@@ -1,0 +1,2945 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gemstock">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Gemstock — Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1c1c1c;
+    --border: #2a2a2a;
+    --border2: #3a3a3a;
+    --text: #f5f2eb;
+    --muted: #8a8478;
+    --muted2: #5a554d;
+    --accent: #d4a847;
+    --accent2: #c8432a;
+    --green: #4ade80;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --psa: #ef4444;
+    --cgc: #10b981;
+    --bgs: #3b82f6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  /* Block any horizontal scroll on all elements */
+  * {
+    max-width: 100vw;
+  }
+
+  /* Modal lockdown */
+  .modal-overlay, .modal {
+    touch-action: pan-y;
+    overflow-x: hidden !important;
+    max-width: 100vw;
+  }
+
+  .modal {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Allow horizontal scroll ONLY on filter row (chips) */
+  .filter-row {
+    touch-action: pan-x;
+    overflow-x: auto;
+  }
+
+  /* Allow text selection on input fields and content areas */
+  input, textarea, select,
+  .card-name, .detail-name, .card-meta, .saved-card-name,
+  .stat-value, .stat-sub, .price-value,
+  .history-entry, .ai-box-content,
+  [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
+  /* Prevent zoom on input focus (iOS) */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(212,168,71,0.04) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(200,67,42,0.03) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* WELCOME BAR */
+  .welcome-bar {
+    padding: max(env(safe-area-inset-top), 8px) 16px 4px;
+    background: var(--bg);
+  }
+
+  .welcome-text {
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 0;
+  }
+
+  .welcome-text:hover { color: var(--text); }
+
+  .welcome-text strong {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+
+  .welcome-edit-icon {
+    opacity: 0.4;
+    font-size: 0.78rem;
+    margin-left: 2px;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(20,20,20,0.85);
+  }
+
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo-wrap { display: flex; align-items: center; gap: 10px; }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .header-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 3px;
+    text-transform: uppercase;
+  }
+
+  .header-actions { display: flex; gap: 6px; }
+
+  .icon-btn {
+    width: 42px; height: 42px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    border-radius: 10px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-size: 1.1rem;
+  }
+
+  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn:hover { border-color: var(--accent); }
+  .icon-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  /* MAIN */
+  .main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 18px 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card.full {
+    grid-column: span 2;
+    padding: 18px 20px;
+  }
+
+  /* Mini chart inside card */
+  .mini-chart-wrap {
+    margin-top: 14px;
+    width: 100%;
+    position: relative;
+  }
+
+  .mini-chart {
+    width: 100%;
+    height: 64px;
+    position: relative;
+  }
+
+  .mini-chart svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* Legend positioned in TOP-RIGHT CORNER of stat-card (absolute to .stat-card) */
+  .stat-chart-legend {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+    align-items: flex-end;
+    z-index: 3;
+    pointer-events: none;
+    text-align: right;
+  }
+
+  .stat-chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .stat-chart-legend-dot {
+    width: 10px;
+    height: 2px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .stat-chart-legend-dot.dashed {
+    background: transparent !important;
+    border-top: 2px dashed var(--accent);
+    height: 0;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.blue::before { background: var(--blue); }
+
+  /* Clickable stat-card filters */
+  .stat-card.clickable {
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .stat-card.clickable:active { transform: scale(0.97); }
+  .stat-card.clickable:hover { border-color: var(--border2); }
+
+  .stat-card.clickable.active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(212,168,71,0.08), var(--surface));
+  }
+
+  .stat-card.clickable.active::before { background: var(--accent); width: 4px; }
+
+  .stat-card.purple::before { background: #a78bfa; }
+  .stat-card.amber::before { background: #fbbf24; }
+  .stat-card.gold::before { background: linear-gradient(180deg, #d4a847, #b8902f); width: 4px; }
+
+  /* Alert dot animation */
+  .alert-dot {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 0 0 rgba(248,113,113,0.7);
+    animation: alertPulse 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
+  }
+
+  .alert-dot.amber {
+    background: #fbbf24;
+    box-shadow: 0 0 0 0 rgba(251,191,36,0.7);
+    animation: alertPulseAmber 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
+  }
+
+  @keyframes alertPulse {
+    0% { box-shadow: 0 0 0 0 rgba(248,113,113,0.7); }
+    70% { box-shadow: 0 0 0 12px rgba(248,113,113,0); }
+    100% { box-shadow: 0 0 0 0 rgba(248,113,113,0); }
+  }
+
+  @keyframes alertPulseAmber {
+    0% { box-shadow: 0 0 0 0 rgba(251,191,36,0.7); }
+    70% { box-shadow: 0 0 0 12px rgba(251,191,36,0); }
+    100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); }
+  }
+
+  /* Sell card extra glow */
+  .stat-card.sell-alert {
+    background: linear-gradient(135deg, rgba(248,113,113,0.06), var(--surface));
+    border-color: rgba(248,113,113,0.2);
+    animation: sellGlow 2.4s infinite ease-in-out;
+  }
+  .stat-card.sell-alert::before {
+    background: linear-gradient(180deg, #ef4444, #c8432a) !important;
+    width: 4px !important;
+  }
+
+  @keyframes sellGlow {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(248,113,113,0.1); }
+    50% { box-shadow: 0 0 16px 2px rgba(248,113,113,0.18); }
+  }
+
+  /* Stale card subtle warning */
+  .stat-card.stale-alert {
+    background: linear-gradient(135deg, rgba(251,191,36,0.05), var(--surface));
+    border-color: rgba(251,191,36,0.2);
+  }
+  .stat-card.stale-alert::before {
+    background: linear-gradient(180deg, #fbbf24, #b8830d) !important;
+    width: 4px !important;
+  }
+
+  .stat-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.accent { color: var(--accent); }
+
+  .stat-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  /* SEARCH BAR */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 14px;
+  }
+
+  .search-bar {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 40px 12px 38px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-bar:focus { border-color: var(--accent); }
+  .search-bar::placeholder { color: var(--muted); }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 0.95rem;
+    pointer-events: none;
+  }
+
+  .clear-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--border);
+    border: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .clear-search.show { display: flex; }
+
+  /* FILTER PILLS */
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .filter-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 16px;
+    border-radius: 22px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .filter-pill:active { transform: scale(0.96); }
+  .filter-pill.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .filter-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-left: 4px;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+
+  .section-title-text {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .section-action {
+    font-size: 0.75rem;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 8px;
+    position: relative;
+    transition: all 0.15s;
+  }
+
+  .card:active { transform: scale(0.99); }
+  .card:hover { border-color: var(--border2); }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .card-info { flex: 1; min-width: 0; cursor: pointer; padding: 2px 0; }
+  .price-row { cursor: pointer; }
+  .last-update { cursor: pointer; }
+
+  .card-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 4px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .card-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .grade-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .grade-badge.psa { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+  .grade-badge.cgc { background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+  .grade-badge.bgs { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+
+  .qty-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: #c2b89c;
+    background: rgba(212,168,71,0.08);
+    border: 1px solid rgba(212,168,71,0.18);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .set-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    color: #b8b3a8;
+    background: rgba(245,242,235,0.05);
+    border: 1px solid rgba(245,242,235,0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .num-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: #93c5fd;
+    background: rgba(96,165,250,0.08);
+    border: 1px solid rgba(96,165,250,0.2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .lang-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: #d8b4fe;
+    background: rgba(168,85,247,0.08);
+    border: 1px solid rgba(168,85,247,0.2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .condition-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: #fde68a;
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .grade-badge.raw {
+    background: rgba(139,92,246,0.12);
+    color: #c4b5fd;
+    border: 1px solid rgba(139,92,246,0.3);
+  }
+
+  .grade-badge.other {
+    background: rgba(251,146,60,0.12);
+    color: #fdba74;
+    border: 1px solid rgba(251,146,60,0.35);
+  }
+
+  .ebay-link-btn {
+    width: 36px; height: 36px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .ebay-link-btn:active { transform: scale(0.92); }
+  .ebay-link-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  .ebay-link-btn::after {
+    content: 'eBay';
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.55rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  /* DUAL EBAY BUTTONS */
+  .ebay-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .ebay-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 9px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    cursor: pointer;
+    min-width: 92px;
+    justify-content: center;
+  }
+
+  .ebay-btn:active { transform: scale(0.94); }
+
+  .ebay-btn.it {
+    background: linear-gradient(90deg, #009246 0%, #009246 33%, #f5f2eb 33%, #f5f2eb 66%, #ce2b37 66%);
+    color: #1a1814;
+    border: none;
+    text-shadow: 0 0 2px rgba(245,242,235,0.8), 0 0 4px rgba(245,242,235,0.5);
+    font-weight: 800;
+  }
+  .ebay-btn.it:hover { filter: brightness(1.1); }
+
+  .ebay-btn.us {
+    background: linear-gradient(135deg, #1e40af 0%, #ffffff 50%, #dc2626 100%);
+    color: #1a1814;
+    border: none;
+    text-shadow: 0 0 2px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.6);
+    font-weight: 800;
+  }
+  .ebay-btn.us:hover { filter: brightness(1.1); }
+
+  .ebay-btn.google {
+    background: linear-gradient(90deg, #4285f4, #34a853, #fbbc04, #ea4335);
+    color: #fff;
+    border-color: transparent;
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    transition: all 0.3s;
+  }
+  .ebay-btn.google:hover {
+    background-position: 100% 50%;
+  }
+
+  .ebay-btn-flag {
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  .ebay-btn-label {
+    letter-spacing: 0.5px;
+  }
+
+  /* Detail page dual buttons */
+  .detail-ebay-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .detail-ebay-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    border: none;
+  }
+
+  .detail-ebay-btn:active { transform: scale(0.97); }
+
+  .detail-ebay-btn.it {
+    background: linear-gradient(135deg, #009246, #ce2b37);
+    color: #fff;
+  }
+  .detail-ebay-btn.it:hover { filter: brightness(1.1); }
+
+  .detail-ebay-btn.us {
+    background: linear-gradient(135deg, #1e40af, #dc2626);
+    color: #fff;
+  }
+  .detail-ebay-btn.us:hover { filter: brightness(1.1); }
+
+  .detail-ebay-btn.google {
+    background: linear-gradient(135deg, #4285f4, #34a853 33%, #fbbc04 66%, #ea4335);
+    color: #fff;
+    grid-column: span 2;
+  }
+  .detail-ebay-btn.google:hover { filter: brightness(1.1); }
+
+  .detail-ebay-flag {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  /* CARD BODY - PRICES */
+  .price-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .price-block {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+
+  .price-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .price-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .price-value.green { color: var(--green); }
+  .price-value.red { color: var(--red); }
+  .price-value.muted { color: var(--muted); }
+  .price-value.accent { color: var(--accent); }
+
+  .last-update {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-left: 2px;
+  }
+
+  .stale-warning {
+    color: #fbbf24;
+  }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .empty-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+
+  .empty-sub {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  /* FAB - Floating action button */
+  .fab {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + 18px);
+    right: 18px;
+    width: 62px; height: 62px;
+    background: linear-gradient(135deg, var(--accent), #b8902f);
+    color: var(--bg);
+    border: none;
+    border-radius: 18px;
+    font-size: 1.9rem;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(212,168,71,0.35), 0 2px 8px rgba(0,0,0,0.3);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-weight: 300;
+  }
+
+  .fab:active { transform: scale(0.92); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  @media (min-width: 768px) {
+    .modal-overlay { align-items: center; padding: 20px; }
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 600px;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 22px 18px calc(env(safe-area-inset-bottom) + 22px);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+  }
+
+  @media (min-width: 768px) {
+    .modal { border-radius: 16px; border: 1px solid var(--border); }
+  }
+
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: -8px auto 16px;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .modal-close {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* FORM */
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .form-input,
+  .form-select {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .form-input:focus,
+  .form-select:focus { border-color: var(--accent); }
+
+  .form-input.mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .form-row {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .form-row .form-group {
+    min-width: 0;
+  }
+
+  @media (max-width: 380px) {
+    .form-row.cols-3 { grid-template-columns: 1fr 1fr; }
+  }
+
+  .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%238a8478%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px top 50%;
+    background-size: 10px auto;
+    padding-right: 32px;
+  }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .btn-primary:hover { background: #c9a040; }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-danger {
+    background: rgba(248,113,113,0.1);
+    color: var(--red);
+    border: 1px solid rgba(248,113,113,0.3);
+  }
+
+  .btn-danger.solid {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+  }
+  .btn-danger.solid:hover { filter: brightness(1.1); }
+
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  /* DETAIL VIEW */
+  .detail-hero {
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  .detail-grade-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .detail-name {
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .detail-set {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .detail-prices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .detail-price-block {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .detail-price-block.highlight {
+    background: linear-gradient(135deg, rgba(212,168,71,0.1), rgba(212,168,71,0.03));
+    border: 1px solid rgba(212,168,71,0.3);
+  }
+
+  .detail-price-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .detail-price-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .pnl-display {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border);
+  }
+
+  .pnl-display.positive { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.25); }
+  .pnl-display.negative { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.25); }
+
+  .pnl-display-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pnl-display-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  .pnl-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    margin-top: 2px;
+    opacity: 0.8;
+  }
+
+  .signal-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .signal-pill.sell { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+  .signal-pill.hot { background: rgba(251,146,60,0.18); color: #fdba74; border: 1px solid rgba(251,146,60,0.4); }
+  .signal-pill.hold { background: rgba(74,222,128,0.15); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+  .signal-pill.pray { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); }
+  .signal-pill.rip { background: rgba(120,113,108,0.18); color: #d6d3d1; border: 1px solid rgba(120,113,108,0.4); }
+  .signal-pill.wait { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); }
+
+  /* HISTORY */
+  .history-list {
+    margin-top: 6px;
+  }
+
+  .history-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .history-entry-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .history-entry-price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .history-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+  }
+
+  /* Threshold pills (settings) */
+  .threshold-pills {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .threshold-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 4px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .threshold-pill:active { transform: scale(0.95); }
+  .threshold-pill.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  /* Links Grid */
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .link-tile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.15s;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .link-tile:active { transform: scale(0.97); }
+  .link-tile:hover {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .link-tile-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .link-tile-cm { background: linear-gradient(135deg, #2563eb, #1e40af); color: #fff; }
+  .link-tile-ct { background: linear-gradient(135deg, #dc2626, #991b1b); color: #fff; }
+  .link-tile-130 { background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; }
+  .link-tile-sd { background: linear-gradient(135deg, #ec4899, #be185d); color: #fff; }
+  .link-tile-eb { background: linear-gradient(90deg, #009246 33%, #f5f2eb 33% 66%, #ce2b37 66%); color: #1a1814; font-size: 0.7rem; }
+  .link-tile-psa { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+  .link-tile-pc { background: linear-gradient(135deg, #10b981, #047857); color: #fff; }
+
+  .link-tile-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .link-tile-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .link-tile-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--muted);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    width: 90px;
+    height: 90px;
+    background: rgba(20, 20, 20, 0.92);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .toast-check {
+    width: 44px;
+    height: 44px;
+    stroke: #4ade80;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .toast-check.error { stroke: #f87171; }
+  .toast-check.warn { stroke: #fbbf24; }
+
+  /* INSTALL PROMPT */
+  .install-banner {
+    background: linear-gradient(135deg, rgba(212,168,71,0.1), rgba(200,67,42,0.05));
+    border: 1px solid rgba(212,168,71,0.25);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .install-banner.show { display: flex; }
+
+  .install-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .install-text {
+    flex: 1;
+    font-size: 0.82rem;
+    line-height: 1.3;
+  }
+
+  .install-text strong { color: var(--accent); }
+
+  .install-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px 8px;
+  }
+
+  /* INFO BANNER */
+  .info-banner {
+    background: rgba(96,165,250,0.06);
+    border: 1px solid rgba(96,165,250,0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 0.78rem;
+    color: #93c5fd;
+    line-height: 1.4;
+    display: flex;
+    gap: 10px;
+  }
+
+  .info-icon { flex-shrink: 0; }
+
+  .quick-update {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+  }
+
+  .quick-update-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  /* Pulldown to refresh feel */
+  .pulldown-hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.7rem;
+    padding: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  /* iOS install instructions */
+  .ios-instructions {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+
+  .ios-instructions h4 {
+    font-size: 0.88rem;
+    margin-bottom: 10px;
+    color: var(--accent);
+  }
+
+  .ios-instructions ol {
+    list-style: none;
+    counter-reset: step;
+    padding: 0;
+  }
+
+  .ios-instructions ol li {
+    counter-increment: step;
+    padding: 6px 0 6px 28px;
+    position: relative;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .ios-instructions ol li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 20px; height: 20px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Card swipe indicator */
+  .pnl-mini {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+    margin-left: auto;
+  }
+
+  .pnl-mini.green { background: rgba(74,222,128,0.15); color: var(--green); }
+  .pnl-mini.red { background: rgba(248,113,113,0.15); color: var(--red); }
+  .pnl-mini.muted { background: var(--surface2); color: var(--muted); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="welcome-bar">
+  <div class="welcome-text" onclick="openNicknameModal()" id="welcome-text">
+    Benvenuto, <strong id="welcome-name">Collezionista</strong> <span class="welcome-edit-icon">✎</span>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-row">
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="rotate(-12 6.5 7)">
+            <rect x="3" y="2.5" width="7" height="9" rx="1" stroke="#d4a847" stroke-width="1.6" fill="rgba(212,168,71,0.15)"/>
+            <line x1="5" y1="9.5" x2="8" y2="9.5" stroke="#d4a847" stroke-width="1.2"/>
+          </g>
+          <path d="M3 19 L9 14 L14 16 L21 9" stroke="#d4a847" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 9 L21 9 L21 13" stroke="#d4a847" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text"><span>GEM</span>STOCK</div>
+        <div class="header-sub">BY SWEETCOLLECTIBLES</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="openLinksModal()" title="Link utili">🔗</button>
+      <button class="icon-btn" onclick="openSettingsModal()" title="Impostazioni">⚙</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-bar" id="search-input" placeholder="Cerca carta nel portfolio..." oninput="renderCards()">
+    <button class="clear-search" id="clear-search" onclick="clearSearch()">✕</button>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-row" id="filter-row">
+    <button class="filter-pill active" data-filter="all">Tutte <span class="filter-count" id="count-all">0</span></button>
+    <button class="filter-pill" data-filter="PSA">PSA <span class="filter-count" id="count-psa">0</span></button>
+    <button class="filter-pill" data-filter="CGC">CGC <span class="filter-count" id="count-cgc">0</span></button>
+    <button class="filter-pill" data-filter="BGS">BGS <span class="filter-count" id="count-bgs">0</span></button>
+    <button class="filter-pill" data-filter="ALTRO">Altro <span class="filter-count" id="count-other">0</span></button>
+    <button class="filter-pill" data-filter="RAW">RAW <span class="filter-count" id="count-raw">0</span></button>
+  </div>
+
+  <!-- SECTION TITLE -->
+  <div class="section-title">
+    <div class="section-title-text" id="section-text">📁 Portfolio</div>
+    <div class="section-action" id="section-clear" style="display:none" onclick="clearAllFilters()">✕ Rimuovi filtro</div>
+  </div>
+
+  <!-- CARDS -->
+  <div id="cards-list"></div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openAddModal()" title="Aggiungi carta">+</button>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="add-modal-title">➕ Nuova Carta</div>
+      <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nome Carta *</label>
+      <input type="text" class="form-input" id="f-name" placeholder="es. Charizard Holo">
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label class="form-label">Set / Espansione</label>
+        <input type="text" class="form-input" id="f-set" placeholder="es. Base Set">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Numero</label>
+        <input type="text" class="form-input mono" id="f-number" placeholder="4/102">
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label class="form-label">Ente Grading *</label>
+        <select class="form-select" id="f-grader" onchange="toggleGraderFields()">
+          <option value="PSA">PSA</option>
+          <option value="CGC">CGC</option>
+          <option value="BGS">BGS</option>
+          <option value="ALTRO">ALTRO (specifica)</option>
+          <option value="RAW">RAW</option>
+        </select>
+      </div>
+      <div class="form-group" id="grade-group">
+        <label class="form-label">Voto *</label>
+        <select class="form-select" id="f-grade">
+          <option value="10">10</option>
+          <option value="9.5">9.5</option>
+          <option value="9">9</option>
+          <option value="8.5">8.5</option>
+          <option value="8">8</option>
+          <option value="7">7</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+      <div class="form-group" id="condition-group" style="display:none">
+        <label class="form-label">Condizione *</label>
+        <select class="form-select" id="f-condition">
+          <option value="MT">MT — Mint</option>
+          <option value="NM">NM — Near Mint</option>
+          <option value="EXC">EXC — Excellent</option>
+          <option value="GD">GD — Good</option>
+          <option value="LP">LP — Light Played</option>
+          <option value="PL">PL — Played</option>
+          <option value="PO">PO — Poor</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group" id="custom-grader-group" style="display:none">
+      <label class="form-label">🏷️ Nome casa di grading *</label>
+      <input type="text" class="form-input" id="f-custom-grader" placeholder="es. SGC, GMG, HGA, ARK, MNT, TAG..." maxlength="20">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🌐 Lingua Carta</label>
+      <select class="form-select" id="f-language">
+        <option value="">— Non specificata —</option>
+        <option value="ENG">ENG — Inglese</option>
+        <option value="ITA">ITA — Italiano</option>
+        <option value="JAP">JAP — Giapponese</option>
+        <option value="FRA">FRA — Francese</option>
+        <option value="GER">GER — Tedesco</option>
+        <option value="ESP">ESP — Spagnolo</option>
+        <option value="KOR">KOR — Coreano</option>
+        <option value="CS">CS — Cinese Semplificato</option>
+        <option value="CT">CT — Cinese Tradizionale</option>
+      </select>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label class="form-label">💰 Prezzo Acquisto (€) *</label>
+        <input type="number" class="form-input mono" id="f-buyprice" placeholder="350" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label">📦 Quantità</label>
+        <input type="number" class="form-input mono" id="f-qty" value="1" min="1" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label class="form-label" id="f-currentprice-label">📊 Ultimo Venduto eBay (€)</label>
+        <input type="number" class="form-input mono" id="f-currentprice" placeholder="opzionale" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label">📅 Data Acquisto</label>
+        <input type="date" class="form-input mono" id="f-buydate">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">📝 Note</label>
+      <input type="text" class="form-input" id="f-notes" placeholder="es. Comprata a Cardmarket...">
+    </div>
+
+    <button class="btn btn-primary" onclick="saveCard()">💾 Salva Carta</button>
+    <button class="btn btn-secondary" onclick="closeModal('add-modal')" style="margin-top:8px">Annulla</button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal" id="detail-modal-content"></div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">⚙ Impostazioni</div>
+      <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
+    </div>
+
+    <div class="info-banner">
+      <div class="info-icon">ℹ️</div>
+      <div>
+        <strong>App in versione manuale</strong> — quando arriverà l'API eBay Marketplace Insights, attiveremo il refresh automatico dei prezzi.
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">⏰ Soglia aggiornamento</label>
+      <div class="threshold-pills" id="stale-pills">
+        <button class="threshold-pill" data-days="3" onclick="setStaleDays(3)">3 gg</button>
+        <button class="threshold-pill" data-days="7" onclick="setStaleDays(7)">7 gg</button>
+        <button class="threshold-pill" data-days="14" onclick="setStaleDays(14)">14 gg</button>
+        <button class="threshold-pill" data-days="30" onclick="setStaleDays(30)">30 gg</button>
+      </div>
+      <input type="hidden" id="s-stale-days" value="7">
+    </div>
+
+    <button class="btn btn-primary" onclick="saveSettings()">💾 Salva Impostazioni</button>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+    <div class="form-label" style="margin-bottom:10px">📦 Gestione Dati</div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="exportData()">⬇ Esporta JSON</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆ Importa JSON</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+
+    <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
+  </div>
+</div>
+
+<!-- LINKS MODAL -->
+<div class="modal-overlay" id="links-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">🔗 Link Utili</div>
+      <button class="modal-close" onclick="closeModal('links-modal')">✕</button>
+    </div>
+
+    <div style="font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; line-height: 1.45;">
+      Scorciatoie per i siti che usi più spesso nel tuo lavoro.
+    </div>
+
+    <div class="links-grid">
+      <a href="https://www.cardmarket.com" target="_blank" rel="noopener" class="link-tile">
+        <div class="link-tile-icon link-tile-cm">CM</div>
+        <div class="link-tile-info">
+          <div class="link-tile-name">Cardmarket</div>
+          <div class="link-tile-desc">marketplace EU</div>
+        </div>
+      </a>
+      <a href="https://www.cardtrader.com" target="_blank" rel="noopener" class="link-tile">
+        <div class="link-tile-icon link-tile-ct">CT</div>
+        <div class="link-tile-info">
+          <div class="link-tile-name">CardTrader</div>
+          <div class="link-tile-desc">marketplace EU</div>
+        </div>
+      </a>
+      <a href="https://130point.com" target="_blank" rel="noopener" class="link-tile">
+        <div class="link-tile-icon link-tile-130">130</div>
+        <div class="link-tile-info">
+          <div class="link-tile-name">130point</div>
+          <div class="link-tile-desc">venduti USA</div>
+        </div>
+      </a>
+      <a href="https://snkrdunk.com" target="_blank" rel="noopener" class="link-tile">
+        <div class="link-tile-icon link-tile-sd">SD</div>
+        <div class="link-tile-info">
+          <div class="link-tile-name">Snkrdunk</div>
+          <div class="link-tile-desc">marketplace JP</div>
+        </div>
+      </a>
+      <a href="https://www.ebay.it" target="_blank" rel="noopener" class="link-tile">
+        <div class="link-tile-icon link-tile-eb">eBay</div>
+        <div class="link-tile-info">
+          <div class="link-tile-name">eBay IT</div>
+          <div class="link-tile-desc">marketplace IT</div>
+        </div>
+      </a>
+      <a href="https://www.psacard.com/cert" target="_blank" rel="noopener" class="link-tile">
+        <div class="link-tile-icon link-tile-psa">PSA</div>
+        <div class="link-tile-info">
+          <div class="link-tile-name">PSA Cert</div>
+          <div class="link-tile-desc">verifica grading</div>
+        </div>
+      </a>
+      <a href="https://www.pricecharting.com" target="_blank" rel="noopener" class="link-tile">
+        <div class="link-tile-icon link-tile-pc">PC</div>
+        <div class="link-tile-info">
+          <div class="link-tile-name">PriceCharting</div>
+          <div class="link-tile-desc">trend storici</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALL INSTRUCTIONS MODAL -->
+<div class="modal-overlay" id="install-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">📱 Installa App</div>
+      <button class="modal-close" onclick="closeModal('install-modal')">✕</button>
+    </div>
+
+    <div class="ios-instructions">
+      <h4>📱 iPhone / iPad (Safari)</h4>
+      <ol>
+        <li>Tocca il pulsante <strong>Condividi</strong> in basso (⎙)</li>
+        <li>Scorri e seleziona <strong>"Aggiungi alla schermata Home"</strong></li>
+        <li>Conferma con <strong>"Aggiungi"</strong></li>
+        <li>L'app comparirà come icona sulla home! 🎉</li>
+      </ol>
+    </div>
+
+    <div class="ios-instructions" style="margin-top:10px">
+      <h4>💻 Windows / Mac (Chrome / Edge)</h4>
+      <ol>
+        <li>Clicca l'icona <strong>⊕ Installa</strong> nella barra degli indirizzi</li>
+        <li>Oppure: menu (⋮) → <strong>"Installa TCG Tracker"</strong></li>
+        <li>L'app si aprirà come finestra dedicata 🎉</li>
+      </ol>
+    </div>
+
+    <div class="ios-instructions" style="margin-top:10px">
+      <h4>🤖 Android (Chrome)</h4>
+      <ol>
+        <li>Tocca il menu (⋮) in alto a destra</li>
+        <li>Seleziona <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong></li>
+        <li>L'app comparirà nella tua lista app! 🎉</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- NICKNAME MODAL -->
+<div class="modal-overlay" id="nickname-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">👤 Il tuo nome</div>
+      <button class="modal-close" onclick="closeModal('nickname-modal')">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Come ti chiami, collezionista?</label>
+      <input type="text" class="form-input" id="f-nickname" placeholder="es. Mirko" maxlength="30">
+    </div>
+
+    <button class="btn btn-primary" onclick="saveNickname()">💾 Salva</button>
+  </div>
+</div>
+
+<!-- CONFIRM CLEAR MODAL -->
+<div class="modal-overlay" id="confirm-clear-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;padding:8px 0 4px">
+      <div style="font-size:3rem;margin-bottom:14px">⚠️</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;letter-spacing:0.5px;margin-bottom:8px">Sei sicuro?</div>
+      <div style="font-size:0.9rem;color:var(--muted);line-height:1.5;margin-bottom:6px">
+        Stai per <strong style="color:var(--red)">cancellare tutto</strong> il tuo portfolio.
+      </div>
+      <div style="font-size:0.82rem;color:var(--muted);line-height:1.4;margin-bottom:22px">
+        Questa azione <strong>NON è reversibile</strong>.<br>
+        Esporta prima un backup se vuoi.
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('confirm-clear-modal')">Annulla</button>
+      <button class="btn btn-danger solid" onclick="confirmClearAll()">🗑 Elimina tutto</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg class="toast-check" id="toast-check" viewBox="0 0 24 24">
+    <path d="M5 13 L10 18 L20 7" />
+  </svg>
+</div>
+
+<script>
+// ============ STATE ============
+let cards = JSON.parse(localStorage.getItem('tcg_cards_v2') || '[]');
+let settings = JSON.parse(localStorage.getItem('tcg_settings') || '{"marketplace":"ebay.it","staleDays":7}');
+let activeFilter = 'all';
+let editingId = null;
+
+// ============ UTILS ============
+function fmt(n) {
+  return Number(n).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function save() {
+  localStorage.setItem('tcg_cards_v2', JSON.stringify(cards));
+}
+
+function saveSettingsToStorage() {
+  localStorage.setItem('tcg_settings', JSON.stringify(settings));
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return null;
+  const diff = (Date.now() - new Date(dateStr).getTime()) / (1000*60*60*24);
+  return Math.floor(diff);
+}
+
+function getCurrentPrice(card) {
+  if (card.history && card.history.length > 0) {
+    return card.history[card.history.length - 1].price;
+  }
+  return null;
+}
+
+function getLastUpdateDate(card) {
+  if (card.history && card.history.length > 0) {
+    return card.history[card.history.length - 1].date;
+  }
+  return null;
+}
+
+function getPnL(card) {
+  const cur = getCurrentPrice(card);
+  if (!cur) return null;
+  return (cur - card.buyPrice) * (card.qty || 1);
+}
+
+function getPnLPct(card) {
+  const cur = getCurrentPrice(card);
+  if (!cur) return null;
+  return ((cur - card.buyPrice) / card.buyPrice * 100);
+}
+
+function getSignal(pct) {
+  if (pct == null) return { label: '—', cls: '' };
+  if (pct >= 30) return { label: '🔴 SELL', cls: 'sell' };
+  if (pct >= 10) return { label: '🔥 HOT', cls: 'hot' };
+  if (pct >= 0) return { label: '🟢 HOLD', cls: 'hold' };
+  if (pct >= -40) return { label: '🙏 PRAY', cls: 'pray' };
+  return { label: '💀 RIP', cls: 'rip' };
+}
+
+function gradeClass(g) {
+  if (g === 'PSA') return 'psa';
+  if (g === 'CGC') return 'cgc';
+  if (g === 'BGS') return 'bgs';
+  if (g === 'ALTRO') return 'other';
+  return 'raw';
+}
+
+function openLink(event, url) {
+  event.stopPropagation();
+  event.preventDefault();
+
+  // Detect if mobile device
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isMobile && url.includes('ebay.it')) {
+    // Try eBay app via universal link - same-window navigation triggers app handoff on iOS
+    window.location.href = url;
+    return false;
+  }
+
+  if (isMobile && url.includes('ebay.com')) {
+    // For ebay.com on mobile, force guest view with no signin redirect
+    // Append parameter to prevent auto-redirect to signin
+    let finalUrl = url;
+    if (!finalUrl.includes('_pgn=')) {
+      finalUrl += '&_pgn=1';
+    }
+    window.location.href = finalUrl;
+    return false;
+  }
+
+  // For other links, open in new tab
+  const newWin = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!newWin) {
+    window.location.href = url;
+  }
+  return false;
+}
+
+function buildEbayUrl(card, domain) {
+  const parts = [card.name];
+  if (card.number) parts.push(card.number);
+  parts.push(card.grader);
+  parts.push(card.grade);
+  const query = parts.join(' ');
+  const d = domain || 'ebay.it';
+  // Use clean public URL that doesn't trigger login redirects
+  // _ipg=60 forces guest mode, _from=R40 is the standard search referer
+  if (d === 'ebay.com') {
+    return `https://www.ebay.com/sch/i.html?_from=R40&_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_ipg=60`;
+  }
+  return `https://www.${d}/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_sop=13`;
+}
+
+function buildGoogleUrl(card) {
+  const parts = [card.name];
+  if (card.number) parts.push(card.number);
+  // RAW carte cercano anche su cardmarket; ALTRO solo nome+numero
+  if (card.grader === 'RAW') parts.push('cardmarket');
+  const query = parts.join(' ');
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+}
+
+// ============ RENDER ============
+function buildMiniChartLegend(curColor) {
+  return `
+    <div class="stat-chart-legend">
+      <div class="stat-chart-legend-item">
+        <span class="stat-chart-legend-dot" style="background:#d4a847"></span>
+        <span>Investito</span>
+      </div>
+      <div class="stat-chart-legend-item">
+        <span class="stat-chart-legend-dot dashed" style="border-top-color:${curColor}"></span>
+        <span>Attuale</span>
+      </div>
+    </div>
+  `;
+}
+
+function buildMiniChartSVG() {
+  // Get cards with valid buy date, sort chronologically
+  const sortedCards = cards
+    .filter(c => c.buyDate)
+    .sort((a, b) => a.buyDate.localeCompare(b.buyDate));
+
+  if (sortedCards.length < 2) return { chart: '', legend: '' };
+
+  // Build cumulative arrays
+  let cumBuy = 0;
+  let cumCur = 0;
+  const points = sortedCards.map(c => {
+    const qty = c.qty || 1;
+    cumBuy += c.buyPrice * qty;
+    const cur = getCurrentPrice(c);
+    cumCur += (cur || c.buyPrice) * qty;
+    return { date: c.buyDate, buy: cumBuy, cur: cumCur };
+  });
+
+  const w = 300, h = 60, padding = 4;
+  const minY = 0;
+  const maxY = Math.max(...points.map(p => Math.max(p.buy, p.cur))) * 1.05;
+  if (maxY === 0) return '';
+
+  const xStep = (w - 2 * padding) / (points.length - 1);
+
+  function toXY(idx, val) {
+    const x = padding + idx * xStep;
+    const y = h - padding - ((val - minY) / (maxY - minY)) * (h - 2 * padding);
+    return [x, y];
+  }
+
+  // Generate path for buy (gold) and cur (green/red based on overall)
+  let buyPath = '';
+  let curPath = '';
+  let buyArea = '';
+  points.forEach((p, i) => {
+    const [bx, by] = toXY(i, p.buy);
+    const [cx, cy] = toXY(i, p.cur);
+    if (i === 0) {
+      buyPath = `M ${bx},${by}`;
+      curPath = `M ${cx},${cy}`;
+      buyArea = `M ${bx},${h - padding} L ${bx},${by}`;
+    } else {
+      buyPath += ` L ${bx},${by}`;
+      curPath += ` L ${cx},${cy}`;
+      buyArea += ` L ${bx},${by}`;
+    }
+    if (i === points.length - 1) {
+      buyArea += ` L ${bx},${h - padding} Z`;
+    }
+  });
+
+  const lastBuy = points[points.length - 1].buy;
+  const lastCur = points[points.length - 1].cur;
+  const curIsPos = lastCur >= lastBuy;
+  const curColor = curIsPos ? '#4ade80' : '#f87171';
+
+  return {
+    chart: `
+      <div class="mini-chart-wrap">
+        <div class="mini-chart">
+          <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="buyGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#d4a847" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#d4a847" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="${buyArea}" fill="url(#buyGrad)"/>
+            <path d="${buyPath}" fill="none" stroke="#d4a847" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="${curPath}" fill="none" stroke="${curColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3,3"/>
+          </svg>
+        </div>
+      </div>
+    `,
+    legend: buildMiniChartLegend(curColor)
+  };
+}
+
+function renderStats() {
+  const totalCards = cards.reduce((s, c) => s + (c.qty || 1), 0);
+  const totalBuy = cards.reduce((s, c) => s + c.buyPrice * (c.qty || 1), 0);
+  const totalCur = cards.reduce((s, c) => {
+    const cur = getCurrentPrice(c);
+    return s + (cur ? cur * (c.qty || 1) : c.buyPrice * (c.qty || 1));
+  }, 0);
+  const pnl = totalCur - totalBuy;
+  const pct = totalBuy > 0 ? (pnl / totalBuy * 100) : 0;
+  const isPos = pnl >= 0;
+
+  // Filter counts
+  const inProfit = cards.filter(c => { const p = getPnLPct(c); return p != null && p > 0; }).length;
+  const inLoss = cards.filter(c => { const p = getPnLPct(c); return p != null && p < 0; }).length;
+  const toSell = cards.filter(c => (getPnLPct(c) || 0) >= 30).length;
+  const toUpdate = cards.filter(c => {
+    const days = daysSince(getLastUpdateDate(c));
+    return days == null || days >= settings.staleDays;
+  }).length;
+
+  const chartData = buildMiniChartSVG();
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card full gold">
+      ${chartData.legend}
+      <div class="stat-label">💼 Capitale Investito</div>
+      <div class="stat-value">€${fmt(totalBuy)}</div>
+      <div class="stat-sub">${cards.length} titoli · ${totalCards} carte · valore attuale €${fmt(totalCur)}</div>
+      ${chartData.chart}
+    </div>
+    <div class="stat-card ${isPos ? 'green' : 'red'}">
+      <div class="stat-label">📊 P&L Totale</div>
+      <div class="stat-value ${isPos ? 'green' : 'red'}">${isPos ? '+' : ''}€${fmt(pnl)}</div>
+      <div class="stat-sub">${isPos ? '+' : ''}${pct.toFixed(1)}%</div>
+    </div>
+    <div class="stat-card clickable ${toSell > 0 ? 'sell-alert' : 'blue'} ${activeFilter === 'topsell' ? 'active' : ''}" data-stat-filter="topsell" onclick="toggleStatFilter('topsell')">
+      ${toSell > 0 ? '<div class="alert-dot"></div>' : ''}
+      <div class="stat-label">🚨 Da Vendere</div>
+      <div class="stat-value" style="color:${toSell > 0 ? 'var(--red)' : 'var(--accent)'}">${toSell}</div>
+      <div class="stat-sub">carte sopra +30% · tocca per filtrare</div>
+    </div>
+    <div class="stat-card clickable green ${activeFilter === 'sell' ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
+      <div class="stat-label">📈 In Profitto</div>
+      <div class="stat-value green">${inProfit}</div>
+      <div class="stat-sub">tocca per filtrare</div>
+    </div>
+    <div class="stat-card clickable red ${activeFilter === 'loss' ? 'active' : ''}" data-stat-filter="loss" onclick="toggleStatFilter('loss')">
+      <div class="stat-label">📉 In Perdita</div>
+      <div class="stat-value red">${inLoss}</div>
+      <div class="stat-sub">tocca per filtrare</div>
+    </div>
+    ${toUpdate > 0 ? `
+    <div class="stat-card clickable stale-alert full ${activeFilter === 'stale' ? 'active' : ''}" data-stat-filter="stale" onclick="toggleStatFilter('stale')">
+      <div class="alert-dot amber"></div>
+      <div class="stat-label">⏳ Da Aggiornare</div>
+      <div class="stat-value" style="color:#fbbf24">${toUpdate}</div>
+      <div class="stat-sub">non aggiornate da ${settings.staleDays}+ giorni · tocca per filtrare</div>
+    </div>
+    ` : ''}
+  `;
+}
+
+function toggleStatFilter(filter) {
+  // Toggle: if already active, deactivate; else activate
+  if (activeFilter === filter) {
+    activeFilter = 'all';
+  } else {
+    activeFilter = filter;
+  }
+  // Update filter pills (set "all" active)
+  document.querySelectorAll('.filter-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === (activeFilter === 'all' ? 'all' : ''));
+  });
+  // If activeFilter is sell/loss/stale, none of the regular pills should be active
+  if (activeFilter === 'all') {
+    document.querySelector('.filter-pill[data-filter="all"]').classList.add('active');
+  }
+  renderStats();
+  renderCards();
+}
+
+function clearAllFilters() {
+  activeFilter = 'all';
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-pill[data-filter="all"]').classList.add('active');
+  renderStats();
+  renderCards();
+}
+
+function renderCards() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const clearBtn = document.getElementById('clear-search');
+  clearBtn.classList.toggle('show', q.length > 0);
+
+  // Count by grader
+  document.getElementById('count-all').textContent = cards.length;
+  document.getElementById('count-psa').textContent = cards.filter(c => c.grader === 'PSA').length;
+  document.getElementById('count-cgc').textContent = cards.filter(c => c.grader === 'CGC').length;
+  document.getElementById('count-bgs').textContent = cards.filter(c => c.grader === 'BGS').length;
+  document.getElementById('count-other').textContent = cards.filter(c => c.grader === 'ALTRO').length;
+  document.getElementById('count-raw').textContent = cards.filter(c => c.grader === 'RAW').length;
+
+  // Update section title
+  const sectionLabels = {
+    'all': '📁 Portfolio',
+    'PSA': '📁 Portfolio · PSA',
+    'CGC': '📁 Portfolio · CGC',
+    'BGS': '📁 Portfolio · BGS',
+    'ALTRO': '📁 Portfolio · Altro',
+    'RAW': '📁 Portfolio · RAW',
+    'sell': '📈 Carte in Profitto',
+    'loss': '📉 Carte in Perdita',
+    'stale': '⏳ Da Aggiornare',
+    'topsell': '🚨 Da Vendere'
+  };
+  document.getElementById('section-text').textContent = sectionLabels[activeFilter] || '📁 Portfolio';
+  document.getElementById('section-clear').style.display = activeFilter === 'all' ? 'none' : '';
+
+  // Filter
+  let filtered = cards.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(q) ||
+                         (c.set || '').toLowerCase().includes(q) ||
+                         (c.notes || '').toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+
+    if (activeFilter === 'all') return true;
+    if (['PSA','CGC','BGS','ALTRO','RAW'].includes(activeFilter)) return c.grader === activeFilter;
+    if (activeFilter === 'sell') { const p = getPnLPct(c); return p != null && p > 0; }
+    if (activeFilter === 'loss') { const p = getPnLPct(c); return p != null && p < 0; }
+    if (activeFilter === 'topsell') { const p = getPnLPct(c); return p != null && p >= 30; }
+    if (activeFilter === 'stale') {
+      const days = daysSince(getLastUpdateDate(c));
+      return days == null || days >= settings.staleDays;
+    }
+    return true;
+  });
+
+  // Sort: most profitable first
+  filtered.sort((a, b) => {
+    const pa = getPnLPct(a) ?? -999;
+    const pb = getPnLPct(b) ?? -999;
+    return pb - pa;
+  });
+
+  const list = document.getElementById('cards-list');
+
+  if (cards.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🎴</div>
+        <div class="empty-title">Portfolio Vuoto</div>
+        <div class="empty-sub">Tocca il pulsante <strong>+</strong> in basso a destra per aggiungere la tua prima carta gradata</div>
+      </div>`;
+    return;
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">Nessun risultato</div>
+        <div class="empty-sub">Prova a cambiare i filtri o la ricerca</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => {
+    const cur = getCurrentPrice(c);
+    const pnl = getPnL(c);
+    const pct = getPnLPct(c);
+    const lastDate = getLastUpdateDate(c);
+    const days = daysSince(lastDate);
+    const isStale = days != null && days >= settings.staleDays;
+    const isRaw = c.grader === 'RAW';
+    const isOther = c.grader === 'ALTRO';
+    const isGoogleOnly = isRaw || isOther; // both use Google link
+    const pnlClass = pct == null ? 'muted' : pct >= 0 ? 'green' : 'red';
+    const pnlText = pct == null ? '—' : `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
+
+    // Grade display
+    let gradeDisplay;
+    if (isRaw) {
+      gradeDisplay = `RAW${c.condition ? ' · ' + c.condition : ''}`;
+    } else if (isOther) {
+      gradeDisplay = `${c.customGrader || 'ALTRO'} ${c.grade}`;
+    } else {
+      gradeDisplay = `${c.grader} ${c.grade}`;
+    }
+
+    // Buttons based on grader - use buttons with onclick to open in new tab (mobile-friendly)
+    let buttonsHtml;
+    if (isGoogleOnly) {
+      const googleUrl = buildGoogleUrl(c);
+      buttonsHtml = `
+        <div class="ebay-buttons">
+          <button type="button" class="ebay-btn google" onclick="openLink(event, '${googleUrl}')" title="Cerca su Google${isRaw ? ' + Cardmarket' : ''}">
+            <span class="ebay-btn-label">🔍 Google</span>
+          </button>
+        </div>`;
+    } else {
+      const ebayItUrl = buildEbayUrl(c, 'ebay.it');
+      const ebayUsUrl = buildEbayUrl(c, 'ebay.com');
+      buttonsHtml = `
+        <div class="ebay-buttons">
+          <button type="button" class="ebay-btn it" onclick="openLink(event, '${ebayItUrl}')" title="Vedi venduti su eBay Italia">
+            <span class="ebay-btn-label">🔍 eBay IT</span>
+          </button>
+          <button type="button" class="ebay-btn us" onclick="openLink(event, '${ebayUsUrl}')" title="Vedi venduti su eBay USA (mercato globale)">
+            <span class="ebay-btn-label">🔍 eBay US</span>
+          </button>
+        </div>`;
+    }
+
+    return `
+      <div class="card">
+        <div class="card-top">
+          <div class="card-info" onclick="openDetail(${c.id})">
+            <div class="card-name">${c.name}</div>
+            <div class="card-meta">
+              <span class="grade-badge ${gradeClass(c.grader)}">${gradeDisplay}</span>
+              ${c.set ? `<span class="set-badge">${c.set}</span>` : ''}
+              ${c.number ? `<span class="num-badge">#${c.number}</span>` : ''}
+              ${c.language ? `<span class="lang-badge">${c.language}</span>` : ''}
+              ${c.qty > 1 ? `<span class="qty-badge">×${c.qty}</span>` : ''}
+              <span class="pnl-mini ${pnlClass}">${pnlText}</span>
+            </div>
+          </div>
+          ${buttonsHtml}
+        </div>
+        <div class="price-row" onclick="openDetail(${c.id})">
+          <div class="price-block">
+            <div class="price-label">Acquisto</div>
+            <div class="price-value muted">€${fmt(c.buyPrice)}</div>
+          </div>
+          <div class="price-block">
+            <div class="price-label">${isRaw ? 'Minimo CM' : isOther ? 'Prezzo Mkt' : 'Ultimo eBay'}</div>
+            <div class="price-value ${cur ? 'accent' : 'muted'}">${cur ? '€'+fmt(cur) : '—'}</div>
+          </div>
+          <div class="price-block">
+            <div class="price-label">P&L</div>
+            <div class="price-value ${pnl == null ? 'muted' : pnl >= 0 ? 'green' : 'red'}">
+              ${pnl == null ? '—' : (pnl >= 0 ? '+' : '') + '€' + fmt(pnl)}
+            </div>
+          </div>
+        </div>
+        ${lastDate ? `
+          <div class="last-update ${isStale ? 'stale-warning' : ''}" onclick="openDetail(${c.id})">
+            ${isStale ? '⚠️' : '✓'} Aggiornato ${days === 0 ? 'oggi' : days === 1 ? 'ieri' : days + ' giorni fa'}
+          </div>
+        ` : `
+          <div class="last-update stale-warning" onclick="openDetail(${c.id})">⚠️ Mai aggiornato — tocca per inserire prezzo</div>
+        `}
+      </div>
+    `;
+  }).join('');
+}
+
+// ============ DETAIL VIEW ============
+function openDetail(id) {
+  const c = cards.find(x => x.id === id);
+  if (!c) return;
+
+  const cur = getCurrentPrice(c);
+  const pnl = getPnL(c);
+  const pct = getPnLPct(c);
+  const sig = getSignal(pct);
+  const isRaw = c.grader === 'RAW';
+  const isOther = c.grader === 'ALTRO';
+  const isGoogleOnly = isRaw || isOther;
+  const ebayItUrl = buildEbayUrl(c, 'ebay.it');
+  const ebayUsUrl = buildEbayUrl(c, 'ebay.com');
+  const googleUrl = buildGoogleUrl(c);
+  let gradeDisplay;
+  if (isRaw) {
+    gradeDisplay = `RAW${c.condition ? ' · ' + c.condition : ''}`;
+  } else if (isOther) {
+    gradeDisplay = `${c.customGrader || 'ALTRO'} ${c.grade}`;
+  } else {
+    gradeDisplay = `${c.grader} ${c.grade}`;
+  }
+
+  const historyHTML = (c.history && c.history.length > 0)
+    ? c.history.slice().reverse().map(h => `
+        <div class="history-entry">
+          <div class="history-entry-date">${h.date}</div>
+          <div class="history-entry-price">€${fmt(h.price)}</div>
+        </div>
+      `).join('')
+    : '<div class="history-empty">Nessuno storico ancora — aggiungi il primo prezzo!</div>';
+
+  document.getElementById('detail-modal-content').innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">📊 Dettaglio</div>
+      <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
+    </div>
+
+    <div class="detail-hero">
+      <div class="detail-grade-row">
+        <span class="grade-badge ${gradeClass(c.grader)}">${gradeDisplay}</span>
+        ${c.set ? `<span class="set-badge">${c.set}</span>` : ''}
+        ${c.number ? `<span class="num-badge">#${c.number}</span>` : ''}
+        ${c.language ? `<span class="lang-badge">${c.language}</span>` : ''}
+        ${c.qty > 1 ? `<span class="qty-badge">×${c.qty}</span>` : ''}
+      </div>
+      <div class="detail-name">${c.name}</div>
+      <div class="detail-set">${c.buyDate ? '🛒 Acquistata il ' + c.buyDate : '—'}</div>
+    </div>
+
+    <div class="detail-prices">
+      <div class="detail-price-block">
+        <div class="detail-price-label">💰 Prezzo Acquisto</div>
+        <div class="detail-price-value">€${fmt(c.buyPrice)}</div>
+      </div>
+      <div class="detail-price-block highlight">
+        <div class="detail-price-label">📊 ${isRaw ? 'Minimo CM' : 'Ultimo Venduto'}</div>
+        <div class="detail-price-value" style="color:${cur ? 'var(--accent)' : 'var(--muted)'}">${cur ? '€'+fmt(cur) : '—'}</div>
+      </div>
+    </div>
+
+    ${pct != null ? `
+      <div class="pnl-display ${pnl >= 0 ? 'positive' : 'negative'}">
+        <div>
+          <div class="pnl-display-label">📈 P&L</div>
+          <div class="pnl-display-value" style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}€${fmt(pnl)}</div>
+          <div class="pnl-pct" style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl >= 0 ? '+' : ''}${pct.toFixed(1)}%</div>
+        </div>
+        <span class="signal-pill ${sig.cls}">${sig.label}</span>
+      </div>
+    ` : ''}
+
+    ${isGoogleOnly ? `
+      <div class="detail-ebay-row">
+        <a href="${googleUrl}" target="_blank" rel="noopener" class="detail-ebay-btn google">
+          <span class="detail-ebay-flag">🔍</span> Cerca su Google${isRaw ? ' + Cardmarket' : ''}
+        </a>
+      </div>
+    ` : `
+      <div class="detail-ebay-row">
+        <a href="${ebayItUrl}" target="_blank" rel="noopener" class="detail-ebay-btn it">
+          <span class="detail-ebay-flag">🔍</span> eBay IT
+        </a>
+        <a href="${ebayUsUrl}" target="_blank" rel="noopener" class="detail-ebay-btn us">
+          <span class="detail-ebay-flag">🔍</span> eBay US
+        </a>
+      </div>
+    `}
+
+    <div class="quick-update">
+      <div class="quick-update-title">⚡ Aggiorna ${isRaw ? 'Minimo CM' : isOther ? 'Prezzo Mercato' : 'Ultimo Venduto eBay'}</div>
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <input type="number" class="form-input mono" id="quick-price" placeholder="Nuovo prezzo €" inputmode="decimal" style="flex:1" onkeydown="if(event.key==='Enter')quickUpdate(${c.id})">
+        <button class="btn btn-primary" onclick="quickUpdate(${c.id})" style="width:auto;padding:0 18px">💾 Salva</button>
+      </div>
+    </div>
+
+    ${c.notes ? `
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px;border:1px solid var(--border);font-size:0.85rem;line-height:1.4">
+        📝 ${c.notes}
+      </div>
+    ` : ''}
+
+    <div class="section-title-text" style="margin-bottom:8px">📅 Storico Aggiornamenti</div>
+    <div class="history-list">${historyHTML}</div>
+
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn btn-secondary" onclick="editCard(${c.id})">✏️ Modifica</button>
+      <button class="btn btn-danger" onclick="deleteCard(${c.id})">🗑 Elimina</button>
+    </div>
+  `;
+
+  openModal('detail-modal');
+  setTimeout(() => document.getElementById('quick-price')?.focus(), 350);
+}
+
+// ============ QUICK UPDATE ============
+function quickUpdate(id) {
+  const card = cards.find(c => c.id === id);
+  if (!card) return;
+
+  const priceInput = document.getElementById('quick-price');
+  const price = parseFloat(priceInput.value);
+  const date = new Date().toISOString().split('T')[0];
+
+  if (isNaN(price) || price <= 0) {
+    showToast('⚠️ Inserisci un prezzo valido');
+    priceInput.focus();
+    return;
+  }
+
+  if (!card.history) card.history = [];
+  card.history.push({ date, price });
+  save();
+
+  showToast('✓ Prezzo aggiornato');
+  renderStats();
+  renderCards();
+  // Refresh modal in-place instead of closing it
+  openDetail(id);
+}
+
+// ============ CRUD ============
+function toggleGraderFields() {
+  const grader = document.getElementById('f-grader').value;
+  const isRaw = grader === 'RAW';
+  const isOther = grader === 'ALTRO';
+  document.getElementById('grade-group').style.display = isRaw ? 'none' : '';
+  document.getElementById('condition-group').style.display = isRaw ? '' : 'none';
+  document.getElementById('custom-grader-group').style.display = isOther ? '' : 'none';
+  document.getElementById('f-currentprice-label').textContent = isRaw ? '📊 Minimo CM (€)' : '📊 Ultimo Venduto eBay (€)';
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById('add-modal-title').textContent = '➕ Nuova Carta';
+  ['f-name','f-set','f-number','f-currentprice','f-notes','f-custom-grader'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-buyprice').value = '';
+  document.getElementById('f-qty').value = '1';
+  document.getElementById('f-grader').value = 'PSA';
+  document.getElementById('f-grade').value = '10';
+  document.getElementById('f-condition').value = 'MT';
+  document.getElementById('f-language').value = '';
+  document.getElementById('f-buydate').value = new Date().toISOString().split('T')[0];
+  toggleGraderFields();
+  openModal('add-modal');
+}
+
+function editCard(id) {
+  const c = cards.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+  document.getElementById('add-modal-title').textContent = '✏️ Modifica Carta';
+  document.getElementById('f-name').value = c.name;
+  document.getElementById('f-set').value = c.set || '';
+  document.getElementById('f-number').value = c.number || '';
+  document.getElementById('f-grader').value = c.grader;
+  document.getElementById('f-custom-grader').value = c.customGrader || '';
+  document.getElementById('f-grade').value = c.grade || '10';
+  document.getElementById('f-condition').value = c.condition || 'MT';
+  document.getElementById('f-language').value = c.language || '';
+  document.getElementById('f-buyprice').value = c.buyPrice;
+  document.getElementById('f-qty').value = c.qty || 1;
+  document.getElementById('f-currentprice').value = getCurrentPrice(c) || '';
+  document.getElementById('f-buydate').value = c.buyDate || '';
+  document.getElementById('f-notes').value = c.notes || '';
+  toggleGraderFields();
+  closeModal('detail-modal');
+  setTimeout(() => openModal('add-modal'), 200);
+}
+
+function saveCard() {
+  const name = document.getElementById('f-name').value.trim();
+  const buyPrice = parseFloat(document.getElementById('f-buyprice').value);
+
+  if (!name) { showToast('⚠️ Inserisci il nome della carta'); return; }
+  if (isNaN(buyPrice) || buyPrice <= 0) { showToast('⚠️ Inserisci un prezzo di acquisto valido'); return; }
+
+  const currentPrice = parseFloat(document.getElementById('f-currentprice').value);
+  const grader = document.getElementById('f-grader').value;
+  const isRaw = grader === 'RAW';
+  const isOther = grader === 'ALTRO';
+  const customGrader = isOther ? document.getElementById('f-custom-grader').value.trim() : '';
+
+  if (isOther && !customGrader) {
+    showToast('⚠️ Inserisci il nome della casa di grading');
+    return;
+  }
+
+  if (editingId !== null) {
+    const c = cards.find(x => x.id === editingId);
+    if (c) {
+      c.name = name;
+      c.set = document.getElementById('f-set').value.trim();
+      c.number = document.getElementById('f-number').value.trim();
+      c.grader = grader;
+      c.customGrader = customGrader;
+      c.grade = isRaw ? '' : document.getElementById('f-grade').value;
+      c.condition = isRaw ? document.getElementById('f-condition').value : '';
+      c.language = document.getElementById('f-language').value;
+      c.buyPrice = buyPrice;
+      c.qty = parseInt(document.getElementById('f-qty').value) || 1;
+      c.buyDate = document.getElementById('f-buydate').value;
+      c.notes = document.getElementById('f-notes').value.trim();
+      if (!isNaN(currentPrice) && currentPrice > 0) {
+        if (!c.history) c.history = [];
+        const today = new Date().toISOString().split('T')[0];
+        const last = c.history[c.history.length-1];
+        if (!last || last.price !== currentPrice) {
+          c.history.push({ date: today, price: currentPrice });
+        }
+      }
+      showToast('✓ Carta aggiornata');
+    }
+  } else {
+    const card = {
+      id: Date.now(),
+      name,
+      set: document.getElementById('f-set').value.trim(),
+      number: document.getElementById('f-number').value.trim(),
+      grader,
+      customGrader,
+      grade: isRaw ? '' : document.getElementById('f-grade').value,
+      condition: isRaw ? document.getElementById('f-condition').value : '',
+      language: document.getElementById('f-language').value,
+      buyPrice,
+      qty: parseInt(document.getElementById('f-qty').value) || 1,
+      buyDate: document.getElementById('f-buydate').value,
+      notes: document.getElementById('f-notes').value.trim(),
+      history: []
+    };
+    if (!isNaN(currentPrice) && currentPrice > 0) {
+      card.history.push({
+        date: new Date().toISOString().split('T')[0],
+        price: currentPrice
+      });
+    }
+    cards.push(card);
+    showToast('✓ Carta aggiunta al portfolio!');
+  }
+
+  save();
+  closeModal('add-modal');
+  editingId = null;
+  renderStats();
+  renderCards();
+}
+
+function deleteCard(id) {
+  const c = cards.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`Eliminare "${c.name}" dal portfolio?`)) return;
+  cards = cards.filter(x => x.id !== id);
+  save();
+  closeModal('detail-modal');
+  showToast('🗑 Carta eliminata');
+  renderStats();
+  renderCards();
+}
+
+// ============ MODAL ============
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Click outside to close
+// Close modal only if click STARTED on overlay (not just ended there after text selection drag)
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  let startedOnOverlay = false;
+  overlay.addEventListener('mousedown', e => {
+    startedOnOverlay = (e.target === overlay);
+  });
+  overlay.addEventListener('touchstart', e => {
+    startedOnOverlay = (e.target === overlay);
+  });
+  overlay.addEventListener('click', e => {
+    // Don't close if user has text selected
+    const hasSelection = window.getSelection && window.getSelection().toString().length > 0;
+    if (hasSelection) return;
+    // Only close if event started on overlay and ended on overlay
+    if (e.target === overlay && startedOnOverlay) {
+      overlay.classList.remove('open');
+    }
+    startedOnOverlay = false;
+  });
+});
+
+// ============ FILTERS ============
+document.querySelectorAll('.filter-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderStats();
+    renderCards();
+  });
+});
+
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  renderCards();
+}
+
+// ============ SETTINGS ============
+function openSettingsModal() {
+  const days = settings.staleDays || 7;
+  document.getElementById('s-stale-days').value = days;
+  document.querySelectorAll('.threshold-pill').forEach(p => {
+    p.classList.toggle('active', parseInt(p.dataset.days) === days);
+  });
+  openModal('settings-modal');
+}
+
+function setStaleDays(days) {
+  document.getElementById('s-stale-days').value = days;
+  document.querySelectorAll('.threshold-pill').forEach(p => {
+    p.classList.toggle('active', parseInt(p.dataset.days) === days);
+  });
+}
+
+function openLinksModal() {
+  openModal('links-modal');
+}
+
+function saveSettings() {
+  settings.staleDays = parseInt(document.getElementById('s-stale-days').value);
+  saveSettingsToStorage();
+  showToast('✓ Impostazioni salvate');
+  closeModal('settings-modal');
+  renderCards();
+}
+
+// ============ DATA ============
+function exportData() {
+  const data = {
+    version: 1,
+    exportDate: new Date().toISOString(),
+    cards,
+    settings
+  };
+  try {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gemstock-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('✓ Backup esportato');
+  } catch (err) {
+    // Mobile fallback: open as data URL so user can share/save
+    try {
+      const jsonStr = JSON.stringify(data, null, 2);
+      const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
+      const w = window.open(dataUrl, '_blank');
+      if (!w) throw new Error('popup blocked');
+      showToast('✓ Backup aperto');
+    } catch (e2) {
+      showToast('⚠️ Errore export', 'error');
+    }
+  }
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.cards && Array.isArray(data.cards)) {
+        if (!confirm(`Importare ${data.cards.length} carte? Sostituirà i dati attuali.`)) return;
+        cards = data.cards;
+        if (data.settings) settings = data.settings;
+        save();
+        saveSettingsToStorage();
+        renderStats();
+        renderCards();
+        closeModal('settings-modal');
+        showToast(`✓ Importate ${data.cards.length} carte`);
+      } else {
+        showToast('⚠️ File non valido', 'warn');
+      }
+    } catch (err) {
+      showToast('⚠️ Errore nel file', 'warn');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearAllData() {
+  // Show custom confirm modal (native confirm() can be unreliable on iOS PWA)
+  openModal('confirm-clear-modal');
+}
+
+function confirmClearAll() {
+  cards = [];
+  save();
+  closeModal('confirm-clear-modal');
+  closeModal('settings-modal');
+  renderStats();
+  renderCards();
+  showToast('🗑 Dati cancellati', 'warn');
+}
+
+// ============ INSTALL ============
+function showInstallInstructions() {
+  openModal('install-modal');
+}
+
+// ============ TOAST ============
+let toastTimer = null;
+function showToast(msg, type) {
+  // type: 'success' (default), 'error', 'warn'
+  const t = document.getElementById('toast');
+  const check = document.getElementById('toast-check');
+  // detect type from emoji prefix if not specified
+  if (!type) {
+    if (msg && (msg.startsWith('⚠️') || msg.startsWith('🚫'))) type = 'warn';
+    else if (msg && msg.startsWith('🗑')) type = 'warn';
+    else type = 'success';
+  }
+  // set check path based on type
+  let path = 'M5 13 L10 18 L20 7'; // checkmark
+  if (type === 'error') path = 'M6 6 L18 18 M18 6 L6 18'; // X
+  else if (type === 'warn') path = 'M12 4 V14 M12 18 V18.5'; // !
+  check.querySelector('path').setAttribute('d', path);
+  check.className = 'toast-check' + (type === 'error' ? ' error' : type === 'warn' ? ' warn' : '');
+
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.classList.remove('show');
+    toastTimer = null;
+  }, 800);
+}
+
+// ============ SERVICE WORKER ============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// ============ NICKNAME ============
+function loadNickname() {
+  const name = localStorage.getItem('tcg_nickname') || 'Collezionista';
+  document.getElementById('welcome-name').textContent = name;
+}
+
+function openNicknameModal() {
+  const current = localStorage.getItem('tcg_nickname') || '';
+  document.getElementById('f-nickname').value = current;
+  openModal('nickname-modal');
+  setTimeout(() => document.getElementById('f-nickname').focus(), 300);
+}
+
+function saveNickname() {
+  const name = document.getElementById('f-nickname').value.trim();
+  if (name) {
+    localStorage.setItem('tcg_nickname', name);
+  } else {
+    localStorage.removeItem('tcg_nickname');
+  }
+  loadNickname();
+  closeModal('nickname-modal');
+  showToast('✓ Nome salvato!');
+}
+
+// ============ INIT ============
+// Prevent horizontal scroll on touch (except for explicitly scrollable elements)
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchmove', e => {
+  const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+  const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+  // If horizontal movement dominates AND not on a scrollable horizontal element
+  if (deltaX > deltaY && deltaX > 10) {
+    let el = e.target;
+    let allow = false;
+    while (el && el !== document.body) {
+      if (el.classList && (el.classList.contains('filter-row'))) {
+        allow = true;
+        break;
+      }
+      el = el.parentElement;
+    }
+    if (!allow) e.preventDefault();
+  }
+}, { passive: false });
+
+loadNickname();
+renderStats();
+renderCards();
+</script>
+</body>
+</html>
