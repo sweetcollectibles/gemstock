@@ -15,8 +15,8 @@
 <style>
   :root {
     --bg: #0a0a0a;
-    --surface: #141414;
-    --surface2: #1c1c1c;
+    --surface: #131313;
+    --surface2: #1a1a1a;
     --border: #2a2a2a;
     --border2: #3a3a3a;
     --text: #f5f2eb;
@@ -45,14 +45,22 @@
     position: relative;
     touch-action: pan-y;
     -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 
   html {
     height: 100%;
+    scroll-padding-top: 20px;
   }
 
   body {
     min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
+    /* Enable GPU acceleration for smoother scrolling */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
 
   /* Block any horizontal scroll on all elements */
@@ -100,21 +108,20 @@
     font-family: 'Syne', sans-serif;
     min-height: 100vh;
     padding-bottom: env(safe-area-inset-bottom);
+    scroll-behavior: smooth;
   }
 
-  /* Background pattern */
+  /* Background pattern - removed for uniform black look */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background:
-      radial-gradient(circle at 20% 10%, rgba(212,168,71,0.04) 0%, transparent 40%),
-      radial-gradient(circle at 80% 80%, rgba(200,67,42,0.03) 0%, transparent 40%);
+    background: var(--bg);
     pointer-events: none;
     z-index: 0;
   }
 
-  /* WELCOME BAR */
+  /* WELCOME BAR (deprecated - kept for compat) */
   .welcome-bar {
     padding: max(env(safe-area-inset-top), 8px) 16px 4px;
     background: var(--bg);
@@ -188,6 +195,54 @@
 
   .logo-text span { color: var(--accent); }
 
+  /* ===== NEW HERO HEADER (all-black with neon logo) ===== */
+  .hero-header {
+    background: var(--bg);
+    padding: 14px 16px 8px;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .hero-logo {
+    width: 220px;
+    max-width: 65%;
+    height: auto;
+    display: block;
+    margin: 10px auto -2px;
+    mix-blend-mode: screen;
+  }
+
+  .hero-wordmark {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: 3.5px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .hero-wordmark .purple-s {
+    color: #a855f7;
+  }
+
+  .hero-tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 2.2px;
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+  /* ===== END HERO HEADER ===== */
+
   .header-sub {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.6rem;
@@ -221,7 +276,7 @@
   .main {
     max-width: 800px;
     margin: 0 auto;
-    padding: 18px 14px;
+    padding: 8px 14px 18px;
     position: relative;
     z-index: 1;
   }
@@ -241,6 +296,7 @@
     padding: 16px 18px;
     position: relative;
     overflow: hidden;
+    transform: translateZ(0);
   }
 
   .stat-card.full {
@@ -552,6 +608,8 @@
     margin-bottom: 8px;
     position: relative;
     transition: all 0.15s;
+    will-change: transform;
+    transform: translateZ(0);
   }
 
   .card:active { transform: scale(0.99); }
@@ -752,6 +810,15 @@
   }
   .ebay-btn.us:hover { filter: brightness(1.1); }
 
+  .ebay-btn.alt {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: #ffffff;
+    border: 1px solid #444;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+  }
+  .ebay-btn.alt:hover { filter: brightness(1.3); border-color: #666; }
+
   .ebay-btn.google {
     background: linear-gradient(90deg, #4285f4, #34a853, #fbbc04, #ea4335);
     color: #fff;
@@ -811,6 +878,13 @@
     color: #fff;
   }
   .detail-ebay-btn.us:hover { filter: brightness(1.1); }
+
+  .detail-ebay-btn.alt {
+    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+    color: #ffffff;
+    border: 1px solid #444;
+  }
+  .detail-ebay-btn.alt:hover { filter: brightness(1.3); border-color: #666; }
 
   .detail-ebay-btn.google {
     background: linear-gradient(135deg, #4285f4, #34a853 33%, #fbbc04 66%, #ea4335);
@@ -958,6 +1032,9 @@
     padding: 22px 18px calc(env(safe-area-inset-bottom) + 22px);
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    transform: translateZ(0);
   }
 
   @media (min-width: 768px) {
@@ -1556,35 +1633,20 @@
 </head>
 <body>
 
-<div class="welcome-bar">
-  <div class="welcome-text" onclick="openNicknameModal()" id="welcome-text">
-    Benvenuto, <strong id="welcome-name">Collezionista</strong> <span class="welcome-edit-icon">✎</span>
-  </div>
-</div>
-
-<div class="header">
-  <div class="header-row">
-    <div class="logo-wrap">
-      <div class="logo-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g transform="rotate(-12 6.5 7)">
-            <rect x="3" y="2.5" width="7" height="9" rx="1" stroke="#d4a847" stroke-width="1.6" fill="rgba(212,168,71,0.15)"/>
-            <line x1="5" y1="9.5" x2="8" y2="9.5" stroke="#d4a847" stroke-width="1.2"/>
-          </g>
-          <path d="M3 19 L9 14 L14 16 L21 9" stroke="#d4a847" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M17 9 L21 9 L21 13" stroke="#d4a847" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div>
-        <div class="logo-text"><span>GEM</span>STOCK</div>
-        <div class="header-sub">BY SWEETCOLLECTIBLES</div>
-      </div>
+<div class="hero-header">
+  <div class="hero-top-bar">
+    <div class="welcome-text" onclick="openNicknameModal()" id="welcome-text">
+      Benvenuto, <strong id="welcome-name">Collezionista</strong> <span class="welcome-edit-icon">✎</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openLinksModal()" title="Link utili">🔗</button>
       <button class="icon-btn" onclick="openSettingsModal()" title="Impostazioni">⚙</button>
     </div>
   </div>
+
+  <img class="hero-logo" src="logo-neon.png" alt="Gemstock"/>
+  <div class="hero-wordmark">GEM<span class="purple-s">S</span>TOCK</div>
+  <div class="hero-tagline">BY SWEETCOLLECTIBLES</div>
 </div>
 
 <div class="main">
@@ -2013,6 +2075,12 @@ function openLink(event, url) {
   // Detect if mobile device
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+  if (isMobile && url.includes('alt.xyz')) {
+    // ALT app - try Universal Link via location.replace (more reliable than window.open for iOS app handoff)
+    window.location.href = url;
+    return false;
+  }
+
   if (isMobile && url.includes('ebay.it')) {
     // Try eBay app via universal link - same-window navigation triggers app handoff on iOS
     window.location.href = url;
@@ -2021,7 +2089,6 @@ function openLink(event, url) {
 
   if (isMobile && url.includes('ebay.com')) {
     // For ebay.com on mobile, force guest view with no signin redirect
-    // Append parameter to prevent auto-redirect to signin
     let finalUrl = url;
     if (!finalUrl.includes('_pgn=')) {
       finalUrl += '&_pgn=1';
@@ -2051,6 +2118,15 @@ function buildEbayUrl(card, domain) {
     return `https://www.ebay.com/sch/i.html?_from=R40&_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_ipg=60`;
   }
   return `https://www.${d}/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_sop=13`;
+}
+
+function buildAltUrl(card) {
+  const parts = [card.name];
+  if (card.number) parts.push(card.number);
+  parts.push(card.grader);
+  parts.push(card.grade);
+  const query = parts.join(' ');
+  return `https://alt.xyz/browse?query=${encodeURIComponent(query)}&soldListings=true&sortBy=newest_first`;
 }
 
 function buildGoogleUrl(card) {
@@ -2359,14 +2435,14 @@ function renderCards() {
         </div>`;
     } else {
       const ebayItUrl = buildEbayUrl(c, 'ebay.it');
-      const ebayUsUrl = buildEbayUrl(c, 'ebay.com');
+      const altUrl = buildAltUrl(c);
       buttonsHtml = `
         <div class="ebay-buttons">
           <button type="button" class="ebay-btn it" onclick="openLink(event, '${ebayItUrl}')" title="Vedi venduti su eBay Italia">
             <span class="ebay-btn-label">🔍 eBay IT</span>
           </button>
-          <button type="button" class="ebay-btn us" onclick="openLink(event, '${ebayUsUrl}')" title="Vedi venduti su eBay USA (mercato globale)">
-            <span class="ebay-btn-label">🔍 eBay US</span>
+          <button type="button" class="ebay-btn alt" onclick="openLink(event, '${altUrl}')" title="Vedi venduti su ALT (mercato USA)">
+            <span class="ebay-btn-label">🔍 ALT</span>
           </button>
         </div>`;
     }
@@ -2428,7 +2504,7 @@ function openDetail(id) {
   const isOther = c.grader === 'ALTRO';
   const isGoogleOnly = isRaw || isOther;
   const ebayItUrl = buildEbayUrl(c, 'ebay.it');
-  const ebayUsUrl = buildEbayUrl(c, 'ebay.com');
+  const altUrl = buildAltUrl(c);
   const googleUrl = buildGoogleUrl(c);
   let gradeDisplay;
   if (isRaw) {
@@ -2497,11 +2573,11 @@ function openDetail(id) {
       </div>
     ` : `
       <div class="detail-ebay-row">
-        <a href="${ebayItUrl}" target="_blank" rel="noopener" class="detail-ebay-btn it">
+        <a href="${ebayItUrl}" target="_blank" rel="noopener" class="detail-ebay-btn it" onclick="event.preventDefault(); openLink(event, '${ebayItUrl}')">
           <span class="detail-ebay-flag">🔍</span> eBay IT
         </a>
-        <a href="${ebayUsUrl}" target="_blank" rel="noopener" class="detail-ebay-btn us">
-          <span class="detail-ebay-flag">🔍</span> eBay US
+        <a href="${altUrl}" target="_blank" rel="noopener" class="detail-ebay-btn alt" onclick="event.preventDefault(); openLink(event, '${altUrl}')">
+          <span class="detail-ebay-flag">🔍</span> ALT
         </a>
       </div>
     `}
