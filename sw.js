@@ -1,41 +1,65 @@
-// TCG Tracker Service Worker
-const CACHE_NAME = 'tcg-tracker-v1';
+// Gemstock Service Worker — v3
+const CACHE_NAME = 'gemstock-v3';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './logo-neon.png',
   './icon-192.png',
   './icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap'
+  './apple-touch-icon.png'
 ];
 
+// INSTALL — precache assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS).catch(() => {}))
   );
+  // Force immediate activation (skip waiting)
   self.skipWaiting();
 });
 
+// ACTIVATE — delete old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => {
+          console.log('[SW] Deleting old cache:', k);
+          return caches.delete(k);
+        })
+      )
     )
   );
   self.clients.claim();
 });
 
+// FETCH — network-first strategy
+// Prova sempre la rete prima → fallback cache se offline
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+
+  // Skip cross-origin requests (fonts, etc.)
+  const url = new URL(event.request.url);
+  if (url.origin !== location.origin) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request).then(fetchResponse => {
-        if (fetchResponse && fetchResponse.status === 200) {
-          const responseClone = fetchResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+    fetch(event.request)
+      .then(networkResponse => {
+        // Save fresh response to cache
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
-        return fetchResponse;
-      }).catch(() => caches.match('./index.html'));
-    })
+        return networkResponse;
+      })
+      .catch(() => {
+        // Network failed → serve from cache (offline mode)
+        return caches.match(event.request).then(cached => {
+          return cached || caches.match('./index.html');
+        });
+      })
   );
 });
