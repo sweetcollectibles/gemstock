@@ -22,7 +22,11 @@
     --text: #f5f2eb;
     --muted: #8a8478;
     --muted2: #5a554d;
-    --accent: #d4a847;
+    --accent: #a855f7;      /* VIOLA — accento principale */
+    --accent-dark: #7e22ce;
+    --accent-soft: rgba(168,85,247,0.12);
+    --gold: #d4a847;         /* ORO — solo per valori monetari */
+    --gold-dark: #b8902f;
     --accent2: #c8432a;
     --green: #4ade80;
     --red: #f87171;
@@ -69,7 +73,8 @@
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
     scroll-behavior: smooth;
   }
 
@@ -393,14 +398,14 @@
 
   .stat-card.clickable.active {
     border-color: var(--accent);
-    background: linear-gradient(135deg, rgba(212,168,71,0.08), var(--surface));
+    background: linear-gradient(135deg, rgba(168,85,247,0.10), var(--surface));
   }
 
   .stat-card.clickable.active::before { background: var(--accent); width: 4px; }
 
   .stat-card.purple::before { background: #a78bfa; }
   .stat-card.amber::before { background: #fbbf24; }
-  .stat-card.gold::before { background: linear-gradient(180deg, #d4a847, #b8902f); width: 4px; }
+  .stat-card.gold::before { background: linear-gradient(180deg, var(--gold), var(--gold-dark)); width: 4px; }
 
   /* Alert dot animation */
   .alert-dot {
@@ -479,6 +484,7 @@
   .stat-value.green { color: var(--green); }
   .stat-value.red { color: var(--red); }
   .stat-value.accent { color: var(--accent); }
+  .stat-value.gold { color: var(--gold); }
 
   .stat-sub {
     font-family: 'JetBrains Mono', monospace;
@@ -783,11 +789,11 @@
     align-items: center;
     gap: 5px;
     padding: 9px 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
+    background: #0a0a0a;
+    border: 1px solid rgba(168,85,247,0.4);
     border-radius: 8px;
     text-decoration: none;
-    color: #fff;
+    color: #f5f2eb;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.7rem;
     font-weight: 700;
@@ -799,44 +805,32 @@
   }
 
   .ebay-btn:active { transform: scale(0.94); }
-
-  .ebay-btn.it {
-    background: linear-gradient(90deg, #009246 0%, #009246 33%, #f5f2eb 33%, #f5f2eb 66%, #ce2b37 66%);
-    color: #1a1814;
-    border: none;
-    text-shadow: 0 0 2px rgba(245,242,235,0.8), 0 0 4px rgba(245,242,235,0.5);
-    font-weight: 800;
+  .ebay-btn:hover {
+    border-color: var(--accent);
+    background: rgba(168,85,247,0.08);
   }
-  .ebay-btn.it:hover { filter: brightness(1.1); }
 
-  .ebay-btn.us {
-    background: linear-gradient(135deg, #1e40af 0%, #ffffff 50%, #dc2626 100%);
-    color: #1a1814;
-    border: none;
-    text-shadow: 0 0 2px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.6);
-    font-weight: 800;
+  /* All variants use the unified style now */
+  .ebay-btn.it,
+  .ebay-btn.us,
+  .ebay-btn.alt,
+  .ebay-btn.google,
+  .ebay-btn.psa {
+    background: #0a0a0a;
+    border: 1px solid rgba(168,85,247,0.4);
+    color: #f5f2eb;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: none;
   }
-  .ebay-btn.us:hover { filter: brightness(1.1); }
-
-  .ebay-btn.alt {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    color: #ffffff;
-    border: 1px solid #444;
-    font-weight: 800;
-    letter-spacing: 0.8px;
-  }
-  .ebay-btn.alt:hover { filter: brightness(1.3); border-color: #666; }
-
-  .ebay-btn.google {
-    background: linear-gradient(90deg, #4285f4, #34a853, #fbbc04, #ea4335);
-    color: #fff;
-    border-color: transparent;
-    background-size: 200% 100%;
-    background-position: 0% 50%;
-    transition: all 0.3s;
-  }
-  .ebay-btn.google:hover {
-    background-position: 100% 50%;
+  .ebay-btn.it:hover,
+  .ebay-btn.us:hover,
+  .ebay-btn.alt:hover,
+  .ebay-btn.google:hover,
+  .ebay-btn.psa:hover {
+    border-color: var(--accent);
+    background: rgba(168,85,247,0.10);
+    filter: none;
   }
 
   .ebay-btn-flag {
@@ -875,31 +869,34 @@
 
   .detail-ebay-btn:active { transform: scale(0.97); }
 
-  .detail-ebay-btn.it {
-    background: linear-gradient(135deg, #009246, #ce2b37);
-    color: #fff;
+  .detail-ebay-btn.it,
+  .detail-ebay-btn.us,
+  .detail-ebay-btn.alt,
+  .detail-ebay-btn.psa {
+    background: #0a0a0a;
+    border: 1px solid rgba(168,85,247,0.4);
+    color: #f5f2eb;
   }
-  .detail-ebay-btn.it:hover { filter: brightness(1.1); }
-
-  .detail-ebay-btn.us {
-    background: linear-gradient(135deg, #1e40af, #dc2626);
-    color: #fff;
+  .detail-ebay-btn.it:hover,
+  .detail-ebay-btn.us:hover,
+  .detail-ebay-btn.alt:hover,
+  .detail-ebay-btn.psa:hover {
+    border-color: var(--accent);
+    background: rgba(168,85,247,0.10);
+    filter: none;
   }
-  .detail-ebay-btn.us:hover { filter: brightness(1.1); }
-
-  .detail-ebay-btn.alt {
-    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
-    color: #ffffff;
-    border: 1px solid #444;
-  }
-  .detail-ebay-btn.alt:hover { filter: brightness(1.3); border-color: #666; }
 
   .detail-ebay-btn.google {
-    background: linear-gradient(135deg, #4285f4, #34a853 33%, #fbbc04 66%, #ea4335);
-    color: #fff;
+    background: #0a0a0a;
+    border: 1px solid rgba(168,85,247,0.4);
+    color: #f5f2eb;
     grid-column: span 2;
   }
-  .detail-ebay-btn.google:hover { filter: brightness(1.1); }
+  .detail-ebay-btn.google:hover {
+    border-color: var(--accent);
+    background: rgba(168,85,247,0.10);
+    filter: none;
+  }
 
   .detail-ebay-flag {
     font-size: 1.2rem;
@@ -939,7 +936,8 @@
   .price-value.green { color: var(--green); }
   .price-value.red { color: var(--red); }
   .price-value.muted { color: var(--muted); }
-  .price-value.accent { color: var(--accent); }
+  .price-value.accent { color: var(--gold); }
+  .price-value.gold { color: var(--gold); }
 
   .last-update {
     font-family: 'JetBrains Mono', monospace;
@@ -991,22 +989,29 @@
     right: 18px;
     left: auto;
     width: 62px; height: 62px;
-    background: linear-gradient(135deg, var(--accent), #b8902f);
-    color: var(--bg);
+    background: linear-gradient(135deg, #a855f7, #7e22ce);
+    color: #fff;
     border: none;
     border-radius: 18px;
     font-size: 1.9rem;
     cursor: pointer;
-    box-shadow: 0 8px 24px rgba(212,168,71,0.35), 0 2px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 24px rgba(168,85,247,0.4), 0 2px 8px rgba(0,0,0,0.3);
     z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s;
+    transition: transform 0.2s, opacity 0.2s;
     font-weight: 300;
   }
 
   .fab:active { transform: scale(0.92); }
+
+  /* Hide FAB when any modal is open */
+  body.modal-open .fab {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+  }
 
   /* MODAL */
   .modal-overlay {
@@ -1062,11 +1067,34 @@
 
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
+  .modal-handle-area {
+    width: 100%;
+    padding: 12px 0 8px;
+    margin: -16px 0 4px;
+    display: flex;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .modal-handle-area:active { cursor: grabbing; }
+
   .modal-handle {
-    width: 36px; height: 4px;
+    width: 44px; height: 5px;
     background: var(--border2);
-    border-radius: 2px;
-    margin: -8px auto 16px;
+    border-radius: 3px;
+    pointer-events: none;
+    transition: background 0.15s;
+  }
+
+  .modal-handle-area:active .modal-handle {
+    background: #a855f7;
+  }
+
+  .modal.dragging {
+    transition: none !important;
   }
 
   .modal-header {
@@ -1098,7 +1126,13 @@
 
   /* FORM */
   .form-group {
-    margin-bottom: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-row .form-group {
+    margin-bottom: 0;
   }
 
   .form-label {
@@ -1108,7 +1142,22 @@
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 6px;
+    margin-bottom: 10px;
+    min-height: 14px;
+    line-height: 1.2;
+  }
+
+  /* Force labels to single line in form-rows where possible */
+  .form-row .form-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Input always aligned at the bottom of form-group */
+  .form-row .form-group .form-input,
+  .form-row .form-group .form-select {
+    margin-top: auto;
   }
 
   .form-input,
@@ -1116,10 +1165,12 @@
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
+    height: 48px;
+    line-height: 1.3;
     background: var(--surface2);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
+    border-radius: 10px;
+    padding: 0 14px;
     color: var(--text);
     font-family: 'Syne', sans-serif;
     font-size: 0.95rem;
@@ -1127,10 +1178,19 @@
     outline: none;
     transition: border-color 0.15s;
     -webkit-text-size-adjust: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  textarea.form-input {
+    height: auto;
+    min-height: 80px;
+    padding: 12px 14px;
+    resize: vertical;
   }
 
   .form-input:focus,
-  .form-select:focus { border-color: var(--accent); }
+  .form-select:focus { border-color: #a855f7; }
 
   .form-input.mono {
     font-family: 'JetBrains Mono', monospace;
@@ -1138,8 +1198,10 @@
 
   .form-row {
     display: grid;
-    gap: 10px;
+    gap: 14px;
     width: 100%;
+    align-items: stretch;
+    margin-bottom: 20px;
   }
 
   .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
@@ -1154,7 +1216,6 @@
   }
 
   .form-select {
-    appearance: none;
     background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%238a8478%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
     background-repeat: no-repeat;
     background-position: right 14px top 50%;
@@ -1506,8 +1567,8 @@
 
   /* INSTALL PROMPT */
   .install-banner {
-    background: linear-gradient(135deg, rgba(212,168,71,0.1), rgba(200,67,42,0.05));
-    border: 1px solid rgba(212,168,71,0.25);
+    background: linear-gradient(135deg, rgba(168,85,247,0.10), rgba(168,85,247,0.03));
+    border: 1px solid rgba(168,85,247,0.25);
     border-radius: 12px;
     padding: 14px 16px;
     margin-bottom: 14px;
@@ -1711,7 +1772,7 @@
 <!-- ADD/EDIT MODAL -->
 <div class="modal-overlay" id="add-modal">
   <div class="modal">
-    <div class="modal-handle"></div>
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
       <div class="modal-title" id="add-modal-title">➕ Nuova Carta</div>
       <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
@@ -1775,6 +1836,11 @@
       <input type="text" class="form-input" id="f-custom-grader" placeholder="es. SGC, GMG, HGA, ARK, MNT, TAG..." maxlength="20">
     </div>
 
+    <div class="form-group" id="psa-cert-group" style="display:none">
+      <label class="form-label">🔍 Numero certificato PSA <span style="color:var(--muted);font-weight:400">(opzionale)</span></label>
+      <input type="text" class="form-input mono" id="f-psa-cert" placeholder="es. 71234567" inputmode="numeric" maxlength="12">
+    </div>
+
     <div class="form-group">
       <label class="form-label">🌐 Lingua Carta</label>
       <select class="form-select" id="f-language">
@@ -1804,7 +1870,7 @@
 
     <div class="form-row cols-2">
       <div class="form-group">
-        <label class="form-label" id="f-currentprice-label">📊 Ultimo Venduto eBay (€)</label>
+        <label class="form-label" id="f-currentprice-label">📊 Ultimo Venduto (€)</label>
         <input type="number" class="form-input mono" id="f-currentprice" placeholder="opzionale" inputmode="decimal">
       </div>
       <div class="form-group">
@@ -1831,7 +1897,7 @@
 <!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="settings-modal">
   <div class="modal">
-    <div class="modal-handle"></div>
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
       <div class="modal-title">⚙ Impostazioni</div>
       <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
@@ -1873,7 +1939,7 @@
 <!-- LINKS MODAL -->
 <div class="modal-overlay" id="links-modal">
   <div class="modal">
-    <div class="modal-handle"></div>
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
       <div class="modal-title">🔗 Link Utili</div>
       <button class="modal-close" onclick="closeModal('links-modal')">✕</button>
@@ -1940,7 +2006,7 @@
 <!-- INSTALL INSTRUCTIONS MODAL -->
 <div class="modal-overlay" id="install-modal">
   <div class="modal">
-    <div class="modal-handle"></div>
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
       <div class="modal-title">📱 Installa App</div>
       <button class="modal-close" onclick="closeModal('install-modal')">✕</button>
@@ -1979,7 +2045,7 @@
 <!-- NICKNAME MODAL -->
 <div class="modal-overlay" id="nickname-modal">
   <div class="modal">
-    <div class="modal-handle"></div>
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
       <div class="modal-title">👤 Il tuo nome</div>
       <button class="modal-close" onclick="closeModal('nickname-modal')">✕</button>
@@ -1997,7 +2063,7 @@
 <!-- CONFIRM CLEAR MODAL -->
 <div class="modal-overlay" id="confirm-clear-modal">
   <div class="modal" style="max-width:420px">
-    <div class="modal-handle"></div>
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div style="text-align:center;padding:8px 0 4px">
       <div style="font-size:3rem;margin-bottom:14px">⚠️</div>
       <div style="font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;letter-spacing:0.5px;margin-bottom:8px">Sei sicuro?</div>
@@ -2098,6 +2164,12 @@ function openLink(event, url) {
   // Detect if mobile device
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+  if (isMobile && url.includes('psacard.com')) {
+    // PSA app - force Universal Link via location.href
+    window.location.href = url;
+    return false;
+  }
+
   if (isMobile && url.includes('alt.xyz')) {
     // ALT app - try Universal Link via location.replace (more reliable than window.open for iOS app handoff)
     window.location.href = url;
@@ -2150,6 +2222,13 @@ function buildAltUrl(card) {
   parts.push(card.grade);
   const query = parts.join(' ');
   return `https://alt.xyz/browse?query=${encodeURIComponent(query)}&soldListings=true&sortBy=newest_first`;
+}
+
+function buildPsaCertUrl(card) {
+  if (!card.psaCert) return '';
+  // Clean the cert number (only digits)
+  const cert = card.psaCert.replace(/[^0-9]/g, '');
+  return `https://www.psacard.com/cert/${cert}`;
 }
 
 function buildGoogleUrl(card) {
@@ -2283,7 +2362,7 @@ function renderStats() {
     <div class="stat-card full gold">
       ${chartData.legend}
       <div class="stat-label">💼 Capitale Investito</div>
-      <div class="stat-value">€${fmt(totalBuy)}</div>
+      <div class="stat-value gold">€${fmt(totalBuy)}</div>
       <div class="stat-sub">${cards.length} titoli · ${totalCards} carte · valore attuale €${fmt(totalCur)}</div>
       ${chartData.chart}
     </div>
@@ -2548,7 +2627,7 @@ function openDetail(id) {
     : '<div class="history-empty">Nessuno storico ancora — aggiungi il primo prezzo!</div>';
 
   document.getElementById('detail-modal-content').innerHTML = `
-    <div class="modal-handle"></div>
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
       <div class="modal-title">📊 Dettaglio</div>
       <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
@@ -2573,7 +2652,7 @@ function openDetail(id) {
       </div>
       <div class="detail-price-block highlight">
         <div class="detail-price-label">📊 ${isRaw ? 'Minimo CM' : 'Ultimo Venduto'}</div>
-        <div class="detail-price-value" style="color:${cur ? 'var(--accent)' : 'var(--muted)'}">${cur ? '€'+fmt(cur) : '—'}</div>
+        <div class="detail-price-value" style="color:${cur ? 'var(--gold)' : 'var(--muted)'}">${cur ? '€'+fmt(cur) : '—'}</div>
       </div>
     </div>
 
@@ -2603,6 +2682,13 @@ function openDetail(id) {
           <span class="detail-ebay-flag">🔍</span> ALT
         </a>
       </div>
+      ${c.grader === 'PSA' && c.psaCert ? `
+        <div class="detail-ebay-row" style="margin-top: 8px;">
+          <a href="${buildPsaCertUrl(c)}" target="_blank" rel="noopener" class="detail-ebay-btn psa" style="grid-column: span 2;" onclick="event.preventDefault(); openLink(event, '${buildPsaCertUrl(c)}')">
+            <span class="detail-ebay-flag">🔍</span> PSA Cert · ${c.psaCert}
+          </a>
+        </div>
+      ` : ''}
     `}
 
     <div class="quick-update">
@@ -2663,16 +2749,18 @@ function toggleGraderFields() {
   const grader = document.getElementById('f-grader').value;
   const isRaw = grader === 'RAW';
   const isOther = grader === 'ALTRO';
+  const isPSA = grader === 'PSA';
   document.getElementById('grade-group').style.display = isRaw ? 'none' : '';
   document.getElementById('condition-group').style.display = isRaw ? '' : 'none';
   document.getElementById('custom-grader-group').style.display = isOther ? '' : 'none';
-  document.getElementById('f-currentprice-label').textContent = isRaw ? '📊 Minimo CM (€)' : '📊 Ultimo Venduto eBay (€)';
+  document.getElementById('psa-cert-group').style.display = isPSA ? '' : 'none';
+  document.getElementById('f-currentprice-label').textContent = isRaw ? '📊 Minimo CM (€)' : '📊 Ultimo Venduto (€)';
 }
 
 function openAddModal() {
   editingId = null;
   document.getElementById('add-modal-title').textContent = '➕ Nuova Carta';
-  ['f-name','f-set','f-number','f-currentprice','f-notes','f-custom-grader'].forEach(id => document.getElementById(id).value = '');
+  ['f-name','f-set','f-number','f-currentprice','f-notes','f-custom-grader','f-psa-cert'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-buyprice').value = '';
   document.getElementById('f-qty').value = '1';
   document.getElementById('f-grader').value = 'PSA';
@@ -2694,6 +2782,7 @@ function editCard(id) {
   document.getElementById('f-number').value = c.number || '';
   document.getElementById('f-grader').value = c.grader;
   document.getElementById('f-custom-grader').value = c.customGrader || '';
+  document.getElementById('f-psa-cert').value = c.psaCert || '';
   document.getElementById('f-grade').value = c.grade || '10';
   document.getElementById('f-condition').value = c.condition || 'MT';
   document.getElementById('f-language').value = c.language || '';
@@ -2718,7 +2807,9 @@ function saveCard() {
   const grader = document.getElementById('f-grader').value;
   const isRaw = grader === 'RAW';
   const isOther = grader === 'ALTRO';
+  const isPSA = grader === 'PSA';
   const customGrader = isOther ? document.getElementById('f-custom-grader').value.trim() : '';
+  const psaCert = isPSA ? document.getElementById('f-psa-cert').value.trim() : '';
 
   if (isOther && !customGrader) {
     showToast('⚠️ Inserisci il nome della casa di grading');
@@ -2733,6 +2824,7 @@ function saveCard() {
       c.number = document.getElementById('f-number').value.trim();
       c.grader = grader;
       c.customGrader = customGrader;
+      c.psaCert = psaCert;
       c.grade = isRaw ? '' : document.getElementById('f-grade').value;
       c.condition = isRaw ? document.getElementById('f-condition').value : '';
       c.language = document.getElementById('f-language').value;
@@ -2758,6 +2850,7 @@ function saveCard() {
       number: document.getElementById('f-number').value.trim(),
       grader,
       customGrader,
+      psaCert,
       grade: isRaw ? '' : document.getElementById('f-grade').value,
       condition: isRaw ? document.getElementById('f-condition').value : '',
       language: document.getElementById('f-language').value,
@@ -2797,8 +2890,18 @@ function deleteCard(id) {
 }
 
 // ============ MODAL ============
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.classList.add('modal-open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  // Check if any other modals are still open
+  const anyOpen = document.querySelector('.modal-overlay.open');
+  if (!anyOpen) {
+    document.body.classList.remove('modal-open');
+  }
+}
 
 // Click outside to close
 // Close modal only if click STARTED on overlay (not just ended there after text selection drag)
@@ -3007,6 +3110,112 @@ function saveNickname() {
   closeModal('nickname-modal');
   showToast('✓ Nome salvato!');
 }
+
+// ============ DRAG-TO-DISMISS MODAL ============
+(function setupModalDrag() {
+  let dragState = null;
+
+  function getModalFromHandle(handle) {
+    return handle.closest('.modal');
+  }
+  function getOverlayFromModal(modal) {
+    return modal.closest('.modal-overlay');
+  }
+
+  function onStart(clientY, target) {
+    const handle = target.closest('.modal-handle-area');
+    if (!handle) return;
+    const modal = getModalFromHandle(handle);
+    if (!modal) return;
+    dragState = {
+      handle,
+      modal,
+      overlay: getOverlayFromModal(modal),
+      startY: clientY,
+      currentY: clientY,
+      delta: 0
+    };
+    modal.classList.add('dragging');
+  }
+
+  function onMove(clientY) {
+    if (!dragState) return;
+    dragState.currentY = clientY;
+    const delta = clientY - dragState.startY;
+    // Only allow downward drag
+    if (delta < 0) {
+      dragState.modal.style.transform = 'translateY(0)';
+      dragState.delta = 0;
+      return;
+    }
+    dragState.delta = delta;
+    dragState.modal.style.transform = `translateY(${delta}px)`;
+    if (dragState.overlay) {
+      const opacity = Math.max(0.4, 1 - (delta / 400));
+      dragState.overlay.style.background = `rgba(0,0,0,${opacity * 0.85})`;
+    }
+  }
+
+  function onEnd() {
+    if (!dragState) return;
+    const { modal, overlay, delta } = dragState;
+    modal.classList.remove('dragging');
+    if (delta > 120) {
+      // Dismiss the modal
+      modal.style.transform = `translateY(100vh)`;
+      setTimeout(() => {
+        if (overlay) {
+          overlay.classList.remove('open');
+          overlay.style.background = '';
+        }
+        modal.style.transform = '';
+        // Update body modal-open class
+        const anyOpen = document.querySelector('.modal-overlay.open');
+        if (!anyOpen) {
+          document.body.classList.remove('modal-open');
+        }
+      }, 200);
+    } else {
+      // Snap back
+      modal.style.transform = '';
+      if (overlay) overlay.style.background = '';
+    }
+    dragState = null;
+  }
+
+  document.addEventListener('touchstart', e => {
+    if (e.target.closest('.modal-handle-area')) {
+      onStart(e.touches[0].clientY, e.target);
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (dragState) {
+      onMove(e.touches[0].clientY);
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => {
+    if (dragState) onEnd();
+  });
+  document.addEventListener('touchcancel', () => {
+    if (dragState) onEnd();
+  });
+
+  // Mouse support for desktop testing
+  document.addEventListener('mousedown', e => {
+    if (e.target.closest('.modal-handle-area')) {
+      onStart(e.clientY, e.target);
+    }
+  });
+  document.addEventListener('mousemove', e => {
+    if (dragState) onMove(e.clientY);
+  });
+  document.addEventListener('mouseup', () => {
+    if (dragState) onEnd();
+  });
+})();
 
 // ============ INIT ============
 // Prevent horizontal scroll on touch (except for explicitly scrollable elements)
