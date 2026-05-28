@@ -637,19 +637,65 @@
     margin-bottom: 10px;
   }
 
+  .photo-thumb {
+    width: 56px;
+    height: 78px;
+    border-radius: 6px;
+    background: var(--surface2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--border2);
+    letter-spacing: -1px;
+  }
+
   .card-info { flex: 1; min-width: 0; cursor: pointer; padding: 2px 0; }
-  .price-row { cursor: pointer; }
+  .card-prices { cursor: pointer; }
   .last-update { cursor: pointer; }
 
+  .card-name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 7px;
+    flex-wrap: wrap;
+  }
+
   .card-name {
-    font-size: 0.95rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.3;
+    padding-bottom: 2px;
+  }
+
+  .card-num-inline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
     font-weight: 700;
-    line-height: 1.25;
-    margin-bottom: 4px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    color: var(--blue);
   }
 
   .card-meta {
@@ -903,36 +949,52 @@
     line-height: 1;
   }
 
-  /* CARD BODY - PRICES */
-  .price-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    margin-top: 4px;
+  /* CARD BODY - PRICES (inline V1) */
+  .card-prices {
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #1f1f1f;
   }
 
-  .price-block {
-    background: var(--surface2);
-    border-radius: 6px;
-    padding: 8px 10px;
+  .price-item {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
   }
 
-  .price-label {
-    font-size: 0.55rem;
+  .price-label-inline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 2px;
   }
 
-  .price-value {
+  .price-value-inline {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 700;
     line-height: 1.1;
   }
 
+  .price-value-inline.muted { color: #b8b3a8; }
+  .price-value-inline.gold { color: var(--gold); }
+
+  .pnl-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.92rem;
+    font-weight: 800;
+    margin-left: auto;
+  }
+  .pnl-pct.green { color: var(--green); }
+  .pnl-pct.red { color: var(--red); }
+  .pnl-pct.muted { color: var(--muted); }
+
+  /* Legacy price-row (detail view still uses some) */
   .price-value.green { color: var(--green); }
   .price-value.red { color: var(--red); }
   .price-value.muted { color: var(--muted); }
@@ -1131,6 +1193,55 @@
     flex-direction: column;
   }
 
+  .photo-upload-btn {
+    width: 100%;
+    height: 56px;
+    background: var(--surface2);
+    border: 1px dashed var(--border2);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .photo-upload-btn:active { transform: scale(0.98); }
+  .photo-upload-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  .photo-preview-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .photo-preview-img {
+    width: 100px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .photo-remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    border: 2px solid var(--bg);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
   .form-row .form-group {
     margin-bottom: 0;
   }
@@ -1292,11 +1403,54 @@
     flex-wrap: wrap;
   }
 
+  .storage-meter {
+    margin-bottom: 4px;
+  }
+  .storage-bar-track {
+    width: 100%;
+    height: 10px;
+    background: var(--surface2);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .storage-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    border-radius: 5px;
+    transition: width 0.4s ease, background 0.3s;
+    width: 0%;
+  }
+  .storage-bar-fill.warn { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+  .storage-bar-fill.danger { background: linear-gradient(90deg, #f87171, #dc2626); }
+  .storage-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .detail-photo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .detail-photo {
+    max-width: 200px;
+    width: 60%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+
   .detail-name {
     font-size: 1.2rem;
     font-weight: 800;
-    line-height: 1.2;
+    line-height: 1.35;
     margin-bottom: 10px;
+    padding-bottom: 2px;
   }
 
   .detail-set {
@@ -1747,8 +1901,8 @@
   <div class="filter-row" id="filter-row">
     <button class="filter-pill active" data-filter="all">Tutte <span class="filter-count" id="count-all">0</span></button>
     <button class="filter-pill" data-filter="PSA">PSA <span class="filter-count" id="count-psa">0</span></button>
-    <button class="filter-pill" data-filter="CGC">CGC <span class="filter-count" id="count-cgc">0</span></button>
     <button class="filter-pill" data-filter="BGS">BGS <span class="filter-count" id="count-bgs">0</span></button>
+    <button class="filter-pill" data-filter="CGC">CGC <span class="filter-count" id="count-cgc">0</span></button>
     <button class="filter-pill" data-filter="ALTRO">Altro <span class="filter-count" id="count-other">0</span></button>
     <button class="filter-pill" data-filter="RAW">RAW <span class="filter-count" id="count-raw">0</span></button>
   </div>
@@ -1880,6 +2034,17 @@
     </div>
 
     <div class="form-group">
+      <label class="form-label">📸 Foto carta <span style="color:var(--muted);font-weight:400">(opzionale)</span></label>
+      <input type="file" id="f-photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+      <div id="photo-preview-area">
+        <button type="button" class="photo-upload-btn" onclick="document.getElementById('f-photo-input').click()">
+          <span style="font-size:1.3rem">📷</span>
+          <span>Aggiungi foto</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">📝 Note</label>
       <input type="text" class="form-input" id="f-notes" placeholder="es. Comprata a Cardmarket...">
     </div>
@@ -1922,6 +2087,16 @@
     </div>
 
     <button class="btn btn-primary" onclick="saveSettings()">💾 Salva Impostazioni</button>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+    <div class="form-label" style="margin-bottom:10px">💾 Spazio utilizzato</div>
+    <div class="storage-meter">
+      <div class="storage-bar-track">
+        <div class="storage-bar-fill" id="storage-bar-fill"></div>
+      </div>
+      <div class="storage-info" id="storage-info">Calcolo...</div>
+    </div>
 
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
 
@@ -2202,6 +2377,7 @@ function openLink(event, url) {
 
 function buildEbayUrl(card, domain) {
   const parts = [card.name];
+  if (card.set) parts.push(card.set);
   if (card.number) parts.push(card.number);
   parts.push(card.grader);
   parts.push(card.grade);
@@ -2217,6 +2393,7 @@ function buildEbayUrl(card, domain) {
 
 function buildAltUrl(card) {
   const parts = [card.name];
+  if (card.set) parts.push(card.set);
   if (card.number) parts.push(card.number);
   parts.push(card.grader);
   parts.push(card.grade);
@@ -2233,8 +2410,9 @@ function buildPsaCertUrl(card) {
 
 function buildGoogleUrl(card) {
   const parts = [card.name];
+  if (card.set) parts.push(card.set);
   if (card.number) parts.push(card.number);
-  // RAW carte cercano anche su cardmarket; ALTRO solo nome+numero
+  // RAW carte cercano anche su cardmarket; ALTRO solo nome+set+numero
   if (card.grader === 'RAW') parts.push('cardmarket');
   const query = parts.join(' ');
   return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
@@ -2363,7 +2541,7 @@ function renderStats() {
       ${chartData.legend}
       <div class="stat-label">💼 Capitale Investito</div>
       <div class="stat-value gold">€${fmt(totalBuy)}</div>
-      <div class="stat-sub">${cards.length} titoli · ${totalCards} carte · valore attuale €${fmt(totalCur)}</div>
+      <div class="stat-sub">${totalCards} carte · valore attuale €${fmt(totalCur)}</div>
       ${chartData.chart}
     </div>
     <div class="stat-card ${isPos ? 'green' : 'red'}">
@@ -2375,24 +2553,22 @@ function renderStats() {
       ${toSell > 0 ? '<div class="alert-dot"></div>' : ''}
       <div class="stat-label">🚨 Da Vendere</div>
       <div class="stat-value" style="color:${toSell > 0 ? 'var(--red)' : 'var(--accent)'}">${toSell}</div>
-      <div class="stat-sub">carte sopra +30% · tocca per filtrare</div>
+      <div class="stat-sub">carte sopra +30%</div>
     </div>
     <div class="stat-card clickable green ${activeFilter === 'sell' ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
       <div class="stat-label">📈 In Profitto</div>
       <div class="stat-value green">${inProfit}</div>
-      <div class="stat-sub">tocca per filtrare</div>
     </div>
     <div class="stat-card clickable red ${activeFilter === 'loss' ? 'active' : ''}" data-stat-filter="loss" onclick="toggleStatFilter('loss')">
       <div class="stat-label">📉 In Perdita</div>
       <div class="stat-value red">${inLoss}</div>
-      <div class="stat-sub">tocca per filtrare</div>
     </div>
     ${toUpdate > 0 ? `
     <div class="stat-card clickable stale-alert full ${activeFilter === 'stale' ? 'active' : ''}" data-stat-filter="stale" onclick="toggleStatFilter('stale')">
       <div class="alert-dot amber"></div>
       <div class="stat-label">⏳ Da Aggiornare</div>
       <div class="stat-value" style="color:#fbbf24">${toUpdate}</div>
-      <div class="stat-sub">non aggiornate da ${settings.staleDays}+ giorni · tocca per filtrare</div>
+      <div class="stat-sub">non aggiornate da ${settings.staleDays}+ giorni</div>
     </div>
     ` : ''}
   `;
@@ -2549,37 +2725,42 @@ function renderCards() {
         </div>`;
     }
 
+    // Photo thumbnail or placeholder with initial
+    const initial = (c.name || '?').trim().charAt(0).toUpperCase();
+    const photoHtml = c.photo
+      ? `<img src="${c.photo}" alt="${c.name}" loading="lazy"/>`
+      : `<div class="photo-placeholder">${initial}</div>`;
+
     return `
       <div class="card">
         <div class="card-top">
+          <div class="photo-thumb" onclick="openDetail(${c.id})">
+            ${photoHtml}
+          </div>
           <div class="card-info" onclick="openDetail(${c.id})">
-            <div class="card-name">${c.name}</div>
+            <div class="card-name-row">
+              <span class="card-name">${c.name}</span>
+              ${c.number ? `<span class="card-num-inline">#${c.number}</span>` : ''}
+            </div>
             <div class="card-meta">
               <span class="grade-badge ${gradeClass(c.grader)}">${gradeDisplay}</span>
               ${c.set ? `<span class="set-badge">${c.set}</span>` : ''}
-              ${c.number ? `<span class="num-badge">#${c.number}</span>` : ''}
               ${c.language ? `<span class="lang-badge">${c.language}</span>` : ''}
               ${c.qty > 1 ? `<span class="qty-badge">×${c.qty}</span>` : ''}
-              <span class="pnl-mini ${pnlClass}">${pnlText}</span>
             </div>
           </div>
           ${buttonsHtml}
         </div>
-        <div class="price-row" onclick="openDetail(${c.id})">
-          <div class="price-block">
-            <div class="price-label">Acquisto</div>
-            <div class="price-value muted">€${fmt(c.buyPrice)}</div>
+        <div class="card-prices" onclick="openDetail(${c.id})">
+          <div class="price-item">
+            <span class="price-label-inline">Acq</span>
+            <span class="price-value-inline muted">€${fmt(c.buyPrice)}</span>
           </div>
-          <div class="price-block">
-            <div class="price-label">${isRaw ? 'Minimo CM' : isOther ? 'Prezzo Mkt' : 'Ultimo eBay'}</div>
-            <div class="price-value ${cur ? 'accent' : 'muted'}">${cur ? '€'+fmt(cur) : '—'}</div>
+          <div class="price-item">
+            <span class="price-label-inline">${isRaw ? 'CM' : 'Mkt'}</span>
+            <span class="price-value-inline gold">${cur ? '€'+fmt(cur) : '—'}</span>
           </div>
-          <div class="price-block">
-            <div class="price-label">P&L</div>
-            <div class="price-value ${pnl == null ? 'muted' : pnl >= 0 ? 'green' : 'red'}">
-              ${pnl == null ? '—' : (pnl >= 0 ? '+' : '') + '€' + fmt(pnl)}
-            </div>
-          </div>
+          <span class="pnl-pct ${pnlClass}">${pnlText}</span>
         </div>
         ${lastDate ? `
           <div class="last-update ${isStale ? 'stale-warning' : ''}" onclick="openDetail(${c.id})">
@@ -2633,6 +2814,11 @@ function openDetail(id) {
       <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
     </div>
 
+    ${c.photo ? `
+    <div class="detail-photo-wrap">
+      <img src="${c.photo}" class="detail-photo" alt="${c.name}"/>
+    </div>
+    ` : ''}
     <div class="detail-hero">
       <div class="detail-grade-row">
         <span class="grade-badge ${gradeClass(c.grader)}">${gradeDisplay}</span>
@@ -2757,6 +2943,59 @@ function toggleGraderFields() {
   document.getElementById('f-currentprice-label').textContent = isRaw ? '📊 Minimo CM (€)' : '📊 Ultimo Venduto (€)';
 }
 
+// ============ PHOTO HANDLING ============
+let currentPhoto = null; // base64 string of the photo being edited/added
+
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      // Compress: resize to max 400x560 keeping aspect ratio, quality 0.75
+      const maxW = 400, maxH = 560;
+      let w = img.width, h = img.height;
+      const ratio = Math.min(maxW / w, maxH / h, 1);
+      w = Math.round(w * ratio);
+      h = Math.round(h * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      currentPhoto = canvas.toDataURL('image/jpeg', 0.75);
+      renderPhotoPreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderPhotoPreview() {
+  const area = document.getElementById('photo-preview-area');
+  if (currentPhoto) {
+    area.innerHTML = `
+      <div class="photo-preview-wrap">
+        <img src="${currentPhoto}" class="photo-preview-img" alt="preview"/>
+        <button type="button" class="photo-remove-btn" onclick="removePhoto()">✕</button>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <button type="button" class="photo-upload-btn" onclick="document.getElementById('f-photo-input').click()">
+        <span style="font-size:1.3rem">📷</span>
+        <span>Aggiungi foto</span>
+      </button>`;
+  }
+}
+
+function removePhoto() {
+  currentPhoto = null;
+  document.getElementById('f-photo-input').value = '';
+  renderPhotoPreview();
+}
+
 function openAddModal() {
   editingId = null;
   document.getElementById('add-modal-title').textContent = '➕ Nuova Carta';
@@ -2768,6 +3007,8 @@ function openAddModal() {
   document.getElementById('f-condition').value = 'MT';
   document.getElementById('f-language').value = '';
   document.getElementById('f-buydate').value = new Date().toISOString().split('T')[0];
+  currentPhoto = null;
+  renderPhotoPreview();
   toggleGraderFields();
   openModal('add-modal');
 }
@@ -2791,6 +3032,8 @@ function editCard(id) {
   document.getElementById('f-currentprice').value = getCurrentPrice(c) || '';
   document.getElementById('f-buydate').value = c.buyDate || '';
   document.getElementById('f-notes').value = c.notes || '';
+  currentPhoto = c.photo || null;
+  renderPhotoPreview();
   toggleGraderFields();
   closeModal('detail-modal');
   setTimeout(() => openModal('add-modal'), 200);
@@ -2832,6 +3075,7 @@ function saveCard() {
       c.qty = parseInt(document.getElementById('f-qty').value) || 1;
       c.buyDate = document.getElementById('f-buydate').value;
       c.notes = document.getElementById('f-notes').value.trim();
+      c.photo = currentPhoto || null;
       if (!isNaN(currentPrice) && currentPrice > 0) {
         if (!c.history) c.history = [];
         const today = new Date().toISOString().split('T')[0];
@@ -2858,6 +3102,7 @@ function saveCard() {
       qty: parseInt(document.getElementById('f-qty').value) || 1,
       buyDate: document.getElementById('f-buydate').value,
       notes: document.getElementById('f-notes').value.trim(),
+      photo: currentPhoto || null,
       history: []
     };
     if (!isNaN(currentPrice) && currentPrice > 0) {
@@ -2942,12 +3187,41 @@ function clearSearch() {
 }
 
 // ============ SETTINGS ============
+function calcStorageUsage() {
+  // Calculate total localStorage usage in bytes
+  let total = 0;
+  for (let key in localStorage) {
+    if (localStorage.hasOwnProperty(key)) {
+      total += (localStorage[key].length + key.length) * 2; // UTF-16 = 2 bytes/char
+    }
+  }
+  // iOS Safari limit ~5MB
+  const limitBytes = 5 * 1024 * 1024;
+  const pct = Math.min(100, (total / limitBytes) * 100);
+  const usedKB = (total / 1024).toFixed(0);
+  const usedMB = (total / (1024 * 1024)).toFixed(2);
+
+  const fill = document.getElementById('storage-bar-fill');
+  const info = document.getElementById('storage-info');
+  if (!fill || !info) return;
+
+  fill.style.width = pct.toFixed(1) + '%';
+  fill.classList.remove('warn', 'danger');
+  if (pct >= 80) fill.classList.add('danger');
+  else if (pct >= 60) fill.classList.add('warn');
+
+  const photoCount = cards.filter(c => c.photo).length;
+  const display = total > 1024 * 1024 ? `${usedMB} MB` : `${usedKB} KB`;
+  info.textContent = `${display} / 5 MB · ${pct.toFixed(0)}% · ${photoCount} foto su ${cards.length} carte`;
+}
+
 function openSettingsModal() {
   const days = settings.staleDays || 7;
   document.getElementById('s-stale-days').value = days;
   document.querySelectorAll('.threshold-pill').forEach(p => {
     p.classList.toggle('active', parseInt(p.dataset.days) === days);
   });
+  calcStorageUsage();
   openModal('settings-modal');
 }
 
