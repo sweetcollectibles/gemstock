@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Gemstock">
+<meta name="apple-mobile-web-app-title" content="Sweethome">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a0a0a">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Gemstock — Portfolio</title>
+<title>Sweethome — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -277,13 +277,34 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                font-size 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                border-radius 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.15s,
+                transform 0.15s;
     font-size: 1.1rem;
   }
 
   .icon-btn:active { transform: scale(0.94); }
   .icon-btn:hover { border-color: var(--accent); }
   .icon-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  /* Shrunk state during scroll — for top bar icons */
+  body.is-scrolling .icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+  }
+
+  .welcome-text {
+    transition: font-size 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  body.is-scrolling .welcome-text {
+    font-size: 0.72rem;
+  }
 
   /* MAIN */
   .main {
@@ -323,14 +344,59 @@
     background: rgba(168,85,247,0.04);
   }
   .cards-tile-icon {
-    width: 46px; height: 46px;
-    border-radius: 11px;
-    background: rgba(168,85,247,0.12);
-    border: 1px solid rgba(168,85,247,0.25);
+    width: 56px; height: 56px;
+    border-radius: 13px;
+    flex-shrink: 0;
+    background-image: url('ghost-tile.png');
+    background-size: cover;
+    background-position: center;
+    border: 1px solid rgba(168,85,247,0.2);
+  }
+
+  /* Sealed tile icon (📦 placeholder gradient) */
+  .cards-tile-icon.icon-sealed {
+    background-image: none;
+    background: linear-gradient(135deg, rgba(212,168,71,0.18), rgba(212,168,71,0.04));
+    border: 1px solid rgba(212,168,71,0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.6rem;
+  }
+
+  /* Wishlist tile icon (♥ placeholder gradient) */
+  .cards-tile-icon.icon-wishlist {
+    background-image: none;
+    background: linear-gradient(135deg, rgba(244,114,182,0.18), rgba(244,114,182,0.04));
+    border: 1px solid rgba(244,114,182,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #f472b6;
+  }
+
+  /* Tile in "soon" state — placeholder, less prominent */
+  .cards-tile.soon {
+    opacity: 0.7;
+    cursor: pointer;
+  }
+  .cards-tile.soon:hover {
+    border-color: var(--border2);
+    background: var(--surface);
+    opacity: 0.85;
+  }
+
+  .cards-tile-soon-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
     flex-shrink: 0;
   }
   .cards-tile-info {
@@ -1249,6 +1315,16 @@
     opacity: 0.5;
   }
 
+  .empty-ghost {
+    width: 140px;
+    height: 140px;
+    border-radius: 28px;
+    margin: 0 auto 16px;
+    display: block;
+    object-fit: cover;
+    border: 1px solid rgba(168,85,247,0.15);
+  }
+
   .empty-title {
     font-size: 1.1rem;
     font-weight: 700;
@@ -1282,11 +1358,25 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s, opacity 0.2s;
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                font-size 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                border-radius 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.2s,
+                box-shadow 0.3s;
     font-weight: 300;
   }
 
   .fab:active { transform: scale(0.92); }
+
+  /* Shrunk state during scroll */
+  body.is-scrolling .fab {
+    width: 46px;
+    height: 46px;
+    font-size: 1.4rem;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(168,85,247,0.3);
+  }
 
   /* Hide FAB when any modal is open OR when not in list view */
   body.modal-open .fab,
@@ -1767,6 +1857,104 @@
   .signal-pill.rip { background: rgba(120,113,108,0.18); color: #d6d3d1; border: 1px solid rgba(120,113,108,0.4); }
   .signal-pill.wait { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); }
 
+  /* CROP PHOTO EDITOR */
+  .crop-hint {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text);
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  .crop-stage {
+    position: relative;
+    width: 280px;
+    height: 392px;
+    margin: 0 auto;
+    background: var(--bg);
+    border-radius: 12px;
+    overflow: hidden;
+    touch-action: none;
+  }
+  #crop-canvas {
+    display: block;
+    width: 280px;
+    height: 392px;
+    touch-action: none;
+  }
+  .crop-frame-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 12px;
+    /* Card-shape guide outline */
+    box-shadow:
+      inset 0 0 0 2px rgba(168,85,247,0.9),
+      inset 0 0 0 4px rgba(0,0,0,0.4),
+      0 0 0 1px rgba(168,85,247,0.3);
+  }
+  .crop-frame-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border: 1px dashed rgba(168,85,247,0.45);
+    border-radius: 8px;
+    pointer-events: none;
+  }
+  .crop-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .crop-zoom-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 1.4rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .crop-zoom-btn:active { transform: scale(0.92); }
+  .crop-zoom-btn:hover { border-color: var(--accent); }
+
+  /* PRICE HISTORY CHART (detail modal) */
+  .price-chart-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 12px 4px;
+    margin-bottom: 14px;
+  }
+  .price-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .price-chart-title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .price-chart-range {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+  .price-chart-svg {
+    width: 100%;
+    height: 120px;
+    display: block;
+  }
+
   /* HISTORY */
   .history-list {
     margin-top: 6px;
@@ -1776,6 +1964,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
     padding: 10px 12px;
     background: var(--surface2);
     border-radius: 6px;
@@ -1787,6 +1976,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.72rem;
     color: var(--muted);
+    flex: 1;
   }
 
   .history-entry-price {
@@ -1794,6 +1984,28 @@
     font-size: 0.9rem;
     font-weight: 700;
   }
+
+  .history-entry-del {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .history-entry-del:hover {
+    background: rgba(248,113,113,0.12);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .history-entry-del:active { transform: scale(0.9); }
 
   .history-empty {
     text-align: center;
@@ -2101,8 +2313,8 @@
     </div>
   </div>
 
-  <img class="hero-logo" src="logo-neon.png" alt="Gemstock"/>
-  <div class="hero-wordmark">GEM<span class="purple-s">S</span>TOCK</div>
+  <img class="hero-logo" src="logo-neon.png" alt="Sweethome"/>
+  <div class="hero-wordmark"><span class="purple-s">S</span>WEETHOME</div>
   <div class="hero-tagline">BY SWEETCOLLECTIBLES</div>
 </div>
 
@@ -2123,12 +2335,32 @@
 
     <!-- "LE TUE CARTE" TILE -->
     <div class="cards-tile" onclick="goToList()">
-      <div class="cards-tile-icon">🎴</div>
+      <div class="cards-tile-icon"></div>
       <div class="cards-tile-info">
         <div class="cards-tile-title">Le tue carte</div>
         <div class="cards-tile-sub" id="cards-tile-sub">— carte nel portfolio</div>
       </div>
       <div class="cards-tile-arrow">›</div>
+    </div>
+
+    <!-- "IL TUO SEALED" TILE (placeholder — non cliccabile) -->
+    <div class="cards-tile soon" onclick="showToast('🚧 In sviluppo')">
+      <div class="cards-tile-icon icon-sealed">📦</div>
+      <div class="cards-tile-info">
+        <div class="cards-tile-title">Il tuo Sealed</div>
+        <div class="cards-tile-sub">presto disponibile</div>
+      </div>
+      <div class="cards-tile-soon-badge">SOON</div>
+    </div>
+
+    <!-- "WISHLIST" TILE (placeholder — non cliccabile) -->
+    <div class="cards-tile soon" onclick="showToast('🚧 In sviluppo')">
+      <div class="cards-tile-icon icon-wishlist">♥</div>
+      <div class="cards-tile-info">
+        <div class="cards-tile-title">Wishlist</div>
+        <div class="cards-tile-sub">presto disponibile</div>
+      </div>
+      <div class="cards-tile-soon-badge">SOON</div>
     </div>
 
     <!-- SEARCH RESULTS (visible only while searching) -->
@@ -2487,6 +2719,37 @@
     </div>
 
     <button class="btn btn-primary" onclick="saveNickname()">💾 Salva</button>
+  </div>
+</div>
+
+<!-- CROP PHOTO MODAL -->
+<div class="modal-overlay" id="crop-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title">✂️ Posiziona la carta</div>
+      <button class="modal-close" onclick="cropCancel()">✕</button>
+    </div>
+
+    <div class="crop-hint">
+      Trascina per spostare · pizzica per zoomare<br>
+      <span style="color:var(--muted);font-size:0.7rem">Posiziona la carta dentro il riquadro</span>
+    </div>
+
+    <div class="crop-stage">
+      <canvas id="crop-canvas" width="280" height="392"></canvas>
+      <div class="crop-frame-overlay"></div>
+    </div>
+
+    <div class="crop-controls">
+      <button type="button" class="crop-zoom-btn" onclick="cropZoom(-1)">－</button>
+      <button type="button" class="crop-zoom-btn" onclick="cropZoom(1)">＋</button>
+    </div>
+
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn btn-secondary" onclick="cropCancel()">Annulla</button>
+      <button class="btn btn-primary" onclick="cropConfirm()">✓ Conferma</button>
+    </div>
   </div>
 </div>
 
@@ -2962,12 +3225,11 @@ function renderCards() {
   if (sectionText) sectionText.textContent = sectionLabels[activeFilter] || '📁 Portfolio';
   if (sectionClear) sectionClear.style.display = activeFilter === 'all' ? 'none' : '';
 
-  // Filter
+  // Filter — ricerca solo su nome e numero per essere stretta e precisa
   let filtered = cards.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(q) ||
-                         (c.set || '').toLowerCase().includes(q) ||
-                         (c.number || '').toLowerCase().includes(q) ||
-                         (c.notes || '').toLowerCase().includes(q);
+    const matchesSearch = !q ||
+                         c.name.toLowerCase().includes(q) ||
+                         (c.number || '').toLowerCase().includes(q);
     if (!matchesSearch) return false;
 
     if (activeFilter === 'all') return true;
@@ -2994,7 +3256,7 @@ function renderCards() {
   if (cards.length === 0) {
     list.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">🎴</div>
+        <img src="ghost-empty.png" alt="" class="empty-ghost"/>
         <div class="empty-title">Portfolio Vuoto</div>
         <div class="empty-sub">Tocca il pulsante <strong>+</strong> in basso a destra per aggiungere la tua prima carta gradata</div>
       </div>`;
@@ -3015,6 +3277,71 @@ function renderCards() {
 }
 
 // ============ DETAIL VIEW ============
+// ============ PRICE HISTORY CHART (detail modal) ============
+function buildPriceHistoryChart(card) {
+  const history = card.history || [];
+  // Need at least 2 points to draw a meaningful line
+  if (history.length < 2) {
+    return ''; // empty — no chart shown
+  }
+
+  const W = 320, H = 120;
+  const PAD_L = 8, PAD_R = 8, PAD_T = 14, PAD_B = 18;
+  const innerW = W - PAD_L - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+
+  // Sort by date ascending
+  const points = history.slice().sort((a, b) => a.date.localeCompare(b.date));
+  const prices = points.map(p => p.price);
+  const minP = Math.min(...prices);
+  const maxP = Math.max(...prices);
+  const range = maxP - minP || 1;
+
+  // Map points to SVG coords
+  const coords = points.map((p, i) => {
+    const x = PAD_L + (points.length === 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
+    const y = PAD_T + (1 - (p.price - minP) / range) * innerH;
+    return { x, y, price: p.price, date: p.date };
+  });
+
+  // Line path
+  const linePath = coords.map((c, i) => (i === 0 ? `M ${c.x} ${c.y}` : `L ${c.x} ${c.y}`)).join(' ');
+  // Area fill path (line + back to baseline)
+  const areaPath = linePath + ` L ${coords[coords.length-1].x} ${H - PAD_B} L ${coords[0].x} ${H - PAD_B} Z`;
+
+  // Determine color based on trend (last vs first)
+  const isUp = points[points.length-1].price >= points[0].price;
+  const lineColor = isUp ? '#4ade80' : '#f87171';
+  const fillStart = isUp ? 'rgba(74,222,128,0.22)' : 'rgba(248,113,113,0.22)';
+
+  // Min/max labels
+  const fmtP = (p) => '€' + Number(p).toLocaleString('it-IT', { maximumFractionDigits: 0 });
+
+  return `
+    <div class="price-chart-wrap">
+      <div class="price-chart-header">
+        <div class="price-chart-title">📈 Andamento prezzo</div>
+        <div class="price-chart-range">${points[0].date} → ${points[points.length-1].date}</div>
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" class="price-chart-svg" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="priceFill_${card.id}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="${lineColor}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#priceFill_${card.id})"/>
+        <path d="${linePath}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        ${coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3" fill="${lineColor}"/>`).join('')}
+        <!-- Max label -->
+        <text x="${W - PAD_R}" y="${PAD_T - 2}" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8478" text-anchor="end">max ${fmtP(maxP)}</text>
+        <!-- Min label -->
+        <text x="${PAD_L}" y="${H - 4}" font-family="JetBrains Mono, monospace" font-size="9" fill="#8a8478">min ${fmtP(minP)}</text>
+      </svg>
+    </div>
+  `;
+}
+
 function openDetail(id) {
   const c = cards.find(x => x.id === id);
   if (!c) return;
@@ -3039,12 +3366,15 @@ function openDetail(id) {
   }
 
   const historyHTML = (c.history && c.history.length > 0)
-    ? c.history.slice().reverse().map(h => `
+    ? c.history.slice().reverse().map((h, idxRev) => {
+        const realIdx = c.history.length - 1 - idxRev;
+        return `
         <div class="history-entry">
           <div class="history-entry-date">${h.date}</div>
           <div class="history-entry-price">€${fmt(h.price)}</div>
+          <button class="history-entry-del" onclick="removeHistoryEntry(${c.id}, ${realIdx})" title="Rimuovi voce">✕</button>
         </div>
-      `).join('')
+      `;}).join('')
     : '<div class="history-empty">Nessuno storico ancora — aggiungi il primo prezzo!</div>';
 
   document.getElementById('detail-modal-content').innerHTML = `
@@ -3131,6 +3461,8 @@ function openDetail(id) {
       </div>
     ` : ''}
 
+    ${buildPriceHistoryChart(c)}
+
     <div class="section-title-text" style="margin-bottom:8px">📅 Storico Aggiornamenti</div>
     <div class="history-list">${historyHTML}</div>
 
@@ -3145,6 +3477,22 @@ function openDetail(id) {
 }
 
 // ============ QUICK UPDATE ============
+function removeHistoryEntry(cardId, index) {
+  const card = cards.find(c => c.id === cardId);
+  if (!card || !card.history || !card.history[index]) return;
+  if (!confirm(`Rimuovere questa voce dallo storico? (€${fmt(card.history[index].price)} del ${card.history[index].date})`)) return;
+  card.history.splice(index, 1);
+  card.updatedAt = new Date().toISOString();
+  save();
+  showToast('🗑 Voce rimossa');
+  renderStats();
+  renderCards();
+  if (currentView === 'home' && document.getElementById('search-input').value.trim()) {
+    onSearchInput();
+  }
+  openDetail(cardId); // refresh detail view
+}
+
 function quickUpdate(id) {
   const card = cards.find(c => c.id === id);
   if (!card) return;
@@ -3166,6 +3514,10 @@ function quickUpdate(id) {
   showToast('✓ Prezzo aggiornato');
   renderStats();
   renderCards();
+  // Also refresh search results if active in home view
+  if (currentView === 'home' && document.getElementById('search-input').value.trim()) {
+    onSearchInput();
+  }
   // Refresh modal in-place instead of closing it
   openDetail(id);
 }
@@ -3183,8 +3535,9 @@ function toggleGraderFields() {
   document.getElementById('f-currentprice-label').textContent = isRaw ? '📊 Minimo CM (€)' : '📊 Ultimo Venduto (€)';
 }
 
-// ============ PHOTO HANDLING ============
-let currentPhoto = null; // base64 string of the photo being edited/added
+// ============ PHOTO HANDLING (with crop editor) ============
+let currentPhoto = null; // base64 string of the photo (final cropped)
+let cropState = null; // { img, scale, offsetX, offsetY, ... }
 
 function handlePhotoUpload(event) {
   const file = event.target.files[0];
@@ -3194,23 +3547,188 @@ function handlePhotoUpload(event) {
   reader.onload = function(e) {
     const img = new Image();
     img.onload = function() {
-      // Compress: resize to max 400x560 keeping aspect ratio, quality 0.75
-      const maxW = 400, maxH = 560;
-      let w = img.width, h = img.height;
-      const ratio = Math.min(maxW / w, maxH / h, 1);
-      w = Math.round(w * ratio);
-      h = Math.round(h * ratio);
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-      currentPhoto = canvas.toDataURL('image/jpeg', 0.75);
-      renderPhotoPreview();
+      openCropEditor(img);
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+function openCropEditor(img) {
+  // Crop area = 5:7 ratio (carta) — final output 400x560
+  // Editor stage size: fits in modal
+  const STAGE_W = 280, STAGE_H = 392; // 5:7 ratio
+
+  // Initial scale: cover (so image fills crop area at min)
+  const scaleCover = Math.max(STAGE_W / img.naturalWidth, STAGE_H / img.naturalHeight);
+  cropState = {
+    img,
+    scale: scaleCover,
+    minScale: scaleCover,
+    maxScale: scaleCover * 4,
+    offsetX: 0, // center
+    offsetY: 0,
+    stageW: STAGE_W,
+    stageH: STAGE_H,
+    naturalW: img.naturalWidth,
+    naturalH: img.naturalHeight
+  };
+
+  const modal = document.getElementById('crop-modal');
+  if (modal) modal.classList.add('open');
+  document.body.classList.add('modal-open');
+  renderCropEditor();
+}
+
+function renderCropEditor() {
+  if (!cropState) return;
+  const canvas = document.getElementById('crop-canvas');
+  if (!canvas) return;
+
+  const { img, scale, offsetX, offsetY, stageW, stageH } = cropState;
+  canvas.width = stageW;
+  canvas.height = stageH;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, stageW, stageH);
+
+  // Draw image with scale + center offset
+  const drawW = img.naturalWidth * scale;
+  const drawH = img.naturalHeight * scale;
+  const drawX = (stageW - drawW) / 2 + offsetX;
+  const drawY = (stageH - drawH) / 2 + offsetY;
+  ctx.drawImage(img, drawX, drawY, drawW, drawH);
+}
+
+// Pan and zoom handlers
+(function setupCropInteraction() {
+  let isPanning = false;
+  let lastX = 0, lastY = 0;
+  let pinchStartDist = 0;
+  let pinchStartScale = 1;
+
+  function getCanvas() { return document.getElementById('crop-canvas'); }
+
+  document.addEventListener('touchstart', e => {
+    if (!cropState) return;
+    const canvas = getCanvas();
+    if (!canvas) return;
+    if (e.target !== canvas) return;
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      isPanning = true;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      isPanning = false;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchStartDist = Math.sqrt(dx*dx + dy*dy);
+      pinchStartScale = cropState.scale;
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchmove', e => {
+    if (!cropState) return;
+    const canvas = getCanvas();
+    if (!canvas) return;
+    if (e.target !== canvas) return;
+    e.preventDefault();
+    if (isPanning && e.touches.length === 1) {
+      const dx = e.touches[0].clientX - lastX;
+      const dy = e.touches[0].clientY - lastY;
+      cropState.offsetX += dx;
+      cropState.offsetY += dy;
+      clampCropOffsets();
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+      renderCropEditor();
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      let newScale = pinchStartScale * (dist / pinchStartDist);
+      newScale = Math.max(cropState.minScale, Math.min(cropState.maxScale, newScale));
+      cropState.scale = newScale;
+      clampCropOffsets();
+      renderCropEditor();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => {
+    isPanning = false;
+  });
+
+  // Mouse fallback for desktop testing
+  let mouseDown = false;
+  document.addEventListener('mousedown', e => {
+    if (!cropState) return;
+    const canvas = getCanvas();
+    if (!canvas || e.target !== canvas) return;
+    mouseDown = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  document.addEventListener('mousemove', e => {
+    if (!mouseDown || !cropState) return;
+    cropState.offsetX += e.clientX - lastX;
+    cropState.offsetY += e.clientY - lastY;
+    clampCropOffsets();
+    lastX = e.clientX;
+    lastY = e.clientY;
+    renderCropEditor();
+  });
+  document.addEventListener('mouseup', () => { mouseDown = false; });
+})();
+
+function clampCropOffsets() {
+  if (!cropState) return;
+  const drawW = cropState.naturalW * cropState.scale;
+  const drawH = cropState.naturalH * cropState.scale;
+  const maxOffsetX = Math.max(0, (drawW - cropState.stageW) / 2);
+  const maxOffsetY = Math.max(0, (drawH - cropState.stageH) / 2);
+  cropState.offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, cropState.offsetX));
+  cropState.offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, cropState.offsetY));
+}
+
+function cropZoom(delta) {
+  if (!cropState) return;
+  const factor = delta > 0 ? 1.2 : 0.85;
+  cropState.scale = Math.max(cropState.minScale, Math.min(cropState.maxScale, cropState.scale * factor));
+  clampCropOffsets();
+  renderCropEditor();
+}
+
+function cropConfirm() {
+  if (!cropState) return;
+  // Render final output at 400x560 (5:7 ratio)
+  const OUT_W = 400, OUT_H = 560;
+  const ratio = OUT_W / cropState.stageW; // also = OUT_H / cropState.stageH
+
+  const out = document.createElement('canvas');
+  out.width = OUT_W;
+  out.height = OUT_H;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, OUT_W, OUT_H);
+
+  const { img, scale, offsetX, offsetY, stageW, stageH } = cropState;
+  const drawW = img.naturalWidth * scale * ratio;
+  const drawH = img.naturalHeight * scale * ratio;
+  const drawX = (OUT_W - drawW) / 2 + offsetX * ratio;
+  const drawY = (OUT_H - drawH) / 2 + offsetY * ratio;
+  ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+  currentPhoto = out.toDataURL('image/jpeg', 0.75);
+  cropState = null;
+  closeModal('crop-modal');
+  renderPhotoPreview();
+}
+
+function cropCancel() {
+  cropState = null;
+  document.getElementById('f-photo-input').value = '';
+  closeModal('crop-modal');
 }
 
 function renderPhotoPreview() {
@@ -3366,6 +3884,10 @@ function saveCard() {
   editingId = null;
   renderStats();
   renderCards();
+  // Also refresh search results if active
+  if (currentView === 'home' && document.getElementById('search-input').value.trim()) {
+    onSearchInput();
+  }
 }
 
 function deleteCard(id) {
@@ -3378,19 +3900,37 @@ function deleteCard(id) {
   showToast('🗑 Carta eliminata');
   renderStats();
   renderCards();
+  if (currentView === 'home' && document.getElementById('search-input').value.trim()) {
+    onSearchInput();
+  }
 }
 
 // ============ MODAL ============
+let savedScrollTop = 0;
+
 function openModal(id) {
+  // Save current scroll position so it doesn't jump when modal opens
+  const wrapper = document.querySelector('.scroll-wrapper');
+  if (wrapper && !document.body.classList.contains('modal-open')) {
+    savedScrollTop = wrapper.scrollTop;
+  }
   document.getElementById(id).classList.add('open');
   document.body.classList.add('modal-open');
 }
+
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
   // Check if any other modals are still open
   const anyOpen = document.querySelector('.modal-overlay.open');
   if (!anyOpen) {
     document.body.classList.remove('modal-open');
+    // Restore scroll position
+    const wrapper = document.querySelector('.scroll-wrapper');
+    if (wrapper && savedScrollTop > 0) {
+      wrapper.scrollTop = savedScrollTop;
+    }
+    // Re-apply FAB visibility based on current view
+    if (typeof updateFabVisibility === 'function') updateFabVisibility();
   }
 }
 
@@ -3444,8 +3984,7 @@ function goToList() {
   if (wrapper) wrapper.scrollTop = 0;
   // Apply current filters/render
   renderCards();
-  // Update FAB visibility (only visible in list view)
-  document.body.classList.remove('hide-fab');
+  updateFabVisibility();
 }
 
 function goToHome() {
@@ -3457,8 +3996,16 @@ function goToHome() {
   // Clear search when going back
   document.getElementById('search-input').value = '';
   onSearchInput();
-  // Hide FAB on home
-  document.body.classList.add('hide-fab');
+  updateFabVisibility();
+}
+
+// Safety helper — call this anytime view changes or modals open/close
+function updateFabVisibility() {
+  if (currentView === 'list') {
+    document.body.classList.remove('hide-fab');
+  } else {
+    document.body.classList.add('hide-fab');
+  }
 }
 
 function onSearchInput() {
@@ -3475,12 +4022,10 @@ function onSearchInput() {
     return;
   }
 
-  // Filter cards by query (name, set, number, notes)
+  // Filter cards by query (name + number only — ricerca stretta)
   const matches = cards.filter(c =>
     c.name.toLowerCase().includes(q) ||
-    (c.set || '').toLowerCase().includes(q) ||
-    (c.number || '').toLowerCase().includes(q) ||
-    (c.notes || '').toLowerCase().includes(q)
+    (c.number || '').toLowerCase().includes(q)
   );
 
   if (currentView === 'home') {
@@ -3624,7 +4169,7 @@ function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `gemstock-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `sweethome-backup-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -3853,6 +4398,47 @@ function saveNickname() {
   });
 })();
 
+// ============ SIDE SWIPE: Lista → Home ============
+(function setupSideSwipe() {
+  let startX = 0, startY = 0;
+  let tracking = false;
+
+  document.addEventListener('touchstart', e => {
+    if (currentView !== 'list') return;
+    // Only trigger if swipe starts from the left edge (first 30px)
+    const x = e.touches[0].clientX;
+    if (x > 30) return;
+    // Don't trigger if a modal is open
+    if (document.body.classList.contains('modal-open')) return;
+    startX = x;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!tracking) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    // If user is swiping more vertical than horizontal → abort
+    if (dy > Math.abs(dx) && dy > 20) {
+      tracking = false;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!tracking) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const dx = endX - startX;
+    const dy = Math.abs(endY - startY);
+    // Trigger back navigation: swipe rightward >70px, horizontal dominant
+    if (dx > 70 && Math.abs(dx) > dy) {
+      goToHome();
+    }
+    tracking = false;
+  }, { passive: true });
+})();
+
 // ============ INIT ============
 // Prevent horizontal scroll on touch (except for explicitly scrollable elements)
 let touchStartX = 0;
@@ -3886,6 +4472,32 @@ renderStats();
 renderCards();
 // Start in home view → hide FAB
 document.body.classList.add('hide-fab');
+
+// ============ SHRINK-ON-SCROLL (FAB + topbar) ============
+(function setupShrinkOnScroll() {
+  const wrapper = document.querySelector('.scroll-wrapper');
+  if (!wrapper) return;
+  let scrollTimeout = null;
+  let lastScrollTop = 0;
+  const THRESHOLD = 30; // px scroll before shrinking
+
+  wrapper.addEventListener('scroll', () => {
+    const st = wrapper.scrollTop;
+    // Only shrink if scrolled past threshold
+    if (st > THRESHOLD) {
+      document.body.classList.add('is-scrolling');
+    } else {
+      document.body.classList.remove('is-scrolling');
+    }
+    lastScrollTop = st;
+
+    // After 200ms of no scrolling → restore (un-shrink)
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      document.body.classList.remove('is-scrolling');
+    }, 200);
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>

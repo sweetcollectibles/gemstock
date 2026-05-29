@@ -1,6 +1,6 @@
 {
-  "name": "Gemstock — By SweetCollectibles",
-  "short_name": "Gemstock",
+  "name": "Sweethome — By SweetCollectibles",
+  "short_name": "Sweethome",
   "description": "Portfolio tracker per carte Pokémon gradate e raw",
   "start_url": "./index.html",
   "display": "standalone",
