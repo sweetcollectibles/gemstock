@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Gemstock — Portfolio</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0a0a;
@@ -55,7 +55,7 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     -webkit-user-select: none;
     user-select: none;
     position: fixed;
@@ -118,7 +118,7 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     min-height: 100vh;
     padding-bottom: env(safe-area-inset-bottom);
     scroll-behavior: smooth;
@@ -292,6 +292,114 @@
     padding: 8px 14px calc(env(safe-area-inset-bottom) + 90px);
     position: relative;
     z-index: 1;
+  }
+
+  /* PAGE VIEWS — Home / List routing */
+  .page-view {
+    animation: viewFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes viewFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* "Le tue carte" tile */
+  .cards-tile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 16px;
+    margin-top: 14px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .cards-tile:active { transform: scale(0.985); }
+  .cards-tile:hover {
+    border-color: var(--accent);
+    background: rgba(168,85,247,0.04);
+  }
+  .cards-tile-icon {
+    width: 46px; height: 46px;
+    border-radius: 11px;
+    background: rgba(168,85,247,0.12);
+    border: 1px solid rgba(168,85,247,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+  .cards-tile-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .cards-tile-title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.2px;
+    margin-bottom: 2px;
+  }
+  .cards-tile-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2px;
+  }
+  .cards-tile-arrow {
+    font-size: 1.6rem;
+    color: var(--muted);
+    font-weight: 300;
+    flex-shrink: 0;
+  }
+
+  /* LIST VIEW HEADER */
+  .list-header-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 16px;
+    margin-bottom: 4px;
+  }
+  .back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .back-btn:active { transform: scale(0.9); }
+  .back-btn:hover { border-color: var(--accent); }
+
+  .list-title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    flex: 1;
+    letter-spacing: -0.3px;
+  }
+  .list-count-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 5px 11px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-weight: 600;
   }
 
   /* STATS */
@@ -508,7 +616,7 @@
     border-radius: 10px;
     padding: 12px 40px 12px 38px;
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 0.92rem;
     outline: none;
     transition: border-color 0.15s;
@@ -565,7 +673,7 @@
     color: var(--muted);
     padding: 10px 16px;
     border-radius: 22px;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 0.82rem;
     font-weight: 700;
     letter-spacing: 0.5px;
@@ -613,7 +721,119 @@
     font-weight: 600;
   }
 
-  /* CARD */
+  /* ====== NEW LIST CARD (slim iOS-style) ====== */
+  .list-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.15s;
+    will-change: transform;
+  }
+  .list-card:active { transform: scale(0.985); }
+  .list-card:hover { border-color: var(--border2); }
+
+  .list-photo {
+    width: 64px;
+    height: 90px;
+    border-radius: 8px;
+    background: var(--surface2);
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .list-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .list-photo-ph {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: var(--border2);
+    letter-spacing: -1px;
+  }
+
+  .list-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .list-name {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.1px;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    padding-bottom: 1px;
+  }
+
+  .list-name-meta {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+
+  .list-prices {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: nowrap;
+  }
+  .price-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .price-item.price-pnl-item {
+    margin-left: auto;
+    align-items: flex-end;
+  }
+  .price-item-label {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 0.6rem;
+    color: var(--muted2);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: none;
+  }
+  .price-item-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .price-item-value.acq { color: #b8b3a8; }
+  .price-item-value.mkt { color: var(--gold); font-weight: 700; }
+  .price-item-value.muted { color: var(--muted); }
+  .price-item-value.pnl-pos { color: var(--green); font-weight: 700; }
+  .price-item-value.pnl-neg { color: var(--red); font-weight: 700; }
+  /* ============================================ */
+
+  /* CARD (legacy, kept for compatibility with detail-related elements) */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -733,7 +953,7 @@
   }
 
   .set-badge {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 0.7rem;
     color: #b8b3a8;
     background: rgba(245,242,235,0.05);
@@ -904,7 +1124,7 @@
     padding: 14px;
     border-radius: 10px;
     text-decoration: none;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 1px;
@@ -1068,8 +1288,9 @@
 
   .fab:active { transform: scale(0.92); }
 
-  /* Hide FAB when any modal is open */
-  body.modal-open .fab {
+  /* Hide FAB when any modal is open OR when not in list view */
+  body.modal-open .fab,
+  body.hide-fab .fab {
     opacity: 0;
     pointer-events: none;
     transform: scale(0.8);
@@ -1200,7 +1421,7 @@
     border: 1px dashed var(--border2);
     border-radius: 10px;
     color: var(--muted);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 0.9rem;
     font-weight: 600;
     display: flex;
@@ -1283,7 +1504,7 @@
     border-radius: 10px;
     padding: 0 14px;
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 0.95rem;
     font-weight: 500;
     outline: none;
@@ -1340,7 +1561,7 @@
     padding: 14px;
     border-radius: 10px;
     border: none;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 0.92rem;
     font-weight: 800;
     letter-spacing: 1.5px;
@@ -1630,7 +1851,7 @@
     text-decoration: none;
     color: var(--text);
     transition: all 0.15s;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
   }
 
   .link-tile:active { transform: scale(0.97); }
@@ -1887,34 +2108,68 @@
 
 <div class="main">
 
-  <!-- STATS -->
-  <div class="stats-grid" id="stats-grid"></div>
+  <!-- ============ HOME VIEW ============ -->
+  <div id="home-view" class="page-view">
 
-  <!-- SEARCH -->
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="text" class="search-bar" id="search-input" placeholder="Cerca carta nel portfolio..." oninput="renderCards()">
-    <button class="clear-search" id="clear-search" onclick="clearSearch()">✕</button>
+    <!-- STATS -->
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- SEARCH -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-bar" id="search-input" placeholder="Cerca carta nel portfolio..." oninput="onSearchInput()">
+      <button class="clear-search" id="clear-search" onclick="clearSearch()">✕</button>
+    </div>
+
+    <!-- "LE TUE CARTE" TILE -->
+    <div class="cards-tile" onclick="goToList()">
+      <div class="cards-tile-icon">🎴</div>
+      <div class="cards-tile-info">
+        <div class="cards-tile-title">Le tue carte</div>
+        <div class="cards-tile-sub" id="cards-tile-sub">— carte nel portfolio</div>
+      </div>
+      <div class="cards-tile-arrow">›</div>
+    </div>
+
+    <!-- SEARCH RESULTS (visible only while searching) -->
+    <div id="search-results" style="display:none">
+      <div class="section-title">
+        <div class="section-title-text">🔍 Risultati ricerca</div>
+      </div>
+      <div id="search-results-list"></div>
+    </div>
+
   </div>
 
-  <!-- FILTERS -->
-  <div class="filter-row" id="filter-row">
-    <button class="filter-pill active" data-filter="all">Tutte <span class="filter-count" id="count-all">0</span></button>
-    <button class="filter-pill" data-filter="PSA">PSA <span class="filter-count" id="count-psa">0</span></button>
-    <button class="filter-pill" data-filter="BGS">BGS <span class="filter-count" id="count-bgs">0</span></button>
-    <button class="filter-pill" data-filter="CGC">CGC <span class="filter-count" id="count-cgc">0</span></button>
-    <button class="filter-pill" data-filter="ALTRO">Altro <span class="filter-count" id="count-other">0</span></button>
-    <button class="filter-pill" data-filter="RAW">RAW <span class="filter-count" id="count-raw">0</span></button>
-  </div>
+  <!-- ============ LIST VIEW ============ -->
+  <div id="list-view" class="page-view" style="display:none">
 
-  <!-- SECTION TITLE -->
-  <div class="section-title">
-    <div class="section-title-text" id="section-text">📁 Portfolio</div>
-    <div class="section-action" id="section-clear" style="display:none" onclick="clearAllFilters()">✕ Rimuovi filtro</div>
-  </div>
+    <div class="list-header-bar">
+      <button class="back-btn" onclick="goToHome()">←</button>
+      <div class="list-title">Le tue carte</div>
+      <div class="list-count-badge" id="list-count-badge">0</div>
+    </div>
 
-  <!-- CARDS -->
-  <div id="cards-list"></div>
+    <!-- FILTERS -->
+    <div class="filter-row" id="filter-row">
+      <button class="filter-pill active" data-filter="all">Tutte <span class="filter-count" id="count-all">0</span></button>
+      <button class="filter-pill" data-filter="PSA">PSA <span class="filter-count" id="count-psa">0</span></button>
+      <button class="filter-pill" data-filter="BGS">BGS <span class="filter-count" id="count-bgs">0</span></button>
+      <button class="filter-pill" data-filter="CGC">CGC <span class="filter-count" id="count-cgc">0</span></button>
+      <button class="filter-pill" data-filter="ALTRO">Altro <span class="filter-count" id="count-other">0</span></button>
+      <button class="filter-pill" data-filter="RAW">RAW <span class="filter-count" id="count-raw">0</span></button>
+    </div>
+
+    <!-- SECTION TITLE (stat filter) -->
+    <div class="section-title">
+      <div class="section-title-text" id="section-text">📁 Portfolio</div>
+      <div class="section-action" id="section-clear" style="display:none" onclick="clearAllFilters()">✕ Rimuovi filtro</div>
+    </div>
+
+    <!-- CARDS -->
+    <div id="cards-list"></div>
+
+  </div>
 
 </div><!-- end .main -->
 
@@ -2264,9 +2519,63 @@
 </div>
 
 <script>
+// ============ DATA STORE ============
+// Astrazione del save/load — oggi usa localStorage, in futuro userà Supabase.
+// Tutta l'app chiama dataStore.* invece di accedere a localStorage direttamente.
+const dataStore = {
+  // === Cards ===
+  loadCards() {
+    try {
+      const raw = localStorage.getItem('tcg_cards_v2');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      console.error('Error loading cards:', e);
+      return [];
+    }
+  },
+  saveCards(arr) {
+    try {
+      localStorage.setItem('tcg_cards_v2', JSON.stringify(arr));
+      return true;
+    } catch (e) {
+      console.error('Error saving cards (storage full?):', e);
+      return false;
+    }
+  },
+  // === Settings ===
+  loadSettings() {
+    try {
+      const raw = localStorage.getItem('tcg_settings');
+      return raw ? JSON.parse(raw) : { marketplace: 'ebay.it', staleDays: 7 };
+    } catch (e) {
+      return { marketplace: 'ebay.it', staleDays: 7 };
+    }
+  },
+  saveSettings(s) {
+    try {
+      localStorage.setItem('tcg_settings', JSON.stringify(s));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+  // === Nickname ===
+  loadNickname() {
+    return localStorage.getItem('tcg_nickname') || '';
+  },
+  saveNickname(name) {
+    if (name) localStorage.setItem('tcg_nickname', name);
+    else localStorage.removeItem('tcg_nickname');
+  },
+  // === Future Supabase hooks (placeholders) ===
+  // currentUserId() { return null; }  // diventerà supabase.auth.user().id
+  // syncCards()      { /* TBD */ }
+  // uploadPhoto(file){ /* TBD */ }
+};
+
 // ============ STATE ============
-let cards = JSON.parse(localStorage.getItem('tcg_cards_v2') || '[]');
-let settings = JSON.parse(localStorage.getItem('tcg_settings') || '{"marketplace":"ebay.it","staleDays":7}');
+let cards = dataStore.loadCards();
+let settings = dataStore.loadSettings();
 let activeFilter = 'all';
 let editingId = null;
 
@@ -2276,11 +2585,11 @@ function fmt(n) {
 }
 
 function save() {
-  localStorage.setItem('tcg_cards_v2', JSON.stringify(cards));
+  dataStore.saveCards(cards);
 }
 
 function saveSettingsToStorage() {
-  localStorage.setItem('tcg_settings', JSON.stringify(settings));
+  dataStore.saveSettings(settings);
 }
 
 function daysSince(dateStr) {
@@ -2590,7 +2899,12 @@ function toggleStatFilter(filter) {
     document.querySelector('.filter-pill[data-filter="all"]').classList.add('active');
   }
   renderStats();
-  renderCards();
+  // Navigate to list view to show filtered cards
+  if (activeFilter !== 'all') {
+    goToList();
+  } else {
+    renderCards();
+  }
 }
 
 function clearAllFilters() {
@@ -2602,17 +2916,33 @@ function clearAllFilters() {
 }
 
 function renderCards() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  const clearBtn = document.getElementById('clear-search');
-  clearBtn.classList.toggle('show', q.length > 0);
-
-  // Count by grader
+  // Count by grader (always update — visible from any view)
   document.getElementById('count-all').textContent = cards.length;
   document.getElementById('count-psa').textContent = cards.filter(c => c.grader === 'PSA').length;
   document.getElementById('count-cgc').textContent = cards.filter(c => c.grader === 'CGC').length;
   document.getElementById('count-bgs').textContent = cards.filter(c => c.grader === 'BGS').length;
   document.getElementById('count-other').textContent = cards.filter(c => c.grader === 'ALTRO').length;
   document.getElementById('count-raw').textContent = cards.filter(c => c.grader === 'RAW').length;
+
+  // Update home tile counter (with empty state)
+  const tileSub = document.getElementById('cards-tile-sub');
+  if (tileSub) {
+    if (cards.length === 0) {
+      tileSub.textContent = 'Nessuna carta · tocca per iniziare';
+    } else {
+      const totalQty = cards.reduce((s,c) => s + (c.qty || 1), 0);
+      tileSub.textContent = `${cards.length} ${cards.length === 1 ? 'titolo' : 'titoli'} · ${totalQty} ${totalQty === 1 ? 'carta' : 'carte'}`;
+    }
+  }
+
+  // Update list badge count
+  const listBadge = document.getElementById('list-count-badge');
+  if (listBadge) listBadge.textContent = cards.length;
+
+  // Don't render list if not in list view
+  if (currentView !== 'list') return;
+
+  const q = document.getElementById('search-input').value.toLowerCase();
 
   // Update section title
   const sectionLabels = {
@@ -2627,13 +2957,16 @@ function renderCards() {
     'stale': '⏳ Da Aggiornare',
     'topsell': '🚨 Da Vendere'
   };
-  document.getElementById('section-text').textContent = sectionLabels[activeFilter] || '📁 Portfolio';
-  document.getElementById('section-clear').style.display = activeFilter === 'all' ? 'none' : '';
+  const sectionText = document.getElementById('section-text');
+  const sectionClear = document.getElementById('section-clear');
+  if (sectionText) sectionText.textContent = sectionLabels[activeFilter] || '📁 Portfolio';
+  if (sectionClear) sectionClear.style.display = activeFilter === 'all' ? 'none' : '';
 
   // Filter
   let filtered = cards.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(q) ||
                          (c.set || '').toLowerCase().includes(q) ||
+                         (c.number || '').toLowerCase().includes(q) ||
                          (c.notes || '').toLowerCase().includes(q);
     if (!matchesSearch) return false;
 
@@ -2678,100 +3011,7 @@ function renderCards() {
     return;
   }
 
-  list.innerHTML = filtered.map(c => {
-    const cur = getCurrentPrice(c);
-    const pnl = getPnL(c);
-    const pct = getPnLPct(c);
-    const lastDate = getLastUpdateDate(c);
-    const days = daysSince(lastDate);
-    const isStale = days != null && days >= settings.staleDays;
-    const isRaw = c.grader === 'RAW';
-    const isOther = c.grader === 'ALTRO';
-    const isGoogleOnly = isRaw || isOther; // both use Google link
-    const pnlClass = pct == null ? 'muted' : pct >= 0 ? 'green' : 'red';
-    const pnlText = pct == null ? '—' : `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
-
-    // Grade display
-    let gradeDisplay;
-    if (isRaw) {
-      gradeDisplay = `RAW${c.condition ? ' · ' + c.condition : ''}`;
-    } else if (isOther) {
-      gradeDisplay = `${c.customGrader || 'ALTRO'} ${c.grade}`;
-    } else {
-      gradeDisplay = `${c.grader} ${c.grade}`;
-    }
-
-    // Buttons based on grader - use buttons with onclick to open in new tab (mobile-friendly)
-    let buttonsHtml;
-    if (isGoogleOnly) {
-      const googleUrl = buildGoogleUrl(c);
-      buttonsHtml = `
-        <div class="ebay-buttons">
-          <button type="button" class="ebay-btn google" onclick="openLink(event, '${googleUrl}')" title="Cerca su Google${isRaw ? ' + Cardmarket' : ''}">
-            <span class="ebay-btn-label">🔍 Google</span>
-          </button>
-        </div>`;
-    } else {
-      const ebayItUrl = buildEbayUrl(c, 'ebay.it');
-      const altUrl = buildAltUrl(c);
-      buttonsHtml = `
-        <div class="ebay-buttons">
-          <button type="button" class="ebay-btn it" onclick="openLink(event, '${ebayItUrl}')" title="Vedi venduti su eBay Italia">
-            <span class="ebay-btn-label">🔍 eBay IT</span>
-          </button>
-          <button type="button" class="ebay-btn alt" onclick="openLink(event, '${altUrl}')" title="Vedi venduti su ALT (mercato USA)">
-            <span class="ebay-btn-label">🔍 ALT</span>
-          </button>
-        </div>`;
-    }
-
-    // Photo thumbnail or placeholder with initial
-    const initial = (c.name || '?').trim().charAt(0).toUpperCase();
-    const photoHtml = c.photo
-      ? `<img src="${c.photo}" alt="${c.name}" loading="lazy"/>`
-      : `<div class="photo-placeholder">${initial}</div>`;
-
-    return `
-      <div class="card">
-        <div class="card-top">
-          <div class="photo-thumb" onclick="openDetail(${c.id})">
-            ${photoHtml}
-          </div>
-          <div class="card-info" onclick="openDetail(${c.id})">
-            <div class="card-name-row">
-              <span class="card-name">${c.name}</span>
-              ${c.number ? `<span class="card-num-inline">#${c.number}</span>` : ''}
-            </div>
-            <div class="card-meta">
-              <span class="grade-badge ${gradeClass(c.grader)}">${gradeDisplay}</span>
-              ${c.set ? `<span class="set-badge">${c.set}</span>` : ''}
-              ${c.language ? `<span class="lang-badge">${c.language}</span>` : ''}
-              ${c.qty > 1 ? `<span class="qty-badge">×${c.qty}</span>` : ''}
-            </div>
-          </div>
-          ${buttonsHtml}
-        </div>
-        <div class="card-prices" onclick="openDetail(${c.id})">
-          <div class="price-item">
-            <span class="price-label-inline">Acq</span>
-            <span class="price-value-inline muted">€${fmt(c.buyPrice)}</span>
-          </div>
-          <div class="price-item">
-            <span class="price-label-inline">${isRaw ? 'CM' : 'Mkt'}</span>
-            <span class="price-value-inline gold">${cur ? '€'+fmt(cur) : '—'}</span>
-          </div>
-          <span class="pnl-pct ${pnlClass}">${pnlText}</span>
-        </div>
-        ${lastDate ? `
-          <div class="last-update ${isStale ? 'stale-warning' : ''}" onclick="openDetail(${c.id})">
-            ${isStale ? '⚠️' : '✓'} Aggiornato ${days === 0 ? 'oggi' : days === 1 ? 'ieri' : days + ' giorni fa'}
-          </div>
-        ` : `
-          <div class="last-update stale-warning" onclick="openDetail(${c.id})">⚠️ Mai aggiornato — tocca per inserire prezzo</div>
-        `}
-      </div>
-    `;
-  }).join('');
+  list.innerHTML = renderListCards(filtered);
 }
 
 // ============ DETAIL VIEW ============
@@ -3076,6 +3316,7 @@ function saveCard() {
       c.buyDate = document.getElementById('f-buydate').value;
       c.notes = document.getElementById('f-notes').value.trim();
       c.photo = currentPhoto || null;
+      c.updatedAt = new Date().toISOString();
       if (!isNaN(currentPrice) && currentPrice > 0) {
         if (!c.history) c.history = [];
         const today = new Date().toISOString().split('T')[0];
@@ -3087,8 +3328,10 @@ function saveCard() {
       showToast('✓ Carta aggiornata');
     }
   } else {
+    const now = new Date().toISOString();
     const card = {
       id: Date.now(),
+      userId: null, // Supabase-ready: will hold user UUID when online
       name,
       set: document.getElementById('f-set').value.trim(),
       number: document.getElementById('f-number').value.trim(),
@@ -3103,7 +3346,10 @@ function saveCard() {
       buyDate: document.getElementById('f-buydate').value,
       notes: document.getElementById('f-notes').value.trim(),
       photo: currentPhoto || null,
-      history: []
+      photoUrl: null, // Supabase-ready: will hold storage URL when online
+      history: [],
+      createdAt: now,
+      updatedAt: now
     };
     if (!isNaN(currentPrice) && currentPrice > 0) {
       card.history.push({
@@ -3183,7 +3429,127 @@ document.querySelectorAll('.filter-pill').forEach(btn => {
 
 function clearSearch() {
   document.getElementById('search-input').value = '';
+  onSearchInput();
+}
+
+// ============ VIEW ROUTING (Home / List) ============
+let currentView = 'home'; // 'home' | 'list'
+
+function goToList() {
+  currentView = 'list';
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('list-view').style.display = '';
+  // Reset scroll
+  const wrapper = document.querySelector('.scroll-wrapper');
+  if (wrapper) wrapper.scrollTop = 0;
+  // Apply current filters/render
   renderCards();
+  // Update FAB visibility (only visible in list view)
+  document.body.classList.remove('hide-fab');
+}
+
+function goToHome() {
+  currentView = 'home';
+  document.getElementById('list-view').style.display = 'none';
+  document.getElementById('home-view').style.display = '';
+  const wrapper = document.querySelector('.scroll-wrapper');
+  if (wrapper) wrapper.scrollTop = 0;
+  // Clear search when going back
+  document.getElementById('search-input').value = '';
+  onSearchInput();
+  // Hide FAB on home
+  document.body.classList.add('hide-fab');
+}
+
+function onSearchInput() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const clearBtn = document.getElementById('clear-search');
+  const resultsBox = document.getElementById('search-results');
+  const resultsList = document.getElementById('search-results-list');
+  clearBtn.classList.toggle('show', q.length > 0);
+
+  if (q.length === 0) {
+    if (resultsBox) resultsBox.style.display = 'none';
+    // Also refresh list if user happened to be in list view
+    if (currentView === 'list') renderCards();
+    return;
+  }
+
+  // Filter cards by query (name, set, number, notes)
+  const matches = cards.filter(c =>
+    c.name.toLowerCase().includes(q) ||
+    (c.set || '').toLowerCase().includes(q) ||
+    (c.number || '').toLowerCase().includes(q) ||
+    (c.notes || '').toLowerCase().includes(q)
+  );
+
+  if (currentView === 'home') {
+    // Show inline results in home view
+    if (resultsBox) {
+      resultsBox.style.display = '';
+      if (matches.length === 0) {
+        resultsList.innerHTML = `
+          <div class="empty-state" style="padding:24px 16px">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">Nessun risultato</div>
+            <div class="empty-sub">Prova un altro termine di ricerca</div>
+          </div>`;
+      } else {
+        resultsList.innerHTML = renderListCards(matches);
+      }
+    }
+  } else {
+    // In list view → search filters renderCards as before
+    renderCards();
+  }
+}
+
+function renderListCards(arr) {
+  return arr.map(c => {
+    const cur = getCurrentPrice(c);
+    const pct = getPnLPct(c);
+    const isRaw = c.grader === 'RAW';
+    const isOther = c.grader === 'ALTRO';
+    const pnlClass = pct == null ? 'muted' : pct >= 0 ? 'pnl-pos' : 'pnl-neg';
+    const pnlText = pct == null ? '—' : `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
+
+    let metaText = '';
+    if (isRaw) {
+      if (c.number) metaText = ` · #${c.number}`;
+    } else if (isOther) {
+      metaText = `${c.number ? ' · #' + c.number : ''} · ${c.customGrader || 'ALTRO'} ${c.grade}`;
+    } else {
+      metaText = `${c.number ? ' · #' + c.number : ''} · ${c.grader} ${c.grade}`;
+    }
+
+    const initial = (c.name || '?').trim().charAt(0).toUpperCase();
+    const photoHtml = c.photo
+      ? `<img src="${c.photo}" alt="${c.name}" loading="lazy"/>`
+      : `<div class="list-photo-ph">${initial}</div>`;
+
+    return `
+      <div class="list-card" onclick="openDetail(${c.id})">
+        <div class="list-photo">${photoHtml}</div>
+        <div class="list-info">
+          <div class="list-name">${c.name}<span class="list-name-meta">${metaText}</span></div>
+          <div class="list-prices">
+            <div class="price-item">
+              <span class="price-item-label">Acquisto</span>
+              <span class="price-item-value acq">€${fmt(c.buyPrice)}</span>
+            </div>
+            <div class="price-item">
+              <span class="price-item-label">Last sold</span>
+              <span class="price-item-value mkt">${cur ? '€'+fmt(cur) : '—'}</span>
+            </div>
+            <div class="price-item price-pnl-item">
+              <span class="price-item-label">P&L</span>
+              <span class="price-item-value ${pnlClass}">${pnlText}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ============ SETTINGS ============
@@ -3362,12 +3728,12 @@ if ('serviceWorker' in navigator) {
 
 // ============ NICKNAME ============
 function loadNickname() {
-  const name = localStorage.getItem('tcg_nickname') || 'Collezionista';
+  const name = dataStore.loadNickname() || 'Collezionista';
   document.getElementById('welcome-name').textContent = name;
 }
 
 function openNicknameModal() {
-  const current = localStorage.getItem('tcg_nickname') || '';
+  const current = dataStore.loadNickname();
   document.getElementById('f-nickname').value = current;
   openModal('nickname-modal');
   setTimeout(() => document.getElementById('f-nickname').focus(), 300);
@@ -3375,11 +3741,7 @@ function openNicknameModal() {
 
 function saveNickname() {
   const name = document.getElementById('f-nickname').value.trim();
-  if (name) {
-    localStorage.setItem('tcg_nickname', name);
-  } else {
-    localStorage.removeItem('tcg_nickname');
-  }
+  dataStore.saveNickname(name);
   loadNickname();
   closeModal('nickname-modal');
   showToast('✓ Nome salvato!');
@@ -3522,6 +3884,8 @@ document.addEventListener('touchmove', e => {
 loadNickname();
 renderStats();
 renderCards();
+// Start in home view → hide FAB
+document.body.classList.add('hide-fab');
 </script>
 </body>
 </html>
