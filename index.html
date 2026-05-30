@@ -277,12 +277,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                font-size 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                border-radius 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 0.15s,
-                transform 0.15s;
+    transition: border-color 0.15s, transform 0.15s;
     font-size: 1.1rem;
   }
 
@@ -290,20 +285,8 @@
   .icon-btn:hover { border-color: var(--accent); }
   .icon-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
-  /* Shrunk state during scroll — for top bar icons */
-  body.is-scrolling .icon-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 0.9rem;
-    border-radius: 8px;
-  }
-
   .welcome-text {
-    transition: font-size 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  body.is-scrolling .welcome-text {
-    font-size: 0.72rem;
+    /* fixed size, no shrink */
   }
 
   /* MAIN */
@@ -1358,24 +1341,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                font-size 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                border-radius 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                opacity 0.2s,
-                box-shadow 0.3s;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.3s ease;
     font-weight: 300;
   }
 
   .fab:active { transform: scale(0.92); }
 
-  /* Shrunk state during scroll */
-  body.is-scrolling .fab {
-    width: 46px;
-    height: 46px;
-    font-size: 1.4rem;
-    border-radius: 14px;
-    box-shadow: 0 4px 14px rgba(168,85,247,0.3);
+  /* Slide out to the right while scrolling down */
+  body.fab-hidden .fab {
+    transform: translateX(calc(100% + 26px));
+    opacity: 0;
   }
 
   /* Hide FAB when any modal is open OR when not in list view */
@@ -1432,6 +1408,7 @@
     transform: translateZ(0);
     /* Prevent modal from being dismissed on scroll */
     touch-action: pan-y;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @media (min-width: 768px) {
@@ -2333,34 +2310,37 @@
       <button class="clear-search" id="clear-search" onclick="clearSearch()">✕</button>
     </div>
 
-    <!-- "LE TUE CARTE" TILE -->
-    <div class="cards-tile" onclick="goToList()">
-      <div class="cards-tile-icon"></div>
-      <div class="cards-tile-info">
-        <div class="cards-tile-title">Le tue carte</div>
-        <div class="cards-tile-sub" id="cards-tile-sub">— carte nel portfolio</div>
+    <!-- HOME TILES (hidden during search) -->
+    <div id="home-tiles">
+      <!-- "LE TUE CARTE" TILE -->
+      <div class="cards-tile" onclick="goToList()">
+        <div class="cards-tile-icon"></div>
+        <div class="cards-tile-info">
+          <div class="cards-tile-title">Le tue carte</div>
+          <div class="cards-tile-sub" id="cards-tile-sub">— carte nel portfolio</div>
+        </div>
+        <div class="cards-tile-arrow">›</div>
       </div>
-      <div class="cards-tile-arrow">›</div>
-    </div>
 
-    <!-- "IL TUO SEALED" TILE (placeholder — non cliccabile) -->
-    <div class="cards-tile soon" onclick="showToast('🚧 In sviluppo')">
-      <div class="cards-tile-icon icon-sealed">📦</div>
-      <div class="cards-tile-info">
-        <div class="cards-tile-title">Il tuo Sealed</div>
-        <div class="cards-tile-sub">presto disponibile</div>
+      <!-- "IL TUO SEALED" TILE (placeholder — non cliccabile) -->
+      <div class="cards-tile soon" onclick="showToast('🚧 In sviluppo')">
+        <div class="cards-tile-icon icon-sealed">📦</div>
+        <div class="cards-tile-info">
+          <div class="cards-tile-title">Il tuo Sealed</div>
+          <div class="cards-tile-sub">presto disponibile</div>
+        </div>
+        <div class="cards-tile-soon-badge">SOON</div>
       </div>
-      <div class="cards-tile-soon-badge">SOON</div>
-    </div>
 
-    <!-- "WISHLIST" TILE (placeholder — non cliccabile) -->
-    <div class="cards-tile soon" onclick="showToast('🚧 In sviluppo')">
-      <div class="cards-tile-icon icon-wishlist">♥</div>
-      <div class="cards-tile-info">
-        <div class="cards-tile-title">Wishlist</div>
-        <div class="cards-tile-sub">presto disponibile</div>
+      <!-- "WISHLIST" TILE (placeholder — non cliccabile) -->
+      <div class="cards-tile soon" onclick="showToast('🚧 In sviluppo')">
+        <div class="cards-tile-icon icon-wishlist">♥</div>
+        <div class="cards-tile-info">
+          <div class="cards-tile-title">Wishlist</div>
+          <div class="cards-tile-sub">presto disponibile</div>
+        </div>
+        <div class="cards-tile-soon-badge">SOON</div>
       </div>
-      <div class="cards-tile-soon-badge">SOON</div>
     </div>
 
     <!-- SEARCH RESULTS (visible only while searching) -->
@@ -3473,7 +3453,9 @@ function openDetail(id) {
   `;
 
   openModal('detail-modal');
-  setTimeout(() => document.getElementById('quick-price')?.focus(), 350);
+  // Reset modal scroll to top (fix: was opening scrolled down, especially with photos)
+  const modalContent = document.getElementById('detail-modal-content');
+  if (modalContent) modalContent.scrollTop = 0;
 }
 
 // ============ QUICK UPDATE ============
@@ -3982,6 +3964,9 @@ function goToList() {
   // Reset scroll
   const wrapper = document.querySelector('.scroll-wrapper');
   if (wrapper) wrapper.scrollTop = 0;
+  // Reset horizontal scroll of filter row
+  const filterRow = document.getElementById('filter-row');
+  if (filterRow) filterRow.scrollLeft = 0;
   // Apply current filters/render
   renderCards();
   updateFabVisibility();
@@ -4013,10 +3998,14 @@ function onSearchInput() {
   const clearBtn = document.getElementById('clear-search');
   const resultsBox = document.getElementById('search-results');
   const resultsList = document.getElementById('search-results-list');
+  const homeTiles = document.getElementById('home-tiles');
+  const statsGrid = document.getElementById('stats-grid');
   clearBtn.classList.toggle('show', q.length > 0);
 
   if (q.length === 0) {
     if (resultsBox) resultsBox.style.display = 'none';
+    if (homeTiles) homeTiles.style.display = '';
+    if (statsGrid) statsGrid.style.display = '';
     // Also refresh list if user happened to be in list view
     if (currentView === 'list') renderCards();
     return;
@@ -4029,7 +4018,9 @@ function onSearchInput() {
   );
 
   if (currentView === 'home') {
-    // Show inline results in home view
+    // Hide tiles + stats, show only results for a clean focused view
+    if (homeTiles) homeTiles.style.display = 'none';
+    if (statsGrid) statsGrid.style.display = 'none';
     if (resultsBox) {
       resultsBox.style.display = '';
       if (matches.length === 0) {
@@ -4303,57 +4294,101 @@ function saveNickname() {
     return modal.closest('.modal-overlay');
   }
 
-  function onStart(clientY, target) {
+  // Determine if a drag can start from this target:
+  // - always if from the handle area
+  // - OR if from anywhere in the modal AND the modal is scrolled to top
+  function findDraggableModal(target) {
     const handle = target.closest('.modal-handle-area');
-    if (!handle) return;
-    const modal = getModalFromHandle(handle);
-    if (!modal) return;
-    dragState = {
-      handle,
-      modal,
-      overlay: getOverlayFromModal(modal),
-      startY: clientY,
-      currentY: clientY,
-      delta: 0
-    };
-    modal.classList.add('dragging');
+    if (handle) {
+      return { modal: getModalFromHandle(handle), fromHandle: true };
+    }
+    // Don't start drag from interactive elements (buttons, inputs, links)
+    if (target.closest('button, input, textarea, select, a, canvas, .ebay-btn, .detail-ebay-btn, .history-entry-del')) {
+      return null;
+    }
+    const modal = target.closest('.modal');
+    if (modal && modal.scrollTop <= 0) {
+      return { modal, fromHandle: false };
+    }
+    return null;
   }
 
-  function onMove(clientY) {
+  function onStart(clientX, clientY, target) {
+    const found = findDraggableModal(target);
+    if (!found || !found.modal) return;
+    dragState = {
+      modal: found.modal,
+      overlay: getOverlayFromModal(found.modal),
+      fromHandle: found.fromHandle,
+      startX: clientX,
+      startY: clientY,
+      delta: 0,
+      deltaX: 0,
+      axisLock: null // 'v' | 'h' | null
+    };
+  }
+
+  function onMove(clientX, clientY) {
     if (!dragState) return;
-    dragState.currentY = clientY;
-    const delta = clientY - dragState.startY;
-    // Only allow downward drag
-    if (delta < 0) {
-      dragState.modal.style.transform = 'translateY(0)';
-      dragState.delta = 0;
-      return;
+    const dy = clientY - dragState.startY;
+    const dx = clientX - dragState.startX;
+
+    // Lock axis on first significant movement
+    if (!dragState.axisLock) {
+      if (Math.abs(dy) > 8 || Math.abs(dx) > 8) {
+        // Vertical if moving down predominantly; horizontal if moving right predominantly
+        if (Math.abs(dx) > Math.abs(dy) && dx > 0) {
+          dragState.axisLock = 'h';
+        } else if (dy > 0) {
+          dragState.axisLock = 'v';
+        } else {
+          // upward or leftward → not a dismiss gesture; cancel
+          dragState.axisLock = 'none';
+        }
+        if (dragState.axisLock !== 'none') {
+          dragState.modal.classList.add('dragging');
+        }
+      }
     }
-    dragState.delta = delta;
-    dragState.modal.style.transform = `translateY(${delta}px)`;
-    if (dragState.overlay) {
-      const opacity = Math.max(0.4, 1 - (delta / 400));
-      dragState.overlay.style.background = `rgba(0,0,0,${opacity * 0.85})`;
+
+    if (dragState.axisLock === 'v') {
+      if (dy < 0) { dragState.delta = 0; dragState.modal.style.transform = 'translateY(0)'; return; }
+      dragState.delta = dy;
+      dragState.modal.style.transform = `translateY(${dy}px)`;
+      if (dragState.overlay) {
+        const opacity = Math.max(0.4, 1 - (dy / 400));
+        dragState.overlay.style.background = `rgba(0,0,0,${opacity * 0.85})`;
+      }
+    } else if (dragState.axisLock === 'h') {
+      if (dx < 0) { dragState.deltaX = 0; dragState.modal.style.transform = 'translateX(0)'; return; }
+      dragState.deltaX = dx;
+      dragState.modal.style.transform = `translateX(${dx}px)`;
+      if (dragState.overlay) {
+        const opacity = Math.max(0.4, 1 - (dx / 400));
+        dragState.overlay.style.background = `rgba(0,0,0,${opacity * 0.85})`;
+      }
     }
   }
 
   function onEnd() {
     if (!dragState) return;
-    const { modal, overlay, delta } = dragState;
+    const { modal, overlay, delta, deltaX, axisLock } = dragState;
     modal.classList.remove('dragging');
-    if (delta > 120) {
-      // Dismiss the modal
-      modal.style.transform = `translateY(100vh)`;
+
+    const dismiss = (axisLock === 'v' && delta > 110) || (axisLock === 'h' && deltaX > 90);
+
+    if (dismiss) {
+      modal.style.transform = axisLock === 'h' ? 'translateX(100vw)' : 'translateY(100vh)';
       setTimeout(() => {
         if (overlay) {
           overlay.classList.remove('open');
           overlay.style.background = '';
         }
         modal.style.transform = '';
-        // Update body modal-open class
         const anyOpen = document.querySelector('.modal-overlay.open');
         if (!anyOpen) {
           document.body.classList.remove('modal-open');
+          if (typeof updateFabVisibility === 'function') updateFabVisibility();
         }
       }, 200);
     } else {
@@ -4365,15 +4400,18 @@ function saveNickname() {
   }
 
   document.addEventListener('touchstart', e => {
-    if (e.target.closest('.modal-handle-area')) {
-      onStart(e.touches[0].clientY, e.target);
-    }
+    // Skip the crop modal (it has its own pan/zoom on canvas)
+    if (e.target.closest('#crop-modal')) return;
+    onStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
   }, { passive: true });
 
   document.addEventListener('touchmove', e => {
     if (dragState) {
-      onMove(e.touches[0].clientY);
-      e.preventDefault();
+      onMove(e.touches[0].clientX, e.touches[0].clientY);
+      // Prevent native scroll only once we've locked into a dismiss gesture
+      if (dragState.axisLock === 'v' || dragState.axisLock === 'h') {
+        e.preventDefault();
+      }
     }
   }, { passive: false });
 
@@ -4384,14 +4422,14 @@ function saveNickname() {
     if (dragState) onEnd();
   });
 
-  // Mouse support for desktop testing
+  // Mouse support for desktop testing (handle area only, to avoid interfering with clicks)
   document.addEventListener('mousedown', e => {
     if (e.target.closest('.modal-handle-area')) {
-      onStart(e.clientY, e.target);
+      onStart(e.clientX, e.clientY, e.target);
     }
   });
   document.addEventListener('mousemove', e => {
-    if (dragState) onMove(e.clientY);
+    if (dragState) onMove(e.clientX, e.clientY);
   });
   document.addEventListener('mouseup', () => {
     if (dragState) onEnd();
@@ -4473,29 +4511,35 @@ renderCards();
 // Start in home view → hide FAB
 document.body.classList.add('hide-fab');
 
-// ============ SHRINK-ON-SCROLL (FAB + topbar) ============
-(function setupShrinkOnScroll() {
+// ============ FAB SLIDE ON SCROLL (hide on scroll-down, show on scroll-up/stop) ============
+(function setupFabScroll() {
   const wrapper = document.querySelector('.scroll-wrapper');
   if (!wrapper) return;
-  let scrollTimeout = null;
   let lastScrollTop = 0;
-  const THRESHOLD = 30; // px scroll before shrinking
+  let scrollTimeout = null;
+  const THRESHOLD = 6; // minimum delta to react
 
   wrapper.addEventListener('scroll', () => {
     const st = wrapper.scrollTop;
-    // Only shrink if scrolled past threshold
-    if (st > THRESHOLD) {
-      document.body.classList.add('is-scrolling');
-    } else {
-      document.body.classList.remove('is-scrolling');
+    const delta = st - lastScrollTop;
+
+    if (st < 40) {
+      // Near top → always show
+      document.body.classList.remove('fab-hidden');
+    } else if (delta > THRESHOLD) {
+      // Scrolling DOWN → hide (slide right)
+      document.body.classList.add('fab-hidden');
+    } else if (delta < -THRESHOLD) {
+      // Scrolling UP → show
+      document.body.classList.remove('fab-hidden');
     }
     lastScrollTop = st;
 
-    // After 200ms of no scrolling → restore (un-shrink)
+    // When scrolling stops → show again
     if (scrollTimeout) clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
-      document.body.classList.remove('is-scrolling');
-    }, 200);
+      document.body.classList.remove('fab-hidden');
+    }, 600);
   }, { passive: true });
 })();
 </script>
