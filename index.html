@@ -39,29 +39,21 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-  /* AUTH OVERLAY */
-  .auth-overlay {
+  /* AUTH PAGE — stessa struttura del scroll-wrapper, mostrata/nascosta alternativamente */
+  /* Nessun overlay, nessun z-index conflict, nessun problema iOS */
+  .auth-page {
     position: fixed;
     inset: 0;
     background: var(--bg);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
     overflow-y: auto;
-    /* iOS Safari fixes */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    touch-action: auto;
-    pointer-events: all !important;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px 60px;
   }
-  .auth-overlay.hidden {
-    display: none !important;
-    pointer-events: none !important;
-  }
-  .auth-overlay * {
+  .auth-page * {
     touch-action: manipulation;
   }
 
@@ -164,12 +156,6 @@
     overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
     scroll-behavior: smooth;
-    z-index: 1; /* must stay below auth-overlay (99999) */
-  }
-
-  /* When auth overlay is visible, block interaction with app underneath */
-  body.auth-visible .scroll-wrapper {
-    pointer-events: none;
   }
 
   /* Block horizontal scroll */
@@ -2602,7 +2588,7 @@
 <!-- ============ AUTH OVERLAY ============ -->
 
 
-<div class="scroll-wrapper">
+<div class="scroll-wrapper" id="app-page" style="display:none">
 
 <div class="hero-header">
   <div class="hero-top-bar">
@@ -5817,6 +5803,17 @@ document.addEventListener('touchmove', e => {
 }, { passive: false });
 
 // ============ AUTH ============
+function showAuthPage() {
+  document.getElementById('auth-page-login').style.display = 'flex';
+  document.getElementById('app-page').style.display = 'none';
+  document.body.classList.add('auth-visible');
+}
+function hideAuthPage() {
+  document.getElementById('auth-page-login').style.display = 'none';
+  document.getElementById('app-page').style.display = '';
+  document.body.classList.remove('auth-visible');
+}
+
 function showLoginForm() {
   document.getElementById('auth-login-form').style.display = '';
   document.getElementById('auth-register-form').style.display = 'none';
@@ -5896,8 +5893,8 @@ async function authSignOut() {
   currentUser = null;
   cards = []; wishlist = []; sealed = [];
   closeModal('settings-modal');
-  document.body.classList.add('auth-visible');
-  document.getElementById('auth-overlay').classList.remove('hidden');
+  showAuthPage();
+  showLoginForm();
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-reg-error').style.display = 'none';
   document.getElementById('auth-email').value = '';
@@ -5908,9 +5905,7 @@ async function authSignOut() {
 
 // ============ INIT APP (async — runs after login) ============
 async function initApp() {
-  // Hide auth overlay + unlock app
-  document.getElementById('auth-overlay').classList.add('hidden');
-  document.body.classList.remove('auth-visible');
+  hideAuthPage();
 
   // Show loading state
   renderStats();
@@ -5945,15 +5940,14 @@ async function initApp() {
 
 // ============ BOOT — check session on page load ============
 (async function boot() {
-  // Show auth overlay by default until we confirm session
-  document.body.classList.add('auth-visible');
+  // Mostra auth page di default
+  showAuthPage();
 
   const { data: { session } } = await _supabase.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
     await initApp();
   }
-  // else: auth overlay stays visible
 
   _supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user && !currentUser) {
@@ -6011,8 +6005,8 @@ document.addEventListener('touchmove', e => {
 })();
 </script>
 
-<!-- AUTH OVERLAY — before </body>, after all modals, z-index wins -->
-<div id="auth-overlay" class="auth-overlay">
+<!-- AUTH PAGE — same level as app, shown/hidden alternately -->
+<div id="auth-page-login" class="auth-page">
   <div class="auth-box">
     <div class="auth-logo">
       <img src="logo-neon.png" alt="Sweethome" class="auth-neon-logo"/>
