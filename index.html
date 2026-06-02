@@ -123,12 +123,10 @@
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
     -webkit-tap-highlight-color: transparent;
   }
 
   html {
-    position: fixed;
     width: 100%;
   }
 
@@ -138,9 +136,18 @@
     font-family: 'Inter', -apple-system, sans-serif;
     -webkit-user-select: none;
     user-select: none;
-    position: fixed;
     width: 100%;
     height: 100%;
+  }
+
+  /* PWA scroll fix — only active when app is running (not on auth page) */
+  body.in-app {
+    position: fixed;
+    overflow: hidden;
+  }
+
+  body.in-app html {
+    position: fixed;
   }
 
   /* SCROLL CONTAINER — unico elemento che scrolla, body e html restano fissi */
@@ -5874,11 +5881,14 @@ function showAuthPage() {
   document.getElementById('auth-page-login').style.display = 'flex';
   document.getElementById('app-page').style.display = 'none';
   document.body.classList.add('auth-visible');
+  document.body.classList.remove('in-app'); // rimuove position:fixed → click funzionano!
 }
+
 function hideAuthPage() {
   document.getElementById('auth-page-login').style.display = 'none';
   document.getElementById('app-page').style.display = '';
   document.body.classList.remove('auth-visible');
+  document.body.classList.add('in-app'); // ripristina position:fixed per PWA scroll
 }
 
 function showLoginForm() {
