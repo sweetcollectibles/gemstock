@@ -5998,6 +5998,7 @@ document.addEventListener('touchmove', e => {
   let scrollTimeout = null;
   const THRESHOLD = 6;
   wrapper.addEventListener('scroll', () => {
+    if (document.body.classList.contains('auth-visible')) return;
     const st = wrapper.scrollTop;
     const delta = st - lastScrollTop;
     if (st < 40) { document.body.classList.remove('fab-hidden'); }
@@ -6010,7 +6011,7 @@ document.addEventListener('touchmove', e => {
 })();
 </script>
 
-<!-- AUTH OVERLAY — last in DOM so it's always on top -->
+<!-- AUTH OVERLAY — before </body>, after all modals, z-index wins -->
 <div id="auth-overlay" class="auth-overlay">
   <div class="auth-box">
     <div class="auth-logo">
