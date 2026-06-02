@@ -152,6 +152,12 @@
     overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
     scroll-behavior: smooth;
+    z-index: 1; /* must stay below auth-overlay (99999) */
+  }
+
+  /* When auth overlay is visible, block interaction with app underneath */
+  body.auth-visible .scroll-wrapper {
+    pointer-events: none;
   }
 
   /* Block horizontal scroll */
@@ -5901,6 +5907,7 @@ async function authSignOut() {
   currentUser = null;
   cards = []; wishlist = []; sealed = [];
   closeModal('settings-modal');
+  document.body.classList.add('auth-visible');
   document.getElementById('auth-overlay').classList.remove('hidden');
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-reg-error').style.display = 'none';
@@ -5912,8 +5919,9 @@ async function authSignOut() {
 
 // ============ INIT APP (async — runs after login) ============
 async function initApp() {
-  // Hide auth overlay
+  // Hide auth overlay + unlock app
   document.getElementById('auth-overlay').classList.add('hidden');
+  document.body.classList.remove('auth-visible');
 
   // Show loading state
   renderStats();
@@ -5948,14 +5956,16 @@ async function initApp() {
 
 // ============ BOOT — check session on page load ============
 (async function boot() {
+  // Show auth overlay by default until we confirm session
+  document.body.classList.add('auth-visible');
+
   const { data: { session } } = await _supabase.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
     await initApp();
   }
-  // else: auth overlay stays visible (already shown by default)
+  // else: auth overlay stays visible
 
-  // Listen for auth changes (e.g. token refresh)
   _supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user && !currentUser) {
       currentUser = session.user;
