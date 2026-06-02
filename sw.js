@@ -1,5 +1,5 @@
 // Sweethome Service Worker — v4
-const CACHE_NAME = 'sweethome-v4';
+const CACHE_NAME = 'sweethome-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -9,7 +9,10 @@ const ASSETS = [
   './icon-512.png',
   './apple-touch-icon.png',
   './ghost-tile.png',
-  './ghost-empty.png'
+  './ghost-empty.png',
+  './icon-carte.png',
+  './icon-sealed.png',
+  './icon-wishlist.png'
 ];
 
 self.addEventListener('install', event => {

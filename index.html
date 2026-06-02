@@ -12,6 +12,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Sweethome — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -37,6 +38,81 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  /* AUTH OVERLAY */
+  .auth-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .auth-overlay.hidden { display: none; }
+
+  .auth-box {
+    width: 100%;
+    max-width: 380px;
+    padding: 8px 0 40px;
+  }
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .auth-neon-logo {
+    width: 130px;
+    height: auto;
+    display: block;
+    margin: 0 auto -4px;
+    mix-blend-mode: screen;
+  }
+  .auth-wordmark {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .auth-tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .auth-error {
+    background: rgba(248,113,113,0.12);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    color: var(--red);
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+
+  /* AUTH LOADING SPINNER */
+  .auth-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 30px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .auth-spinner {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   html, body {
     height: 100%;
@@ -330,33 +406,29 @@
     width: 56px; height: 56px;
     border-radius: 13px;
     flex-shrink: 0;
-    background-image: url('ghost-tile.png');
+    background-image: url('icon-carte.png');
     background-size: cover;
     background-position: center;
     border: 1px solid rgba(168,85,247,0.2);
   }
 
-  /* Sealed tile icon (📦 placeholder gradient) */
+  /* Sealed tile icon — neon logo */
   .cards-tile-icon.icon-sealed {
-    background-image: none;
-    background: linear-gradient(135deg, rgba(212,168,71,0.18), rgba(212,168,71,0.04));
-    border: 1px solid rgba(212,168,71,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6rem;
+    background-image: url('icon-sealed.png');
+    background-size: cover;
+    background-position: center;
+    border: 1px solid rgba(168,85,247,0.2);
+    font-size: 0;
   }
 
-  /* Wishlist tile icon (♥ placeholder gradient) */
+  /* Wishlist tile icon — neon logo */
   .cards-tile-icon.icon-wishlist {
-    background-image: none;
-    background: linear-gradient(135deg, rgba(244,114,182,0.18), rgba(244,114,182,0.04));
-    border: 1px solid rgba(244,114,182,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6rem;
-    color: #f472b6;
+    background-image: url('icon-wishlist.png');
+    background-size: cover;
+    background-position: center;
+    border: 1px solid rgba(168,85,247,0.2);
+    font-size: 0;
+    color: transparent;
   }
 
   /* Tile in "soon" state — placeholder, less prominent */
@@ -910,6 +982,17 @@
     position: relative;
     flex-shrink: 0;
   }
+  .wish-stale-badge {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    background: rgba(10,10,10,0.8);
+    border: 1px solid rgba(251,191,36,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    backdrop-filter: blur(4px);
+  }
   .wish-photo img {
     width: 100%; height: 100%;
     object-fit: cover;
@@ -1001,6 +1084,52 @@
   }
   .wish-link-btn:active { transform: scale(0.94); }
   .wish-link-btn:hover { border-color: var(--accent); }
+
+  /* ====== SEALED LIST ====== */
+  .sealed-card {
+    display: flex;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.12s;
+  }
+  .sealed-card:active { transform: scale(0.985); }
+  .sealed-card:hover { border-color: var(--border2); }
+  .sealed-photo {
+    width: 70px; height: 70px;
+    border-radius: 10px;
+    background: var(--surface2);
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .sealed-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .sealed-photo-ph { font-size: 1.8rem; opacity: 0.5; }
+  .sealed-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .sealed-name {
+    font-size: 0.98rem; font-weight: 700; color: var(--text); line-height: 1.2;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .sealed-note {
+    font-size: 0.72rem; color: var(--muted); line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .sealed-note.warn { color: #fbbf24; }
+  .sealed-prices { display: flex; align-items: baseline; gap: 12px; margin-top: 2px; }
+  .sp-item { display: flex; flex-direction: column; gap: 1px; }
+  .sp-label { font-size: 0.58rem; color: var(--muted2); font-weight: 500; }
+  .sp-value { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; }
+  .sp-value.acq { color: #b8b3a8; }
+  .sp-value.cur { color: var(--gold); font-weight: 700; }
+  .sp-pnl { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.82rem; margin-left: auto; align-self: center; }
+  .sp-pnl.green { color: var(--green); }
+  .sp-pnl.red { color: var(--red); }
+  .sp-pnl.muted { color: var(--muted); }
 
   /* CARD (legacy, kept for compatibility with detail-related elements) */
   .card {
@@ -2452,6 +2581,52 @@
 </head>
 <body>
 
+<!-- ============ AUTH OVERLAY ============ -->
+<div id="auth-overlay" class="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <img src="logo-neon.png" alt="Sweethome" class="auth-neon-logo"/>
+      <div class="auth-wordmark"><span class="purple-s">S</span>WEETHOME</div>
+      <div class="auth-tagline">BY SWEETCOLLECTIBLES</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="auth-login-form">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="auth-email" placeholder="tuaemail@example.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="auth-error" class="auth-error" style="display:none"></div>
+      <button class="btn btn-primary" onclick="authSignIn()" id="auth-login-btn">Accedi</button>
+      <button class="btn btn-secondary" onclick="showRegisterForm()" style="margin-top:10px">Non hai un account? Registrati</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="auth-register-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Nickname</label>
+        <input type="text" class="form-input" id="auth-nickname" placeholder="es. Mirko" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="auth-reg-email" placeholder="tuaemail@example.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password <span style="color:var(--muted);font-weight:400">(min. 6 caratteri)</span></label>
+        <input type="password" class="form-input" id="auth-reg-password" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div id="auth-reg-error" class="auth-error" style="display:none"></div>
+      <button class="btn btn-primary" onclick="authSignUp()" id="auth-reg-btn">Crea account</button>
+      <button class="btn btn-secondary" onclick="showLoginForm()" style="margin-top:10px">Hai già un account? Accedi</button>
+    </div>
+
+  </div>
+</div>
+
 <div class="scroll-wrapper">
 
 <div class="hero-header">
@@ -2497,19 +2672,19 @@
         <div class="cards-tile-arrow">›</div>
       </div>
 
-      <!-- "IL TUO SEALED" TILE (placeholder — non cliccabile) -->
-      <div class="cards-tile soon" onclick="showToast('🚧 In sviluppo')">
-        <div class="cards-tile-icon icon-sealed">📦</div>
+      <!-- "IL TUO SEALED" TILE -->
+      <div class="cards-tile" onclick="goToSealed()">
+        <div class="cards-tile-icon icon-sealed"></div>
         <div class="cards-tile-info">
           <div class="cards-tile-title">Il tuo Sealed</div>
-          <div class="cards-tile-sub">presto disponibile</div>
+          <div class="cards-tile-sub" id="sealed-tile-sub">— prodotti sigillati</div>
         </div>
-        <div class="cards-tile-soon-badge">SOON</div>
+        <div class="cards-tile-arrow">›</div>
       </div>
 
       <!-- "WISHLIST" TILE -->
       <div class="cards-tile" onclick="goToWishlist()">
-        <div class="cards-tile-icon icon-wishlist">♥</div>
+        <div class="cards-tile-icon icon-wishlist"></div>
         <div class="cards-tile-info">
           <div class="cards-tile-title">Wishlist</div>
           <div class="cards-tile-sub" id="wishlist-tile-sub">— carte desiderate</div>
@@ -2568,6 +2743,21 @@
     </div>
 
     <div id="wishlist-grid" class="wish-grid"></div>
+
+  </div>
+
+  <!-- ============ SEALED VIEW ============ -->
+  <div id="sealed-view" class="page-view" style="display:none">
+
+    <div class="list-header-bar">
+      <button class="back-btn" onclick="goToHome()">←</button>
+      <div class="list-title">Il tuo Sealed</div>
+      <div class="list-count-badge" id="sealed-count-badge">0</div>
+    </div>
+
+    <div class="stats-grid" id="sealed-stats"></div>
+
+    <div id="sealed-list"></div>
 
   </div>
 
@@ -2769,6 +2959,7 @@
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
+    <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
   </div>
 </div>
 
@@ -3014,6 +3205,52 @@
   </div>
 </div>
 
+<!-- ADD / EDIT SEALED MODAL -->
+<div class="modal-overlay" id="sealed-modal">
+  <div class="modal" id="sealed-modal-content" style="max-width:480px">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title" id="sealed-modal-title">📦 Aggiungi Sealed</div>
+      <button class="modal-close" onclick="closeModal('sealed-modal')">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nome prodotto *</label>
+      <input type="text" class="form-input" id="sf-name" placeholder="es. 151 Elite Trainer Box">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label class="form-label">💰 Prezzo acquisto</label>
+        <input type="number" class="form-input mono" id="sf-buy" placeholder="€" inputmode="decimal">
+      </div>
+      <div class="form-group" style="flex:1">
+        <label class="form-label">📊 Valore attuale</label>
+        <input type="number" class="form-input mono" id="sf-current" placeholder="€" inputmode="decimal">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">📝 Note <span style="color:var(--muted);font-weight:400">(es. difetti, condizioni)</span></label>
+      <input type="text" class="form-input" id="sf-notes" placeholder="es. Angolo scatola ammaccato">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">📸 Foto <span style="color:var(--muted);font-weight:400">(opzionale)</span></label>
+      <input type="file" id="sf-photo-input" accept="image/*" style="display:none" onchange="handleSealedPhotoUpload(event)">
+      <div id="sealed-photo-preview-area">
+        <button type="button" class="photo-upload-btn" onclick="document.getElementById('sf-photo-input').click()">
+          <span style="font-size:1.3rem">📷</span>
+          <span>Aggiungi foto</span>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveSealed()">💾 Salva</button>
+    <button class="btn btn-secondary" id="sealed-delete-btn" onclick="deleteSealed()" style="margin-top:8px;display:none">🗑 Rimuovi prodotto</button>
+  </div>
+</div>
+
 <!-- CONFIRM CLEAR MODAL -->
 <div class="modal-overlay" id="confirm-clear-modal">
   <div class="modal" style="max-width:420px">
@@ -3043,82 +3280,217 @@
 </div>
 
 <script>
+// ============ SUPABASE CLIENT ============
+const SUPABASE_URL = 'https://xoeyfbqplvmbrplqdbrq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZXlmYnFwbHZtYnJwbHFkYnJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTkyMTUsImV4cCI6MjA5NTk5NTIxNX0.Md4LQkMGkErkFzOHrMuKUh9MVw-oAaJpXPPnZ2n8zVA';
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Current authenticated user
+let currentUser = null;
+
+// ============ FORMAT CONVERTERS (app ↔ database) ============
+function cardToDb(c, userId) {
+  return {
+    user_id:       userId || currentUser?.id,
+    name:          c.name,
+    set_name:      c.set || null,
+    number:        c.number || null,
+    grader:        c.grader || null,
+    custom_grader: c.customGrader || null,
+    psa_cert:      c.psaCert || null,
+    grade:         c.grade || null,
+    condition:     c.condition || null,
+    language:      c.language || null,
+    buy_price:     c.buyPrice || null,
+    qty:           c.qty || 1,
+    buy_date:      c.buyDate || null,
+    notes:         c.notes || null,
+    photo_url:     c.photo || null,
+    history:       c.history || [],
+    updated_at:    new Date().toISOString()
+  };
+}
+function dbToCard(r) {
+  return {
+    id:           r.id,
+    userId:       r.user_id,
+    name:         r.name,
+    set:          r.set_name || '',
+    number:       r.number || '',
+    grader:       r.grader || 'RAW',
+    customGrader: r.custom_grader || '',
+    psaCert:      r.psa_cert || '',
+    grade:        r.grade || '',
+    condition:    r.condition || '',
+    language:     r.language || '',
+    buyPrice:     r.buy_price || 0,
+    qty:          r.qty || 1,
+    buyDate:      r.buy_date || '',
+    notes:        r.notes || '',
+    photo:        r.photo_url || null,
+    photoUrl:     r.photo_url || null,
+    history:      Array.isArray(r.history) ? r.history : [],
+    createdAt:    r.created_at,
+    updatedAt:    r.updated_at
+  };
+}
+function wishToDb(w, userId) {
+  return {
+    user_id:    userId || currentUser?.id,
+    name:       w.name,
+    set_name:   w.set || null,
+    number:     w.number || null,
+    language:   w.language || null,
+    psa10_price: w.psa10 || null,
+    raw_price:  w.raw || null,
+    photo_url:  w.photo || null,
+    updated_at: new Date().toISOString()
+  };
+}
+function dbToWish(r) {
+  return {
+    id:        r.id,
+    userId:    r.user_id,
+    name:      r.name,
+    set:       r.set_name || '',
+    number:    r.number || '',
+    language:  r.language || '',
+    psa10:     r.psa10_price || null,
+    raw:       r.raw_price || null,
+    photo:     r.photo_url || null,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at
+  };
+}
+function sealedToDb(s, userId) {
+  return {
+    user_id:       userId || currentUser?.id,
+    name:          s.name,
+    buy_price:     s.buyPrice || null,
+    current_price: s.currentPrice || null,
+    notes:         s.notes || null,
+    photo_url:     s.photo || null,
+    updated_at:    new Date().toISOString()
+  };
+}
+function dbToSealed(r) {
+  return {
+    id:           r.id,
+    userId:       r.user_id,
+    name:         r.name,
+    buyPrice:     r.buy_price || null,
+    currentPrice: r.current_price || null,
+    notes:        r.notes || '',
+    photo:        r.photo_url || null,
+    createdAt:    r.created_at,
+    updatedAt:    r.updated_at
+  };
+}
+
 // ============ DATA STORE ============
-// Astrazione del save/load — oggi usa localStorage, in futuro userà Supabase.
-// Tutta l'app chiama dataStore.* invece di accedere a localStorage direttamente.
 const dataStore = {
-  // === Cards ===
-  loadCards() {
-    try {
-      const raw = localStorage.getItem('tcg_cards_v2');
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      console.error('Error loading cards:', e);
-      return [];
-    }
-  },
-  saveCards(arr) {
-    try {
-      localStorage.setItem('tcg_cards_v2', JSON.stringify(arr));
-      return true;
-    } catch (e) {
-      console.error('Error saving cards (storage full?):', e);
-      return false;
-    }
-  },
-  // === Settings ===
+  // === Settings (still localStorage — not user-specific) ===
   loadSettings() {
     try {
       const raw = localStorage.getItem('tcg_settings');
       return raw ? JSON.parse(raw) : { marketplace: 'ebay.it', staleDays: 7 };
-    } catch (e) {
-      return { marketplace: 'ebay.it', staleDays: 7 };
-    }
+    } catch (e) { return { marketplace: 'ebay.it', staleDays: 7 }; }
   },
   saveSettings(s) {
-    try {
-      localStorage.setItem('tcg_settings', JSON.stringify(s));
-      return true;
-    } catch (e) {
-      return false;
-    }
+    try { localStorage.setItem('tcg_settings', JSON.stringify(s)); return true; } catch(e) { return false; }
   },
-  // === Nickname ===
-  loadNickname() {
-    return localStorage.getItem('tcg_nickname') || '';
+
+  // === Cards (Supabase) ===
+  async loadCards() {
+    if (!currentUser) return [];
+    const { data, error } = await _supabase.from('cards').select('*').order('created_at', { ascending: true });
+    if (error) { console.error('loadCards:', error); return []; }
+    return (data || []).map(dbToCard);
   },
-  saveNickname(name) {
+  async insertCard(card) {
+    const { data, error } = await _supabase.from('cards').insert(cardToDb(card)).select().single();
+    if (error) { console.error('insertCard:', error); return null; }
+    return dbToCard(data);
+  },
+  async updateCard(card) {
+    const { error } = await _supabase.from('cards').update(cardToDb(card)).eq('id', card.id).eq('user_id', currentUser.id);
+    if (error) console.error('updateCard:', error);
+    return !error;
+  },
+  async deleteCard(id) {
+    const { error } = await _supabase.from('cards').delete().eq('id', id).eq('user_id', currentUser.id);
+    if (error) console.error('deleteCard:', error);
+    return !error;
+  },
+
+  // === Wishlist (Supabase) ===
+  async loadWishlist() {
+    if (!currentUser) return [];
+    const { data, error } = await _supabase.from('wishlist').select('*').order('created_at', { ascending: true });
+    if (error) { console.error('loadWishlist:', error); return []; }
+    return (data || []).map(dbToWish);
+  },
+  async insertWish(w) {
+    const { data, error } = await _supabase.from('wishlist').insert(wishToDb(w)).select().single();
+    if (error) { console.error('insertWish:', error); return null; }
+    return dbToWish(data);
+  },
+  async updateWish(w) {
+    const { error } = await _supabase.from('wishlist').update(wishToDb(w)).eq('id', w.id).eq('user_id', currentUser.id);
+    if (error) console.error('updateWish:', error);
+    return !error;
+  },
+  async deleteWish(id) {
+    const { error } = await _supabase.from('wishlist').delete().eq('id', id).eq('user_id', currentUser.id);
+    if (error) console.error('deleteWish:', error);
+    return !error;
+  },
+
+  // === Sealed (Supabase) ===
+  async loadSealed() {
+    if (!currentUser) return [];
+    const { data, error } = await _supabase.from('sealed').select('*').order('created_at', { ascending: true });
+    if (error) { console.error('loadSealed:', error); return []; }
+    return (data || []).map(dbToSealed);
+  },
+  async insertSealed(s) {
+    const { data, error } = await _supabase.from('sealed').insert(sealedToDb(s)).select().single();
+    if (error) { console.error('insertSealed:', error); return null; }
+    return dbToSealed(data);
+  },
+  async updateSealed(s) {
+    const { error } = await _supabase.from('sealed').update(sealedToDb(s)).eq('id', s.id).eq('user_id', currentUser.id);
+    if (error) console.error('updateSealed:', error);
+    return !error;
+  },
+  async deleteSealed(id) {
+    const { error } = await _supabase.from('sealed').delete().eq('id', id).eq('user_id', currentUser.id);
+    if (error) console.error('deleteSealed:', error);
+    return !error;
+  },
+
+  // === Profile/Nickname (Supabase profiles table) ===
+  async loadNickname() {
+    if (!currentUser) return '';
+    const { data } = await _supabase.from('profiles').select('nickname').eq('id', currentUser.id).single();
+    return data?.nickname || '';
+  },
+  async saveNickname(name) {
+    if (!currentUser) return;
+    await _supabase.from('profiles').upsert({ id: currentUser.id, nickname: name || null, updated_at: new Date().toISOString() });
+    // Also cache locally for quick access
     if (name) localStorage.setItem('tcg_nickname', name);
     else localStorage.removeItem('tcg_nickname');
   },
-  // === Wishlist ===
-  loadWishlist() {
-    try {
-      const raw = localStorage.getItem('tcg_wishlist');
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      console.error('Error loading wishlist:', e);
-      return [];
-    }
-  },
-  saveWishlist(arr) {
-    try {
-      localStorage.setItem('tcg_wishlist', JSON.stringify(arr));
-      return true;
-    } catch (e) {
-      console.error('Error saving wishlist:', e);
-      return false;
-    }
-  },
-  // === Future Supabase hooks (placeholders) ===
-  // currentUserId() { return null; }  // diventerà supabase.auth.user().id
-  // syncCards()      { /* TBD */ }
-  // uploadPhoto(file){ /* TBD */ }
+  loadNicknameLocal() {
+    return localStorage.getItem('tcg_nickname') || '';
+  }
 };
 
 // ============ STATE ============
-let cards = dataStore.loadCards();
-let wishlist = dataStore.loadWishlist();
+let cards = [];
+let wishlist = [];
+let sealed = [];
 let settings = dataStore.loadSettings();
 let activeFilter = 'all';
 let editingId = null;
@@ -3126,10 +3498,6 @@ let editingId = null;
 // ============ UTILS ============
 function fmt(n) {
   return Number(n).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-
-function save() {
-  dataStore.saveCards(cards);
 }
 
 function saveSettingsToStorage() {
@@ -3766,42 +4134,29 @@ function removeHistoryEntry(cardId, index) {
   if (!confirm(`Rimuovere questa voce dallo storico? (€${fmt(card.history[index].price)} del ${card.history[index].date})`)) return;
   card.history.splice(index, 1);
   card.updatedAt = new Date().toISOString();
-  save();
+  await dataStore.updateCard(card);
   showToast('🗑 Voce rimossa');
   renderStats();
   renderCards();
-  if (currentView === 'home' && document.getElementById('search-input').value.trim()) {
-    onSearchInput();
-  }
-  openDetail(cardId); // refresh detail view
+  if (currentView === 'home' && document.getElementById('search-input').value.trim()) onSearchInput();
+  openDetail(cardId);
 }
 
-function quickUpdate(id) {
+async function quickUpdate(id) {
   const card = cards.find(c => c.id === id);
   if (!card) return;
-
   const priceInput = document.getElementById('quick-price');
   const price = parseFloat(priceInput.value);
   const date = new Date().toISOString().split('T')[0];
-
-  if (isNaN(price) || price <= 0) {
-    showToast('⚠️ Inserisci un prezzo valido');
-    priceInput.focus();
-    return;
-  }
-
+  if (isNaN(price) || price <= 0) { showToast('⚠️ Inserisci un prezzo valido'); return; }
   if (!card.history) card.history = [];
   card.history.push({ date, price });
-  save();
-
+  card.updatedAt = new Date().toISOString();
+  await dataStore.updateCard(card);
   showToast('✓ Prezzo aggiornato');
   renderStats();
   renderCards();
-  // Also refresh search results if active in home view
-  if (currentView === 'home' && document.getElementById('search-input').value.trim()) {
-    onSearchInput();
-  }
-  // Refresh modal in-place instead of closing it
+  if (currentView === 'home' && document.getElementById('search-input').value.trim()) onSearchInput();
   openDetail(id);
 }
 
@@ -3854,24 +4209,36 @@ async function doImageSearch(name, number, language) {
 
 async function searchPokemonTcgIo(name, number) {
   const status = document.getElementById('imgsearch-status');
-  let q = `name:"${name}*"`;
-  if (number) {
-    q += ` number:${number.replace(/[^0-9a-zA-Z]/g, '')}`;
-  }
-  try {
+
+  // Build Lucene query. For multi-word names use quotes; for single word use wildcard.
+  const cleanName = name.trim();
+  const nameQuery = cleanName.includes(' ')
+    ? `name:"${cleanName}"`
+    : `name:${cleanName}*`;
+
+  async function runQuery(q) {
     const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&pageSize=24&orderBy=-set.releaseDate`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error('API error ' + res.status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    let cards = data.data || [];
+    return data.data || [];
+  }
 
+  try {
+    let q = nameQuery;
+    if (number) q += ` number:${number.replace(/[^0-9a-zA-Z]/g, '')}`;
+    let cards = await runQuery(q);
+
+    // Retry with name only if number too strict
     if (cards.length === 0 && number) {
-      const url2 = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent('name:"' + name + '*"')}&pageSize=24&orderBy=-set.releaseDate`;
-      const res2 = await fetch(url2);
-      const data2 = await res2.json();
-      cards = data2.data || [];
+      cards = await runQuery(nameQuery);
     }
-    // Normalize to common shape
+    // Retry with a looser wildcard if still nothing
+    if (cards.length === 0 && cleanName.includes(' ')) {
+      const firstWord = cleanName.split(' ')[0];
+      cards = await runQuery(`name:${firstWord}*`);
+    }
+
     const normalized = cards.map(c => ({
       name: c.name,
       img: c.images?.small || c.images?.large || '',
@@ -3882,47 +4249,75 @@ async function searchPokemonTcgIo(name, number) {
     renderImageResults(normalized);
   } catch (e) {
     console.error('pokemontcg.io search failed:', e);
-    status.textContent = '⚠️ Ricerca non disponibile (connessione?). Puoi caricare la foto manualmente.';
+    status.style.display = '';
+    status.innerHTML = `⚠️ Ricerca non riuscita.<br><span style="font-size:0.7rem;color:var(--muted2)">Errore: ${e.message || e}</span><br><span style="font-size:0.75rem">Usa 📷 Carica per inserire la foto dal telefono.</span>`;
   }
 }
 
 async function searchTcgdex(name, number, lang) {
   const status = document.getElementById('imgsearch-status');
-  try {
-    // TCGdex: filter cards by name (partial match supported via name=)
-    const url = `https://api.tcgdex.net/v2/${lang}/cards?name=${encodeURIComponent(name)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('TCGdex error ' + res.status);
-    let cards = await res.json();
-    if (!Array.isArray(cards)) cards = [];
 
-    // Optional client-side number filter
+  // Call our Supabase Edge Function proxy (no CORS issues!)
+  const PROXY_URL = `${SUPABASE_URL}/functions/v1/tcgdex-proxy`;
+
+  async function queryProxy(language, cardName) {
+    const url = `${PROXY_URL}?name=${encodeURIComponent(cardName)}&lang=${language}`;
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      }
+    });
+    if (!res.ok) throw new Error('Proxy error ' + res.status);
+    const json = await res.json();
+    return Array.isArray(json) ? json : [];
+  }
+
+  function normalizeTcgdex(cards, number) {
+    let list = cards.slice();
     if (number) {
       const numClean = number.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
-      const filtered = cards.filter(c => (c.localId + '').toLowerCase() === numClean);
-      if (filtered.length > 0) cards = filtered;
+      const matches = list.filter(c => (c.localId + '').toLowerCase() === numClean);
+      if (matches.length > 0) list = matches;
     }
-
-    // Limit to 24, build image URLs. TCGdex image needs /<quality>.<ext> suffix
-    cards = cards.slice(0, 24);
-    const normalized = cards.map(c => {
-      // c.image is a base URL without extension; append /high.webp
+    return list.slice(0, 24).map(c => {
       const base = c.image || '';
-      const img = base ? `${base}/low.webp` : '';
-      const imgLarge = base ? `${base}/high.webp` : '';
       return {
         name: c.name || '',
-        img,
-        imgLarge,
-        setName: '', // set name not always present in list endpoint
+        img: base ? `${base}/low.webp` : '',
+        imgLarge: base ? `${base}/high.webp` : '',
+        setName: '',
         number: c.localId || ''
       };
     }).filter(c => c.img);
+  }
 
-    renderImageResults(normalized);
+  try {
+    // 1) Try JAP via proxy
+    let cards = [];
+    status.textContent = '🔍 Ricerca carte giapponesi...';
+    try { cards = await queryProxy('ja', name); } catch (e) { console.warn('Proxy ja:', e.message); }
+
+    // 2) Fallback to EN via proxy
+    if (cards.length === 0) {
+      status.textContent = '🔍 Ricerca estesa...';
+      try { cards = await queryProxy('en', name); } catch (e) { console.warn('Proxy en:', e.message); }
+    }
+
+    if (cards.length > 0) {
+      const normalized = normalizeTcgdex(cards, number);
+      if (normalized.length > 0) {
+        renderImageResults(normalized);
+        return;
+      }
+    }
+
+    // 3) Final fallback: pokemontcg.io
+    status.textContent = '🔍 Ricerca database internazionale...';
+    await searchPokemonTcgIo(name, number);
   } catch (e) {
-    console.error('TCGdex search failed:', e);
-    status.textContent = '⚠️ Ricerca JAP non disponibile (connessione?). Puoi caricare la foto manualmente.';
+    console.error('JAP search failed:', e);
+    status.textContent = '⚠️ Ricerca non disponibile. Usa 📷 per caricare la foto.';
   }
 }
 
@@ -4136,20 +4531,44 @@ function cropZoom(delta) {
   renderCropEditor();
 }
 
-function cropConfirm() {
+// ============ SUPABASE STORAGE — UPLOAD FOTO ============
+async function uploadPhotoToStorage(dataUrl, prefix) {
+  if (!currentUser) return dataUrl;
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+    const path = `${currentUser.id}/${prefix}_${Date.now()}.${ext}`;
+
+    const { error } = await _supabase.storage
+      .from('card-photos')
+      .upload(path, blob, { contentType: blob.type, upsert: false });
+
+    if (error) { console.error('Storage upload:', error); return dataUrl; }
+
+    const { data: { publicUrl } } = _supabase.storage
+      .from('card-photos')
+      .getPublicUrl(path);
+
+    return publicUrl;
+  } catch (e) {
+    console.error('Upload failed:', e);
+    return dataUrl; // fallback a base64 in caso di errore
+  }
+}
+
+async function cropConfirm() {
   if (!cropState) return;
-  // Render final output at 400x560 (5:7 ratio)
   const OUT_W = 400, OUT_H = 560;
-  const ratio = OUT_W / cropState.stageW; // also = OUT_H / cropState.stageH
+  const ratio = OUT_W / cropState.stageW;
 
   const out = document.createElement('canvas');
-  out.width = OUT_W;
-  out.height = OUT_H;
+  out.width = OUT_W; out.height = OUT_H;
   const ctx = out.getContext('2d');
   ctx.fillStyle = '#0a0a0a';
   ctx.fillRect(0, 0, OUT_W, OUT_H);
 
-  const { img, scale, offsetX, offsetY, stageW, stageH } = cropState;
+  const { img, scale, offsetX, offsetY } = cropState;
   const drawW = img.naturalWidth * scale * ratio;
   const drawH = img.naturalHeight * scale * ratio;
   const drawX = (OUT_W - drawW) / 2 + offsetX * ratio;
@@ -4161,13 +4580,21 @@ function cropConfirm() {
   cropState = null;
   closeModal('crop-modal');
 
+  // Upload to Supabase Storage and get public URL
+  showToast('⏳ Caricamento foto...');
+  const photoUrl = await uploadPhotoToStorage(dataUrl, target);
+
   if (target === 'wish') {
-    currentWishPhoto = dataUrl;
+    currentWishPhoto = photoUrl;
     renderWishPhotoPreview();
+  } else if (target === 'sealed') {
+    currentSealedPhoto = photoUrl;
+    renderSealedPhotoPreview();
   } else {
-    currentPhoto = dataUrl;
+    currentPhoto = photoUrl;
     renderPhotoPreview();
   }
+  showToast('✓ Foto caricata!');
 }
 
 function cropCancel() {
@@ -4175,6 +4602,8 @@ function cropCancel() {
   document.getElementById('f-photo-input').value = '';
   const wfp = document.getElementById('wf-photo-input');
   if (wfp) wfp.value = '';
+  const sfp = document.getElementById('sf-photo-input');
+  if (sfp) sfp.value = '';
   closeModal('crop-modal');
 }
 
@@ -4250,7 +4679,7 @@ function editCard(id) {
   setTimeout(() => openModal('add-modal'), 200);
 }
 
-function saveCard() {
+async function saveCard() {
   const name = document.getElementById('f-name').value.trim();
   const buyPrice = parseFloat(document.getElementById('f-buyprice').value);
 
@@ -4265,10 +4694,7 @@ function saveCard() {
   const customGrader = isOther ? document.getElementById('f-custom-grader').value.trim() : '';
   const psaCert = isPSA ? document.getElementById('f-psa-cert').value.trim() : '';
 
-  if (isOther && !customGrader) {
-    showToast('⚠️ Inserisci il nome della casa di grading');
-    return;
-  }
+  if (isOther && !customGrader) { showToast('⚠️ Inserisci il nome della casa di grading'); return; }
 
   if (editingId !== null) {
     const c = cards.find(x => x.id === editingId);
@@ -4276,9 +4702,7 @@ function saveCard() {
       c.name = name;
       c.set = document.getElementById('f-set').value.trim();
       c.number = document.getElementById('f-number').value.trim();
-      c.grader = grader;
-      c.customGrader = customGrader;
-      c.psaCert = psaCert;
+      c.grader = grader; c.customGrader = customGrader; c.psaCert = psaCert;
       c.grade = isRaw ? '' : document.getElementById('f-grade').value;
       c.condition = isRaw ? document.getElementById('f-condition').value : '';
       c.language = document.getElementById('f-language').value;
@@ -4292,23 +4716,19 @@ function saveCard() {
         if (!c.history) c.history = [];
         const today = new Date().toISOString().split('T')[0];
         const last = c.history[c.history.length-1];
-        if (!last || last.price !== currentPrice) {
-          c.history.push({ date: today, price: currentPrice });
-        }
+        if (!last || last.price !== currentPrice) c.history.push({ date: today, price: currentPrice });
       }
+      await dataStore.updateCard(c);
       showToast('✓ Carta aggiornata');
     }
   } else {
     const now = new Date().toISOString();
     const card = {
-      id: Date.now(),
-      userId: null, // Supabase-ready: will hold user UUID when online
+      userId: currentUser?.id,
       name,
       set: document.getElementById('f-set').value.trim(),
       number: document.getElementById('f-number').value.trim(),
-      grader,
-      customGrader,
-      psaCert,
+      grader, customGrader, psaCert,
       grade: isRaw ? '' : document.getElementById('f-grade').value,
       condition: isRaw ? document.getElementById('f-condition').value : '',
       language: document.getElementById('f-language').value,
@@ -4317,38 +4737,30 @@ function saveCard() {
       buyDate: document.getElementById('f-buydate').value,
       notes: document.getElementById('f-notes').value.trim(),
       photo: currentPhoto || null,
-      photoUrl: null, // Supabase-ready: will hold storage URL when online
       history: [],
-      createdAt: now,
-      updatedAt: now
+      createdAt: now, updatedAt: now
     };
     if (!isNaN(currentPrice) && currentPrice > 0) {
-      card.history.push({
-        date: new Date().toISOString().split('T')[0],
-        price: currentPrice
-      });
+      card.history.push({ date: now.split('T')[0], price: currentPrice });
     }
-    cards.push(card);
+    const saved = await dataStore.insertCard(card);
+    if (saved) { cards.push(saved); } else { cards.push({...card, id: Date.now()}); }
     showToast('✓ Carta aggiunta al portfolio!');
   }
 
-  save();
   closeModal('add-modal');
   editingId = null;
   renderStats();
   renderCards();
-  // Also refresh search results if active
-  if (currentView === 'home' && document.getElementById('search-input').value.trim()) {
-    onSearchInput();
-  }
+  if (currentView === 'home' && document.getElementById('search-input').value.trim()) onSearchInput();
 }
 
-function deleteCard(id) {
+async function deleteCard(id) {
   const c = cards.find(x => x.id === id);
   if (!c) return;
   if (!confirm(`Eliminare "${c.name}" dal portfolio?`)) return;
+  await dataStore.deleteCard(id);
   cards = cards.filter(x => x.id !== id);
-  save();
   closeModal('detail-modal');
   showToast('🗑 Carta eliminata');
   renderStats();
@@ -4454,6 +4866,7 @@ function goToList() {
   currentView = 'list';
   document.getElementById('home-view').style.display = 'none';
   document.getElementById('wishlist-view').style.display = 'none';
+  document.getElementById('sealed-view').style.display = 'none';
   document.getElementById('list-view').style.display = '';
   // Reset scroll
   const wrapper = document.querySelector('.scroll-wrapper');
@@ -4470,6 +4883,7 @@ function goToHome() {
   currentView = 'home';
   document.getElementById('list-view').style.display = 'none';
   document.getElementById('wishlist-view').style.display = 'none';
+  document.getElementById('sealed-view').style.display = 'none';
   document.getElementById('home-view').style.display = '';
   const wrapper = document.querySelector('.scroll-wrapper');
   if (wrapper) wrapper.scrollTop = 0;
@@ -4477,12 +4891,13 @@ function goToHome() {
   document.getElementById('search-input').value = '';
   onSearchInput();
   renderWishlist(); // refresh tile counter
+  renderSealed();   // refresh tile counter
   updateFabVisibility();
 }
 
 // Safety helper — call this anytime view changes or modals open/close
 function updateFabVisibility() {
-  if (currentView === 'list' || currentView === 'wishlist') {
+  if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
     document.body.classList.remove('hide-fab');
   } else {
     document.body.classList.add('hide-fab');
@@ -4497,6 +4912,8 @@ let currentWishPhoto = null;
 function fabAction() {
   if (currentView === 'wishlist') {
     openWishAddModal();
+  } else if (currentView === 'sealed') {
+    openSealedAddModal();
   } else {
     openAddModal();
   }
@@ -4519,10 +4936,21 @@ function renderWishlist() {
   const tileSub = document.getElementById('wishlist-tile-sub');
 
   if (badge) badge.textContent = wishlist.length;
+
+  // Count stale items (prices not updated in staleDays)
+  const staleCount = wishlist.filter(w => {
+    const d = daysSince(w.updatedAt);
+    return d == null || d >= settings.staleDays;
+  }).length;
+
   if (tileSub) {
-    tileSub.textContent = wishlist.length === 0
-      ? '— nessuna carta'
-      : `${wishlist.length} ${wishlist.length === 1 ? 'carta desiderata' : 'carte desiderate'}`;
+    if (wishlist.length === 0) {
+      tileSub.textContent = '— nessuna carta';
+    } else if (staleCount > 0) {
+      tileSub.innerHTML = `${wishlist.length} ${wishlist.length === 1 ? 'carta' : 'carte'} · <span style="color:#fbbf24">⏳ ${staleCount} da aggiornare</span>`;
+    } else {
+      tileSub.textContent = `${wishlist.length} ${wishlist.length === 1 ? 'carta desiderata' : 'carte desiderate'}`;
+    }
   }
 
   if (!grid) return;
@@ -4549,9 +4977,14 @@ function renderWishlist() {
     const psa10 = (w.psa10 != null && w.psa10 !== '') ? '€' + fmt(w.psa10) : '—';
     const raw = (w.raw != null && w.raw !== '') ? '€' + fmt(w.raw) : '—';
 
+    // Stale badge if prices old
+    const d = daysSince(w.updatedAt);
+    const isStale = d == null || d >= settings.staleDays;
+    const staleBadge = isStale ? `<div class="wish-stale-badge" title="Prezzi da aggiornare">⏳</div>` : '';
+
     return `
       <div class="wish-card">
-        <div class="wish-photo" onclick="openWishEdit(${w.id})">${photoHtml}</div>
+        <div class="wish-photo" onclick="openWishEdit(${w.id})">${photoHtml}${staleBadge}</div>
         <div class="wish-info" onclick="openWishEdit(${w.id})">
           <div class="wish-name">${w.name}</div>
           <div class="wish-set">${setLine}</div>
@@ -4618,55 +5051,43 @@ function openWishEdit(id) {
   openModal('wish-modal');
 }
 
-function saveWishCard() {
+async function saveWishCard() {
   const name = document.getElementById('wf-name').value.trim();
   if (!name) { showToast('⚠️ Inserisci il nome della carta'); return; }
-
   const set = document.getElementById('wf-set').value.trim();
   const number = document.getElementById('wf-number').value.trim().replace('#','');
   const language = document.getElementById('wf-language').value;
-  const psa10v = document.getElementById('wf-psa10').value;
-  const rawv = document.getElementById('wf-raw').value;
-  const psa10 = psa10v === '' ? null : parseFloat(psa10v);
-  const raw = rawv === '' ? null : parseFloat(rawv);
+  const psa10 = document.getElementById('wf-psa10').value === '' ? null : parseFloat(document.getElementById('wf-psa10').value);
+  const raw = document.getElementById('wf-raw').value === '' ? null : parseFloat(document.getElementById('wf-raw').value);
   const now = new Date().toISOString();
 
   if (editingWishId) {
     const w = wishlist.find(x => x.id === editingWishId);
     if (w) {
       w.name = name; w.set = set; w.number = number; w.language = language;
-      w.psa10 = psa10; w.raw = raw;
-      w.photo = currentWishPhoto || null;
-      w.updatedAt = now;
+      w.psa10 = psa10; w.raw = raw; w.photo = currentWishPhoto || null; w.updatedAt = now;
+      await dataStore.updateWish(w);
     }
     showToast('✓ Wishlist aggiornata');
   } else {
-    wishlist.push({
-      id: Date.now(),
-      userId: null,
-      name, set, number, language, psa10, raw,
-      photo: currentWishPhoto || null,
-      photoUrl: null,
-      createdAt: now,
-      updatedAt: now
-    });
+    const item = { userId: currentUser?.id, name, set, number, language, psa10, raw, photo: currentWishPhoto || null, createdAt: now, updatedAt: now };
+    const saved = await dataStore.insertWish(item);
+    wishlist.push(saved || {...item, id: Date.now()});
     showToast('💜 Aggiunta alla wishlist!');
   }
 
-  dataStore.saveWishlist(wishlist);
-  editingWishId = null;
-  currentWishPhoto = null;
+  editingWishId = null; currentWishPhoto = null;
   closeModal('wish-modal');
   renderWishlist();
 }
 
-function deleteWishCard() {
+async function deleteWishCard() {
   if (!editingWishId) return;
   const w = wishlist.find(x => x.id === editingWishId);
   if (!w) return;
   if (!confirm(`Rimuovere "${w.name}" dalla wishlist?`)) return;
+  await dataStore.deleteWish(editingWishId);
   wishlist = wishlist.filter(x => x.id !== editingWishId);
-  dataStore.saveWishlist(wishlist);
   editingWishId = null;
   closeModal('wish-modal');
   showToast('🗑 Rimossa dalla wishlist');
@@ -4722,6 +5143,202 @@ function removeWishPhoto() {
   currentWishPhoto = null;
   document.getElementById('wf-photo-input').value = '';
   renderWishPhotoPreview();
+}
+
+// ============ SEALED ============
+let editingSealedId = null;
+let currentSealedPhoto = null;
+
+function goToSealed() {
+  currentView = 'sealed';
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('list-view').style.display = 'none';
+  document.getElementById('wishlist-view').style.display = 'none';
+  document.getElementById('sealed-view').style.display = '';
+  const wrapper = document.querySelector('.scroll-wrapper');
+  if (wrapper) wrapper.scrollTop = 0;
+  renderSealed();
+  updateFabVisibility();
+}
+
+function renderSealed() {
+  const list = document.getElementById('sealed-list');
+  const badge = document.getElementById('sealed-count-badge');
+  const statsBox = document.getElementById('sealed-stats');
+  const tileSub = document.getElementById('sealed-tile-sub');
+
+  if (badge) badge.textContent = sealed.length;
+  if (tileSub) {
+    tileSub.textContent = sealed.length === 0
+      ? '— nessun prodotto'
+      : `${sealed.length} ${sealed.length === 1 ? 'prodotto' : 'prodotti'} sigillati`;
+  }
+
+  // Stats
+  if (statsBox) {
+    if (sealed.length === 0) {
+      statsBox.innerHTML = '';
+    } else {
+      const totalBuy = sealed.reduce((s, x) => s + (parseFloat(x.buyPrice) || 0), 0);
+      const totalCur = sealed.reduce((s, x) => s + (parseFloat(x.currentPrice) || parseFloat(x.buyPrice) || 0), 0);
+      const pnl = totalBuy > 0 ? ((totalCur - totalBuy) / totalBuy) * 100 : 0;
+      const pnlClass = pnl >= 0 ? 'green' : 'red';
+      const pnlText = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(1)}%`;
+      statsBox.innerHTML = `
+        <div class="stat-card full gold" style="grid-column:1/-1">
+          <div class="stat-label">📦 Valore Sealed</div>
+          <div class="stat-value">€${fmt(totalCur)}</div>
+          <div class="stat-sub">${sealed.length} ${sealed.length === 1 ? 'prodotto' : 'prodotti'} · investito €${fmt(totalBuy)} · <span style="color:var(--${pnl>=0?'green':'red'})">${pnlText}</span></div>
+        </div>`;
+    }
+  }
+
+  if (!list) return;
+
+  if (sealed.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <img src="ghost-empty.png" alt="" class="empty-ghost"/>
+        <div class="empty-title">Nessun Sealed</div>
+        <div class="empty-sub">Tocca <strong>+</strong> per aggiungere un prodotto sigillato</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = sealed.map(s => {
+    const buy = parseFloat(s.buyPrice) || 0;
+    const cur = (s.currentPrice != null && s.currentPrice !== '') ? parseFloat(s.currentPrice) : null;
+    let pnlText = '—', pnlClass = 'muted';
+    if (cur != null && buy > 0) {
+      const pct = ((cur - buy) / buy) * 100;
+      pnlClass = pct >= 0 ? 'green' : 'red';
+      pnlText = `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
+    }
+    const photoHtml = s.photo
+      ? `<img src="${s.photo}" alt="${s.name}" loading="lazy"/>`
+      : `<div class="sealed-photo-ph">📦</div>`;
+    const noteHtml = s.notes
+      ? `<div class="sealed-note ${/difett|ammacc|rovin|graffi|apert|danneg|piega/i.test(s.notes) ? 'warn' : ''}">${/difett|ammacc|rovin|graffi|apert|danneg|piega/i.test(s.notes) ? '⚠️ ' : ''}${s.notes}</div>`
+      : '';
+
+    return `
+      <div class="sealed-card" onclick="openSealedEdit(${s.id})">
+        <div class="sealed-photo">${photoHtml}</div>
+        <div class="sealed-info">
+          <div class="sealed-name">${s.name}</div>
+          ${noteHtml}
+          <div class="sealed-prices">
+            <div class="sp-item"><span class="sp-label">Acquisto</span><span class="sp-value acq">€${fmt(buy)}</span></div>
+            <div class="sp-item"><span class="sp-label">Valore</span><span class="sp-value cur">${cur != null ? '€'+fmt(cur) : '—'}</span></div>
+            <span class="sp-pnl ${pnlClass}">${pnlText}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openSealedAddModal() {
+  editingSealedId = null;
+  currentSealedPhoto = null;
+  document.getElementById('sealed-modal-title').textContent = '📦 Aggiungi Sealed';
+  ['sf-name','sf-buy','sf-current','sf-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('sealed-delete-btn').style.display = 'none';
+  renderSealedPhotoPreview();
+  openModal('sealed-modal');
+}
+
+function openSealedEdit(id) {
+  const s = sealed.find(x => x.id === id);
+  if (!s) return;
+  editingSealedId = id;
+  currentSealedPhoto = s.photo || null;
+  document.getElementById('sealed-modal-title').textContent = '✏️ Modifica prodotto';
+  document.getElementById('sf-name').value = s.name || '';
+  document.getElementById('sf-buy').value = s.buyPrice ?? '';
+  document.getElementById('sf-current').value = s.currentPrice ?? '';
+  document.getElementById('sf-notes').value = s.notes || '';
+  document.getElementById('sealed-delete-btn').style.display = '';
+  renderSealedPhotoPreview();
+  openModal('sealed-modal');
+}
+
+function saveSealed() {
+  const name = document.getElementById('sf-name').value.trim();
+  if (!name) { showToast('⚠️ Inserisci il nome del prodotto'); return; }
+  const buyV = document.getElementById('sf-buy').value;
+  const curV = document.getElementById('sf-current').value;
+  const buyPrice = buyV === '' ? null : parseFloat(buyV);
+  const currentPrice = curV === '' ? null : parseFloat(curV);
+  const notes = document.getElementById('sf-notes').value.trim();
+  const now = new Date().toISOString();
+
+  if (editingSealedId) {
+    const s = sealed.find(x => x.id === editingSealedId);
+    if (s) {
+      s.name = name; s.buyPrice = buyPrice; s.currentPrice = currentPrice;
+      s.notes = notes; s.photo = currentSealedPhoto || null; s.updatedAt = now;
+      await dataStore.updateSealed(s);
+    }
+    showToast('✓ Prodotto aggiornato');
+  } else {
+    const item = { userId: currentUser?.id, name, buyPrice, currentPrice, notes, photo: currentSealedPhoto || null, createdAt: now, updatedAt: now };
+    const saved = await dataStore.insertSealed(item);
+    sealed.push(saved || {...item, id: Date.now()});
+    showToast('📦 Prodotto aggiunto!');
+  }
+
+  editingSealedId = null; currentSealedPhoto = null;
+  closeModal('sealed-modal');
+  renderSealed();
+}
+
+async function deleteSealed() {
+  if (!editingSealedId) return;
+  const s = sealed.find(x => x.id === editingSealedId);
+  if (!s) return;
+  if (!confirm(`Rimuovere "${s.name}" dal Sealed?`)) return;
+  await dataStore.deleteSealed(editingSealedId);
+  sealed = sealed.filter(x => x.id !== editingSealedId);
+  editingSealedId = null;
+  closeModal('sealed-modal');
+  showToast('🗑 Prodotto rimosso');
+  renderSealed();
+}
+
+function handleSealedPhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() { openCropEditor(img, 'sealed'); };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderSealedPhotoPreview() {
+  const area = document.getElementById('sealed-photo-preview-area');
+  if (currentSealedPhoto) {
+    area.innerHTML = `
+      <div class="photo-preview-wrap">
+        <img src="${currentSealedPhoto}" class="photo-preview-img" alt="preview"/>
+        <button type="button" class="photo-remove-btn" onclick="removeSealedPhoto()">✕</button>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <button type="button" class="photo-upload-btn" onclick="document.getElementById('sf-photo-input').click()">
+        <span style="font-size:1.3rem">📷</span>
+        <span>Aggiungi foto</span>
+      </button>`;
+  }
+}
+
+function removeSealedPhoto() {
+  currentSealedPhoto = null;
+  document.getElementById('sf-photo-input').value = '';
+  renderSealedPhotoPreview();
 }
 
 
@@ -4920,20 +5537,12 @@ function importData(event) {
     try {
       const data = JSON.parse(e.target.result);
       if (data.cards && Array.isArray(data.cards)) {
-        if (!confirm(`Importare ${data.cards.length} carte? Sostituirà i dati attuali.`)) return;
-        cards = data.cards;
-        if (data.settings) settings = data.settings;
-        save();
-        saveSettingsToStorage();
-        renderStats();
-        renderCards();
-        closeModal('settings-modal');
-        showToast(`✓ Importate ${data.cards.length} carte`);
+        showToast('⚠️ Import non disponibile con Supabase — usa il sito web per migrare i dati');
       } else {
-        showToast('⚠️ File non valido', 'warn');
+        showToast('⚠️ File non valido');
       }
     } catch (err) {
-      showToast('⚠️ Errore nel file', 'warn');
+      showToast('⚠️ Errore nel file');
     }
   };
   reader.readAsText(file);
@@ -4941,18 +5550,12 @@ function importData(event) {
 }
 
 function clearAllData() {
-  // Show custom confirm modal (native confirm() can be unreliable on iOS PWA)
   openModal('confirm-clear-modal');
 }
 
 function confirmClearAll() {
-  cards = [];
-  save();
+  showToast('⚠️ Per cancellare tutti i dati usa Supabase Dashboard');
   closeModal('confirm-clear-modal');
-  closeModal('settings-modal');
-  renderStats();
-  renderCards();
-  showToast('🗑 Dati cancellati', 'warn');
 }
 
 // ============ INSTALL ============
@@ -4996,20 +5599,21 @@ if ('serviceWorker' in navigator) {
 
 // ============ NICKNAME ============
 function loadNickname() {
-  const name = dataStore.loadNickname() || 'Collezionista';
+  // Quick load from localStorage cache (set during initApp)
+  const name = dataStore.loadNicknameLocal() || 'Collezionista';
   document.getElementById('welcome-name').textContent = name;
 }
 
 function openNicknameModal() {
-  const current = dataStore.loadNickname();
+  const current = dataStore.loadNicknameLocal();
   document.getElementById('f-nickname').value = current;
   openModal('nickname-modal');
   setTimeout(() => document.getElementById('f-nickname').focus(), 300);
 }
 
-function saveNickname() {
+async function saveNickname() {
   const name = document.getElementById('f-nickname').value.trim();
-  dataStore.saveNickname(name);
+  await dataStore.saveNickname(name);
   loadNickname();
   closeModal('nickname-modal');
   showToast('✓ Nome salvato!');
@@ -5174,7 +5778,7 @@ function saveNickname() {
   let tracking = false;
 
   document.addEventListener('touchstart', e => {
-    if (currentView !== 'list' && currentView !== 'wishlist') return;
+    if (currentView !== 'list' && currentView !== 'wishlist' && currentView !== 'sealed') return;
     // Only trigger if swipe starts from the left edge (first 30px)
     const x = e.touches[0].clientX;
     if (x > 30) return;
@@ -5237,42 +5841,172 @@ document.addEventListener('touchmove', e => {
   }
 }, { passive: false });
 
-loadNickname();
-renderStats();
-renderCards();
-renderWishlist();
-// Start in home view → hide FAB
-document.body.classList.add('hide-fab');
+// ============ AUTH ============
+function showLoginForm() {
+  document.getElementById('auth-login-form').style.display = '';
+  document.getElementById('auth-register-form').style.display = 'none';
+  document.getElementById('auth-error').style.display = 'none';
+}
+function showRegisterForm() {
+  document.getElementById('auth-login-form').style.display = 'none';
+  document.getElementById('auth-register-form').style.display = '';
+  document.getElementById('auth-reg-error').style.display = 'none';
+}
 
-// ============ FAB SLIDE ON SCROLL (hide on scroll-down, show on scroll-up/stop) ============
+function setAuthLoading(form, loading) {
+  const btn = document.getElementById(form === 'login' ? 'auth-login-btn' : 'auth-reg-btn');
+  if (btn) { btn.disabled = loading; btn.textContent = loading ? 'Attendere...' : (form === 'login' ? 'Accedi' : 'Crea account'); }
+}
+
+async function authSignIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Inserisci email e password.'; errEl.style.display = ''; return; }
+  setAuthLoading('login', true);
+  const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+  setAuthLoading('login', false);
+  if (error) {
+    errEl.textContent = error.message.includes('Invalid') ? 'Email o password non corretti.' : error.message;
+    errEl.style.display = '';
+    return;
+  }
+  currentUser = data.user;
+  await initApp();
+}
+
+async function authSignUp() {
+  const nickname = document.getElementById('auth-nickname').value.trim();
+  const email = document.getElementById('auth-reg-email').value.trim();
+  const password = document.getElementById('auth-reg-password').value;
+  const errEl = document.getElementById('auth-reg-error');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Inserisci email e password.'; errEl.style.display = ''; return; }
+  if (password.length < 6) { errEl.textContent = 'La password deve essere di almeno 6 caratteri.'; errEl.style.display = ''; return; }
+  setAuthLoading('register', true);
+  const { data, error } = await _supabase.auth.signUp({ email, password });
+  setAuthLoading('register', false);
+  if (error) { errEl.textContent = error.message; errEl.style.display = ''; return; }
+  currentUser = data.user;
+  // Save nickname if provided
+  if (nickname && currentUser) {
+    await dataStore.saveNickname(nickname);
+  }
+  await initApp();
+}
+
+async function authSignOut() {
+  await _supabase.auth.signOut();
+  currentUser = null;
+  cards = []; wishlist = []; sealed = [];
+  closeModal('settings-modal');
+  document.getElementById('auth-overlay').classList.remove('hidden');
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-reg-error').style.display = 'none';
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
+  showLoginForm();
+  showToast('👋 Logout effettuato');
+}
+
+// ============ INIT APP (async — runs after login) ============
+async function initApp() {
+  // Hide auth overlay
+  document.getElementById('auth-overlay').classList.add('hidden');
+
+  // Show loading state
+  renderStats();
+  document.getElementById('cards-list').innerHTML = '<div class="auth-loading"><div class="auth-spinner"></div> Caricamento dati...</div>';
+
+  // Load all data from Supabase in parallel
+  const [loadedCards, loadedWishlist, loadedSealed, nickname] = await Promise.all([
+    dataStore.loadCards(),
+    dataStore.loadWishlist(),
+    dataStore.loadSealed(),
+    dataStore.loadNickname()
+  ]);
+
+  cards = loadedCards;
+  wishlist = loadedWishlist;
+  sealed = loadedSealed;
+
+  // Set nickname
+  if (nickname) {
+    localStorage.setItem('tcg_nickname', nickname);
+  }
+  loadNickname();
+  renderStats();
+  renderCards();
+  renderWishlist();
+  renderSealed();
+
+  // Start in home view → hide FAB
+  document.body.classList.add('hide-fab');
+  goToHome();
+}
+
+// ============ BOOT — check session on page load ============
+(async function boot() {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    await initApp();
+  }
+  // else: auth overlay stays visible (already shown by default)
+
+  // Listen for auth changes (e.g. token refresh)
+  _supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+      currentUser = session.user;
+      await initApp();
+    }
+    if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      cards = []; wishlist = []; sealed = [];
+    }
+  });
+})();
+
+// Prevent horizontal scroll on touch (except for explicitly scrollable elements)
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchmove', e => {
+  const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+  const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+  if (deltaX > deltaY && deltaX > 10) {
+    let el = e.target;
+    let allow = false;
+    while (el && el !== document.body) {
+      if (el.classList && (el.classList.contains('filter-row'))) { allow = true; break; }
+      el = el.parentElement;
+    }
+    if (!allow) e.preventDefault();
+  }
+}, { passive: false });
+
+// ============ FAB SLIDE ON SCROLL ============
 (function setupFabScroll() {
   const wrapper = document.querySelector('.scroll-wrapper');
   if (!wrapper) return;
   let lastScrollTop = 0;
   let scrollTimeout = null;
-  const THRESHOLD = 6; // minimum delta to react
-
+  const THRESHOLD = 6;
   wrapper.addEventListener('scroll', () => {
     const st = wrapper.scrollTop;
     const delta = st - lastScrollTop;
-
-    if (st < 40) {
-      // Near top → always show
-      document.body.classList.remove('fab-hidden');
-    } else if (delta > THRESHOLD) {
-      // Scrolling DOWN → hide (slide right)
-      document.body.classList.add('fab-hidden');
-    } else if (delta < -THRESHOLD) {
-      // Scrolling UP → show
-      document.body.classList.remove('fab-hidden');
-    }
+    if (st < 40) { document.body.classList.remove('fab-hidden'); }
+    else if (delta > THRESHOLD) { document.body.classList.add('fab-hidden'); }
+    else if (delta < -THRESHOLD) { document.body.classList.remove('fab-hidden'); }
     lastScrollTop = st;
-
-    // When scrolling stops → show again
     if (scrollTimeout) clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-      document.body.classList.remove('fab-hidden');
-    }, 600);
+    scrollTimeout = setTimeout(() => { document.body.classList.remove('fab-hidden'); }, 600);
   }, { passive: true });
 })();
 </script>
