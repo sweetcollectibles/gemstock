@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Sweethome — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -2724,7 +2724,53 @@
 
 </div><!-- end .main -->
 
-</div><!-- end .scroll-wrapper -->
+</div><!-- end scroll-wrapper / app-page -->
+
+<!-- AUTH PAGE — BEFORE the script so DOM exists when JS runs -->
+<div id="auth-page-login" class="auth-page">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <img src="logo-neon.png" alt="Sweethome" class="auth-neon-logo"/>
+      <div class="auth-wordmark"><span class="purple-s">S</span>WEETHOME</div>
+      <div class="auth-tagline">BY SWEETCOLLECTIBLES</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="auth-login-form">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="auth-email" placeholder="tuaemail@example.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="auth-error" class="auth-error" style="display:none"></div>
+      <button class="btn btn-primary" onclick="authSignIn()" id="auth-login-btn">Accedi</button>
+      <button class="btn btn-secondary" onclick="showRegisterForm()" style="margin-top:10px">Non hai un account? Registrati</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="auth-register-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Nickname</label>
+        <input type="text" class="form-input" id="auth-nickname" placeholder="es. Mirko" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="auth-reg-email" placeholder="tuaemail@example.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password <span style="color:var(--muted);font-weight:400">(min. 6 caratteri)</span></label>
+        <input type="password" class="form-input" id="auth-reg-password" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div id="auth-reg-error" class="auth-error" style="display:none"></div>
+      <button class="btn btn-primary" onclick="authSignUp()" id="auth-reg-btn">Crea account</button>
+      <button class="btn btn-secondary" onclick="showLoginForm()" style="margin-top:10px">Hai già un account? Accedi</button>
+    </div>
+
+  </div>
+</div>
 
 <!-- FAB -->
 <button class="fab" onclick="fabAction()" title="Aggiungi">+</button>
@@ -3244,7 +3290,28 @@
 // ============ SUPABASE CLIENT ============
 const SUPABASE_URL = 'https://xoeyfbqplvmbrplqdbrq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZXlmYnFwbHZtYnJwbHFkYnJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTkyMTUsImV4cCI6MjA5NTk5NTIxNX0.Md4LQkMGkErkFzOHrMuKUh9MVw-oAaJpXPPnZ2n8zVA';
-const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Supabase v2 UMD exposes global `supabase` (not `window.supabase`)
+let _supabase = null;
+try {
+  const sbLib = (typeof supabase !== 'undefined') ? supabase : window.supabase;
+  if (sbLib && sbLib.createClient) {
+    _supabase = sbLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch(e) {
+  console.error('Supabase init failed:', e);
+}
+
+// If Supabase SDK didn't load, show error on auth page
+if (!_supabase) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const err = document.getElementById('auth-error');
+    if (err) {
+      err.textContent = '⚠️ Errore di connessione. Ricarica la pagina.';
+      err.style.display = '';
+    }
+  });
+}
 
 // Current authenticated user
 let currentUser = null;
@@ -5940,8 +6007,12 @@ async function initApp() {
 
 // ============ BOOT — check session on page load ============
 (async function boot() {
-  // Mostra auth page di default
   showAuthPage();
+
+  if (!_supabase) {
+    console.warn('Supabase not available — running in offline mode');
+    return;
+  }
 
   const { data: { session } } = await _supabase.auth.getSession();
   if (session?.user) {
@@ -6004,52 +6075,6 @@ document.addEventListener('touchmove', e => {
   }, { passive: true });
 })();
 </script>
-
-<!-- AUTH PAGE — same level as app, shown/hidden alternately -->
-<div id="auth-page-login" class="auth-page">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <img src="logo-neon.png" alt="Sweethome" class="auth-neon-logo"/>
-      <div class="auth-wordmark"><span class="purple-s">S</span>WEETHOME</div>
-      <div class="auth-tagline">BY SWEETCOLLECTIBLES</div>
-    </div>
-
-    <!-- LOGIN -->
-    <div id="auth-login-form">
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" class="form-input" id="auth-email" placeholder="tuaemail@example.com" autocomplete="email" inputmode="email">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" class="form-input" id="auth-password" placeholder="••••••••" autocomplete="current-password">
-      </div>
-      <div id="auth-error" class="auth-error" style="display:none"></div>
-      <button class="btn btn-primary" onclick="authSignIn()" id="auth-login-btn">Accedi</button>
-      <button class="btn btn-secondary" onclick="showRegisterForm()" style="margin-top:10px">Non hai un account? Registrati</button>
-    </div>
-
-    <!-- REGISTER -->
-    <div id="auth-register-form" style="display:none">
-      <div class="form-group">
-        <label class="form-label">Nickname</label>
-        <input type="text" class="form-input" id="auth-nickname" placeholder="es. Mirko" maxlength="30">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" class="form-input" id="auth-reg-email" placeholder="tuaemail@example.com" autocomplete="email" inputmode="email">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password <span style="color:var(--muted);font-weight:400">(min. 6 caratteri)</span></label>
-        <input type="password" class="form-input" id="auth-reg-password" placeholder="••••••••" autocomplete="new-password">
-      </div>
-      <div id="auth-reg-error" class="auth-error" style="display:none"></div>
-      <button class="btn btn-primary" onclick="authSignUp()" id="auth-reg-btn">Crea account</button>
-      <button class="btn btn-secondary" onclick="showLoginForm()" style="margin-top:10px">Hai già un account? Accedi</button>
-    </div>
-
-  </div>
-</div>
 
 </body>
 </html>
