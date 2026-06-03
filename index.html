@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a0a0a">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Sweethome — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -39,6 +39,28 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
+  /* Fix elementi che rimangono "flaggati" dopo il tap su mobile */
+  button, a, .cards-tile, .wish-card, .sealed-card, .wish-link-btn, .filter-pill,
+  .ebay-btn, .detail-ebay-btn, .list-card, [onclick] {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    outline: none !important;
+  }
+  button:focus, a:focus, .cards-tile:focus, [onclick]:focus,
+  button:focus-visible, a:focus-visible {
+    outline: none !important;
+  }
+  /* Hover effects solo su dispositivi con mouse vero (non touch) */
+  @media (hover: none) {
+    .cards-tile:hover, .wish-card:hover, .sealed-card:hover,
+    .wish-link-btn:hover, .filter-pill:hover, .list-card:hover,
+    .ebay-btn:hover, .detail-ebay-btn:hover {
+      /* annulla hover su touch — usa lo stato base */
+      border-color: inherit;
+      background: inherit;
+    }
+  }
+
   /* AUTH PAGE — stessa struttura del scroll-wrapper, mostrata/nascosta alternativamente */
   /* Nessun overlay, nessun z-index conflict, nessun problema iOS */
   .auth-page {
@@ -55,6 +77,20 @@
   }
   .auth-page * {
     touch-action: manipulation;
+  }
+  .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 14px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .remember-row input {
+    width: 18px; height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
   }
 
   .auth-box {
@@ -1141,6 +1177,11 @@
   .sp-pnl.green { color: var(--green); }
   .sp-pnl.red { color: var(--red); }
   .sp-pnl.muted { color: var(--muted); }
+  .sealed-links {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
 
   /* CARD (legacy, kept for compatibility with detail-related elements) */
   .card {
@@ -1614,8 +1655,9 @@
     opacity: 0;
   }
 
-  /* Hide FAB when any modal is open OR when not in list view */
+  /* Hide FAB when any modal is open OR when not in list view OR on auth page */
   body.modal-open .fab,
+  body.auth-visible .fab,
   body.hide-fab .fab {
     opacity: 0;
     pointer-events: none;
@@ -2635,7 +2677,7 @@
         <div class="cards-tile-icon"></div>
         <div class="cards-tile-info">
           <div class="cards-tile-title">Le tue carte</div>
-          <div class="cards-tile-sub" id="cards-tile-sub">— carte nel portfolio</div>
+          <div class="cards-tile-sub" id="cards-tile-sub">— carte</div>
         </div>
         <div class="cards-tile-arrow">›</div>
       </div>
@@ -2645,7 +2687,7 @@
         <div class="cards-tile-icon icon-sealed"></div>
         <div class="cards-tile-info">
           <div class="cards-tile-title">Il tuo Sealed</div>
-          <div class="cards-tile-sub" id="sealed-tile-sub">— prodotti sigillati</div>
+          <div class="cards-tile-sub" id="sealed-tile-sub">— articoli</div>
         </div>
         <div class="cards-tile-arrow">›</div>
       </div>
@@ -2655,7 +2697,7 @@
         <div class="cards-tile-icon icon-wishlist"></div>
         <div class="cards-tile-info">
           <div class="cards-tile-title">Wishlist</div>
-          <div class="cards-tile-sub" id="wishlist-tile-sub">— carte desiderate</div>
+          <div class="cards-tile-sub" id="wishlist-tile-sub">— carte</div>
         </div>
         <div class="cards-tile-arrow">›</div>
       </div>
@@ -2752,6 +2794,10 @@
         <label class="form-label">Password</label>
         <input type="password" class="form-input" id="auth-password" placeholder="••••••••" autocomplete="current-password">
       </div>
+      <label class="remember-row">
+        <input type="checkbox" id="auth-remember" checked>
+        <span>Ricordami</span>
+      </label>
       <div id="auth-error" class="auth-error" style="display:none"></div>
       <button class="btn btn-primary" onclick="authSignIn()" id="auth-login-btn">Accedi</button>
       <button class="btn btn-secondary" onclick="showRegisterForm()" style="margin-top:10px">Non hai un account? Registrati</button>
@@ -2941,7 +2987,7 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label">⏰ Soglia aggiornamento</label>
+      <label class="form-label">⏰ Soglia aggiornamento <span style="color:var(--muted);font-weight:400">(Le tue carte)</span></label>
       <div class="threshold-pills" id="stale-pills">
         <button class="threshold-pill" data-days="3" onclick="setStaleDays(3)">3 gg</button>
         <button class="threshold-pill" data-days="7" onclick="setStaleDays(7)">7 gg</button>
@@ -2949,6 +2995,17 @@
         <button class="threshold-pill" data-days="30" onclick="setStaleDays(30)">30 gg</button>
       </div>
       <input type="hidden" id="s-stale-days" value="7">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">💜 Soglia aggiornamento <span style="color:var(--muted);font-weight:400">(Wishlist)</span></label>
+      <div class="threshold-pills" id="wish-stale-pills">
+        <button class="threshold-pill" data-wdays="7" onclick="setWishStaleDays(7)">7 gg</button>
+        <button class="threshold-pill" data-wdays="14" onclick="setWishStaleDays(14)">14 gg</button>
+        <button class="threshold-pill" data-wdays="30" onclick="setWishStaleDays(30)">30 gg</button>
+        <button class="threshold-pill" data-wdays="60" onclick="setWishStaleDays(60)">60 gg</button>
+      </div>
+      <input type="hidden" id="s-wish-stale-days" value="14">
     </div>
 
     <button class="btn btn-primary" onclick="saveSettings()">💾 Salva Impostazioni</button>
@@ -3428,8 +3485,8 @@ const dataStore = {
   loadSettings() {
     try {
       const raw = localStorage.getItem('tcg_settings');
-      return raw ? JSON.parse(raw) : { marketplace: 'ebay.it', staleDays: 7 };
-    } catch (e) { return { marketplace: 'ebay.it', staleDays: 7 }; }
+      return raw ? JSON.parse(raw) : { marketplace: 'ebay.it', staleDays: 7, wishlistStaleDays: 14 };
+    } catch (e) { return { marketplace: 'ebay.it', staleDays: 7, wishlistStaleDays: 14 }; }
   },
   saveSettings(s) {
     try { localStorage.setItem('tcg_settings', JSON.stringify(s)); return true; } catch(e) { return false; }
@@ -3444,8 +3501,8 @@ const dataStore = {
   },
   async insertCard(card) {
     const { data, error } = await _supabase.from('cards').insert(cardToDb(card)).select().single();
-    if (error) { console.error('insertCard:', error); return null; }
-    return dbToCard(data);
+    if (error) { console.error('insertCard:', error); return { error }; }
+    return { data: dbToCard(data) };
   },
   async updateCard(card) {
     const { error } = await _supabase.from('cards').update(cardToDb(card)).eq('id', card.id).eq('user_id', currentUser.id);
@@ -3467,8 +3524,8 @@ const dataStore = {
   },
   async insertWish(w) {
     const { data, error } = await _supabase.from('wishlist').insert(wishToDb(w)).select().single();
-    if (error) { console.error('insertWish:', error); return null; }
-    return dbToWish(data);
+    if (error) { console.error('insertWish:', error); return { error }; }
+    return { data: dbToWish(data) };
   },
   async updateWish(w) {
     const { error } = await _supabase.from('wishlist').update(wishToDb(w)).eq('id', w.id).eq('user_id', currentUser.id);
@@ -3490,8 +3547,8 @@ const dataStore = {
   },
   async insertSealed(s) {
     const { data, error } = await _supabase.from('sealed').insert(sealedToDb(s)).select().single();
-    if (error) { console.error('insertSealed:', error); return null; }
-    return dbToSealed(data);
+    if (error) { console.error('insertSealed:', error); return { error }; }
+    return { data: dbToSealed(data) };
   },
   async updateSealed(s) {
     const { error } = await _supabase.from('sealed').update(sealedToDb(s)).eq('id', s.id).eq('user_id', currentUser.id);
@@ -3878,7 +3935,7 @@ function renderCards() {
       tileSub.textContent = 'Nessuna carta · tocca per iniziare';
     } else {
       const totalQty = cards.reduce((s,c) => s + (c.qty || 1), 0);
-      tileSub.textContent = `${cards.length} ${cards.length === 1 ? 'titolo' : 'titoli'} · ${totalQty} ${totalQty === 1 ? 'carta' : 'carte'}`;
+      tileSub.textContent = `${totalQty} ${totalQty === 1 ? 'carta' : 'carte'}`;
     }
   }
 
@@ -4778,8 +4835,12 @@ async function saveCard() {
     if (!isNaN(currentPrice) && currentPrice > 0) {
       card.history.push({ date: now.split('T')[0], price: currentPrice });
     }
-    const saved = await dataStore.insertCard(card);
-    if (saved) { cards.push(saved); } else { cards.push({...card, id: Date.now()}); }
+    const result = await dataStore.insertCard(card);
+    if (result.error) {
+      showToast('❌ Errore salvataggio: ' + (result.error.message || 'riprova'));
+      return; // NON aggiungere in memoria se non salvata sul cloud
+    }
+    cards.push(result.data);
     showToast('✓ Carta aggiunta al portfolio!');
   }
 
@@ -4975,7 +5036,7 @@ function renderWishlist() {
   // Count stale items (prices not updated in staleDays)
   const staleCount = wishlist.filter(w => {
     const d = daysSince(w.updatedAt);
-    return d == null || d >= settings.staleDays;
+    return d == null || d >= (settings.wishlistStaleDays || 14);
   }).length;
 
   if (tileSub) {
@@ -4984,7 +5045,7 @@ function renderWishlist() {
     } else if (staleCount > 0) {
       tileSub.innerHTML = `${wishlist.length} ${wishlist.length === 1 ? 'carta' : 'carte'} · <span style="color:#fbbf24">⏳ ${staleCount} da aggiornare</span>`;
     } else {
-      tileSub.textContent = `${wishlist.length} ${wishlist.length === 1 ? 'carta desiderata' : 'carte desiderate'}`;
+      tileSub.textContent = `${wishlist.length} ${wishlist.length === 1 ? 'carta' : 'carte'}`;
     }
   }
 
@@ -5012,9 +5073,9 @@ function renderWishlist() {
     const psa10 = (w.psa10 != null && w.psa10 !== '') ? '€' + fmt(w.psa10) : '—';
     const raw = (w.raw != null && w.raw !== '') ? '€' + fmt(w.raw) : '—';
 
-    // Stale badge if prices old
+    // Stale badge if prices old (separate wishlist setting)
     const d = daysSince(w.updatedAt);
-    const isStale = d == null || d >= settings.staleDays;
+    const isStale = d == null || d >= (settings.wishlistStaleDays || 14);
     const staleBadge = isStale ? `<div class="wish-stale-badge" title="Prezzi da aggiornare">⏳</div>` : '';
 
     return `
@@ -5106,8 +5167,9 @@ async function saveWishCard() {
     showToast('✓ Wishlist aggiornata');
   } else {
     const item = { userId: currentUser?.id, name, set, number, language, psa10, raw, photo: currentWishPhoto || null, createdAt: now, updatedAt: now };
-    const saved = await dataStore.insertWish(item);
-    wishlist.push(saved || {...item, id: Date.now()});
+    const result = await dataStore.insertWish(item);
+    if (result.error) { showToast('❌ Errore: ' + (result.error.message || 'riprova')); return; }
+    wishlist.push(result.data);
     showToast('💜 Aggiunta alla wishlist!');
   }
 
@@ -5205,8 +5267,8 @@ function renderSealed() {
   if (badge) badge.textContent = sealed.length;
   if (tileSub) {
     tileSub.textContent = sealed.length === 0
-      ? '— nessun prodotto'
-      : `${sealed.length} ${sealed.length === 1 ? 'prodotto' : 'prodotti'} sigillati`;
+      ? '— nessun articolo'
+      : `${sealed.length} ${sealed.length === 1 ? 'articolo' : 'articoli'}`;
   }
 
   // Stats
@@ -5257,20 +5319,32 @@ function renderSealed() {
       : '';
 
     return `
-      <div class="sealed-card" onclick="openSealedEdit(${s.id})">
-        <div class="sealed-photo">${photoHtml}</div>
+      <div class="sealed-card">
+        <div class="sealed-photo" onclick="openSealedEdit(${s.id})">${photoHtml}</div>
         <div class="sealed-info">
-          <div class="sealed-name">${s.name}</div>
+          <div class="sealed-name" onclick="openSealedEdit(${s.id})">${s.name}</div>
           ${noteHtml}
-          <div class="sealed-prices">
+          <div class="sealed-prices" onclick="openSealedEdit(${s.id})">
             <div class="sp-item"><span class="sp-label">Acquisto</span><span class="sp-value acq">€${fmt(buy)}</span></div>
             <div class="sp-item"><span class="sp-label">Valore</span><span class="sp-value cur">${cur != null ? '€'+fmt(cur) : '—'}</span></div>
             <span class="sp-pnl ${pnlClass}">${pnlText}</span>
+          </div>
+          <div class="sealed-links">
+            <button type="button" class="wish-link-btn" onclick="openLink(event, '${buildSealedEbayUrl(s)}')">eBay IT</button>
+            <button type="button" class="wish-link-btn" onclick="openLink(event, '${buildSealedCardmarketUrl(s)}')">CM</button>
           </div>
         </div>
       </div>
     `;
   }).join('');
+}
+
+// Sealed link builders — exact name search
+function buildSealedEbayUrl(s) {
+  return `https://www.ebay.it/sch/i.html?_nkw=${encodeURIComponent(s.name)}&LH_Sold=1&LH_Complete=1`;
+}
+function buildSealedCardmarketUrl(s) {
+  return `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(s.name)}`;
 }
 
 function openSealedAddModal() {
@@ -5318,8 +5392,9 @@ async function saveSealed() {
     showToast('✓ Prodotto aggiornato');
   } else {
     const item = { userId: currentUser?.id, name, buyPrice, currentPrice, notes, photo: currentSealedPhoto || null, createdAt: now, updatedAt: now };
-    const saved = await dataStore.insertSealed(item);
-    sealed.push(saved || {...item, id: Date.now()});
+    const result = await dataStore.insertSealed(item);
+    if (result.error) { showToast('❌ Errore: ' + (result.error.message || 'riprova')); return; }
+    sealed.push(result.data);
     showToast('📦 Prodotto aggiunto!');
   }
 
@@ -5504,8 +5579,13 @@ function calcStorageUsage() {
 function openSettingsModal() {
   const days = settings.staleDays || 7;
   document.getElementById('s-stale-days').value = days;
-  document.querySelectorAll('.threshold-pill').forEach(p => {
+  document.querySelectorAll('#stale-pills .threshold-pill').forEach(p => {
     p.classList.toggle('active', parseInt(p.dataset.days) === days);
+  });
+  const wdays = settings.wishlistStaleDays || 14;
+  document.getElementById('s-wish-stale-days').value = wdays;
+  document.querySelectorAll('#wish-stale-pills .threshold-pill').forEach(p => {
+    p.classList.toggle('active', parseInt(p.dataset.wdays) === wdays);
   });
   calcStorageUsage();
   openModal('settings-modal');
@@ -5513,8 +5593,15 @@ function openSettingsModal() {
 
 function setStaleDays(days) {
   document.getElementById('s-stale-days').value = days;
-  document.querySelectorAll('.threshold-pill').forEach(p => {
+  document.querySelectorAll('#stale-pills .threshold-pill').forEach(p => {
     p.classList.toggle('active', parseInt(p.dataset.days) === days);
+  });
+}
+
+function setWishStaleDays(days) {
+  document.getElementById('s-wish-stale-days').value = days;
+  document.querySelectorAll('#wish-stale-pills .threshold-pill').forEach(p => {
+    p.classList.toggle('active', parseInt(p.dataset.wdays) === days);
   });
 }
 
@@ -5524,7 +5611,9 @@ function openLinksModal() {
 
 function saveSettings() {
   settings.staleDays = parseInt(document.getElementById('s-stale-days').value);
+  settings.wishlistStaleDays = parseInt(document.getElementById('s-wish-stale-days').value);
   saveSettingsToStorage();
+  renderWishlist(); // refresh wishlist alerts with new threshold
   showToast('✓ Impostazioni salvate');
   closeModal('settings-modal');
   renderCards();
@@ -5903,6 +5992,13 @@ async function authSignIn() {
     return;
   }
   currentUser = data.user;
+  // Gestione "Ricordami": se non spuntato, segna che la sessione è temporanea
+  const remember = document.getElementById('auth-remember');
+  if (remember && !remember.checked) {
+    sessionStorage.setItem('tcg_temp_session', '1');
+  } else {
+    sessionStorage.removeItem('tcg_temp_session');
+  }
   await initApp();
 }
 
