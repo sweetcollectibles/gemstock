@@ -4163,7 +4163,7 @@ function openDetail(id) {
 }
 
 // ============ QUICK UPDATE ============
-function removeHistoryEntry(cardId, index) {
+async function removeHistoryEntry(cardId, index) {
   const card = cards.find(c => c.id === cardId);
   if (!card || !card.history || !card.history[index]) return;
   if (!confirm(`Rimuovere questa voce dallo storico? (€${fmt(card.history[index].price)} del ${card.history[index].date})`)) return;
@@ -5298,7 +5298,7 @@ function openSealedEdit(id) {
   openModal('sealed-modal');
 }
 
-function saveSealed() {
+async function saveSealed() {
   const name = document.getElementById('sf-name').value.trim();
   if (!name) { showToast('⚠️ Inserisci il nome del prodotto'); return; }
   const buyV = document.getElementById('sf-buy').value;
@@ -5847,34 +5847,6 @@ async function saveNickname() {
     tracking = false;
   }, { passive: true });
 })();
-
-// ============ INIT ============
-// Prevent horizontal scroll on touch (except for explicitly scrollable elements)
-let touchStartX = 0;
-let touchStartY = 0;
-
-document.addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-}, { passive: true });
-
-document.addEventListener('touchmove', e => {
-  const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
-  const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
-  // If horizontal movement dominates AND not on a scrollable horizontal element
-  if (deltaX > deltaY && deltaX > 10) {
-    let el = e.target;
-    let allow = false;
-    while (el && el !== document.body) {
-      if (el.classList && (el.classList.contains('filter-row'))) {
-        allow = true;
-        break;
-      }
-      el = el.parentElement;
-    }
-    if (!allow) e.preventDefault();
-  }
-}, { passive: false });
 
 // ============ AUTH ============
 function showAuthPage() {
