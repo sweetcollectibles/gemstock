@@ -3031,6 +3031,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v15</div>
   </div>
 </div>
 
@@ -3500,9 +3501,20 @@ const dataStore = {
     return (data || []).map(dbToCard);
   },
   async insertCard(card) {
-    const { data, error } = await _supabase.from('cards').insert(cardToDb(card)).select().single();
-    if (error) { console.error('insertCard:', error); return { error }; }
-    return { data: dbToCard(data) };
+    try {
+      const payload = cardToDb(card);
+      console.log('🔵 insertCard payload:', payload);
+      const { data, error } = await _supabase.from('cards').insert(payload).select().single();
+      if (error) {
+        console.error('🔴 insertCard ERROR:', error);
+        return { error };
+      }
+      console.log('🟢 insertCard OK:', data);
+      return { data: dbToCard(data) };
+    } catch (e) {
+      console.error('🔴 insertCard EXCEPTION:', e);
+      return { error: { message: 'Eccezione: ' + (e.message || e) } };
+    }
   },
   async updateCard(card) {
     const { error } = await _supabase.from('cards').update(cardToDb(card)).eq('id', card.id).eq('user_id', currentUser.id);
@@ -4772,6 +4784,11 @@ function editCard(id) {
 }
 
 async function saveCard() {
+ try {
+  // Guard: Supabase disponibile?
+  if (!_supabase) { showToast('❌ Connessione cloud assente — ricarica la pagina'); return; }
+  if (!currentUser) { showToast('❌ Sessione scaduta — rifai il login'); return; }
+
   const name = document.getElementById('f-name').value.trim();
   const buyPrice = parseFloat(document.getElementById('f-buyprice').value);
 
@@ -4837,7 +4854,10 @@ async function saveCard() {
     }
     const result = await dataStore.insertCard(card);
     if (result.error) {
-      showToast('❌ Errore salvataggio: ' + (result.error.message || 'riprova'));
+      const e = result.error;
+      const detail = e.message || e.details || e.hint || e.code || 'errore sconosciuto';
+      showToast('❌ ' + detail);
+      console.error('Salvataggio fallito:', e);
       return; // NON aggiungere in memoria se non salvata sul cloud
     }
     cards.push(result.data);
@@ -4849,6 +4869,10 @@ async function saveCard() {
   renderStats();
   renderCards();
   if (currentView === 'home' && document.getElementById('search-input').value.trim()) onSearchInput();
+ } catch (err) {
+   console.error('🔴 saveCard EXCEPTION:', err);
+   showToast('❌ Errore: ' + (err.message || err));
+ }
 }
 
 async function deleteCard(id) {
