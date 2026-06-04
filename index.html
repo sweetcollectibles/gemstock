@@ -3031,7 +3031,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v15</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v17</div>
   </div>
 </div>
 
@@ -3580,11 +3580,18 @@ const dataStore = {
     return data?.nickname || '';
   },
   async saveNickname(name) {
-    if (!currentUser) return;
-    await _supabase.from('profiles').upsert({ id: currentUser.id, nickname: name || null, updated_at: new Date().toISOString() });
-    // Also cache locally for quick access
+    if (!currentUser) return { error: { message: 'Sessione assente' } };
+    const { error } = await _supabase
+      .from('profiles')
+      .upsert({ id: currentUser.id, nickname: name || null, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    if (error) {
+      console.error('🔴 saveNickname ERROR:', error);
+      return { error };
+    }
+    // Cache locally for quick access
     if (name) localStorage.setItem('tcg_nickname', name);
     else localStorage.removeItem('tcg_nickname');
+    return { ok: true };
   },
   loadNicknameLocal() {
     return localStorage.getItem('tcg_nickname') || '';
@@ -4360,8 +4367,6 @@ async function searchPokemonTcgIo(name, number) {
 
 async function searchTcgdex(name, number, lang) {
   const status = document.getElementById('imgsearch-status');
-
-  // Call our Supabase Edge Function proxy (no CORS issues!)
   const PROXY_URL = `${SUPABASE_URL}/functions/v1/tcgdex-proxy`;
 
   async function queryProxy(language, cardName) {
@@ -4377,46 +4382,46 @@ async function searchTcgdex(name, number, lang) {
     return Array.isArray(json) ? json : [];
   }
 
-  function normalizeTcgdex(cards, number) {
+  function normalizeTcgdex(cards, number, flag) {
     let list = cards.slice();
     if (number) {
       const numClean = number.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
       const matches = list.filter(c => (c.localId + '').toLowerCase() === numClean);
       if (matches.length > 0) list = matches;
     }
-    return list.slice(0, 24).map(c => {
+    return list.map(c => {
       const base = c.image || '';
       return {
         name: c.name || '',
         img: base ? `${base}/low.webp` : '',
         imgLarge: base ? `${base}/high.webp` : '',
-        setName: '',
+        setName: flag,           // mostra 🇯🇵 o 🌍 come etichetta
         number: c.localId || ''
       };
-    }).filter(c => c.img);
+    }).filter(c => c.img);       // solo carte con immagine
   }
 
   try {
-    // 1) Try JAP via proxy
-    let cards = [];
-    status.textContent = '🔍 Ricerca carte giapponesi...';
-    try { cards = await queryProxy('ja', name); } catch (e) { console.warn('Proxy ja:', e.message); }
+    status.textContent = '🔍 Ricerca carte giapponesi e internazionali...';
 
-    // 2) Fallback to EN via proxy
-    if (cards.length === 0) {
-      status.textContent = '🔍 Ricerca estesa...';
-      try { cards = await queryProxy('en', name); } catch (e) { console.warn('Proxy en:', e.message); }
+    // Cerca in parallelo: giapponese + inglese
+    const [jaRaw, enRaw] = await Promise.all([
+      queryProxy('ja', name).catch(e => { console.warn('Proxy ja:', e.message); return []; }),
+      queryProxy('en', name).catch(e => { console.warn('Proxy en:', e.message); return []; })
+    ]);
+
+    const jaCards = normalizeTcgdex(jaRaw, number, '🇯🇵 JAP');
+    const enCards = normalizeTcgdex(enRaw, number, '🌍 INT');
+
+    // Giapponesi prima, poi internazionali (max 30 totali)
+    const merged = [...jaCards, ...enCards].slice(0, 30);
+
+    if (merged.length > 0) {
+      renderImageResults(merged);
+      return;
     }
 
-    if (cards.length > 0) {
-      const normalized = normalizeTcgdex(cards, number);
-      if (normalized.length > 0) {
-        renderImageResults(normalized);
-        return;
-      }
-    }
-
-    // 3) Final fallback: pokemontcg.io
+    // Nessun risultato con immagine da TCGdex → fallback pokemontcg.io
     status.textContent = '🔍 Ricerca database internazionale...';
     await searchPokemonTcgIo(name, number);
   } catch (e) {
@@ -5761,7 +5766,11 @@ function openNicknameModal() {
 
 async function saveNickname() {
   const name = document.getElementById('f-nickname').value.trim();
-  await dataStore.saveNickname(name);
+  const result = await dataStore.saveNickname(name);
+  if (result && result.error) {
+    showToast('❌ ' + (result.error.message || 'Errore salvataggio nome'));
+    return;
+  }
   loadNickname();
   closeModal('nickname-modal');
   showToast('✓ Nome salvato!');
