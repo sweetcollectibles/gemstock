@@ -2952,10 +2952,7 @@
             <span>Carica</span>
           </button>
         </div>
-        <button type="button" id="psa-scan-btn" class="photo-upload-btn" style="display:none;margin-top:8px;width:100%;border-color:rgba(168,85,247,0.5);color:var(--accent)" onclick="loadPsaScan()">
-          <span style="font-size:1.2rem">🏅</span>
-          <span>Carica scan da PSA</span>
-        </button>
+        <button type="button" id="psa-scan-btn" style="display:none" onclick="loadPsaScan()"></button>
       </div>
     </div>
 
@@ -3043,7 +3040,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v22</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v23</div>
   </div>
 </div>
 
@@ -4314,12 +4311,7 @@ function toggleGraderFields() {
 }
 
 function updatePsaScanBtn() {
-  const btn = document.getElementById('psa-scan-btn');
-  if (!btn) return;
-  const grader = document.getElementById('f-grader').value;
-  const cert = document.getElementById('f-psa-cert').value.trim();
-  // Mostra il pulsante quando grader=PSA e cert inserito (token opzionale qui)
-  btn.style.display = (grader === 'PSA' && cert) ? '' : 'none';
+  renderPhotoPreview(); // renderPhotoPreview gestisce già il pulsante PSA
 }
 
 // ============ PHOTO HANDLING (with crop editor) ============
@@ -4842,12 +4834,21 @@ function cropCancel() {
 
 function renderPhotoPreview() {
   const area = document.getElementById('photo-preview-area');
+  const grader = document.getElementById('f-grader')?.value || '';
+  const cert = document.getElementById('f-psa-cert')?.value.trim() || '';
+  const psaBtn = (grader === 'PSA' && cert)
+    ? `<button type="button" class="photo-upload-btn" style="margin-top:8px;width:100%;border-color:rgba(168,85,247,0.5);color:var(--accent)" onclick="loadPsaScan()">
+        <span style="font-size:1.2rem">🏅</span>
+        <span>Carica scan da PSA</span>
+       </button>`
+    : '';
+
   if (currentPhoto) {
     area.innerHTML = `
       <div class="photo-preview-wrap">
         <img src="${currentPhoto}" class="photo-preview-img" alt="preview"/>
         <button type="button" class="photo-remove-btn" onclick="removePhoto()">✕</button>
-      </div>`;
+      </div>${psaBtn}`;
   } else {
     area.innerHTML = `
       <div class="photo-btn-row">
@@ -4859,7 +4860,7 @@ function renderPhotoPreview() {
           <span style="font-size:1.2rem">📷</span>
           <span>Carica</span>
         </button>
-      </div>`;
+      </div>${psaBtn}`;
   }
 }
 
