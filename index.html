@@ -3012,8 +3012,6 @@
       <input type="hidden" id="s-wish-stale-days" value="14">
     </div>
 
-    <button class="btn btn-primary" onclick="saveSettings()">💾 Salva Impostazioni</button>
-
     <div class="form-group" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
       <label class="form-label">🏅 Token PSA API <span style="color:var(--muted);font-weight:400">(per scan automatici)</span></label>
       <input type="password" class="form-input mono" id="s-psa-token" placeholder="Incolla qui il tuo token PSA" autocomplete="off" style="font-size:0.75rem">
@@ -3021,6 +3019,8 @@
         Ottieni il token su <span style="color:var(--accent)">psacard.com/publicapi/documentation</span> → Sign In → Generate Token
       </div>
     </div>
+
+    <button class="btn btn-primary" style="margin-top:16px" onclick="saveSettings()">💾 Salva Impostazioni</button>
 
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
 
@@ -3043,7 +3043,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v19</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v20</div>
   </div>
 </div>
 
