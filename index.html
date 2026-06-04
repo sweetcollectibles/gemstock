@@ -2897,7 +2897,7 @@
 
     <div class="form-group" id="psa-cert-group" style="display:none">
       <label class="form-label">🔍 Numero certificato PSA <span style="color:var(--muted);font-weight:400">(opzionale)</span></label>
-      <input type="text" class="form-input mono" id="f-psa-cert" placeholder="es. 71234567" inputmode="numeric" maxlength="12">
+      <input type="text" class="form-input mono" id="f-psa-cert" placeholder="es. 71234567" inputmode="numeric" maxlength="12" oninput="updatePsaScanBtn()">
     </div>
 
     <div class="form-group">
@@ -2952,6 +2952,10 @@
             <span>Carica</span>
           </button>
         </div>
+        <button type="button" id="psa-scan-btn" class="photo-upload-btn" style="display:none;margin-top:8px;width:100%;border-color:rgba(168,85,247,0.5);color:var(--accent)" onclick="loadPsaScan()">
+          <span style="font-size:1.2rem">🏅</span>
+          <span>Carica scan da PSA</span>
+        </button>
       </div>
     </div>
 
@@ -3010,6 +3014,14 @@
 
     <button class="btn btn-primary" onclick="saveSettings()">💾 Salva Impostazioni</button>
 
+    <div class="form-group" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <label class="form-label">🏅 Token PSA API <span style="color:var(--muted);font-weight:400">(per scan automatici)</span></label>
+      <input type="password" class="form-input mono" id="s-psa-token" placeholder="Incolla qui il tuo token PSA" autocomplete="off" style="font-size:0.75rem">
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;line-height:1.5">
+        Ottieni il token su <span style="color:var(--accent)">psacard.com/publicapi/documentation</span> → Sign In → Generate Token
+      </div>
+    </div>
+
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
 
     <div class="form-label" style="margin-bottom:10px">💾 Spazio utilizzato</div>
@@ -3031,7 +3043,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v18</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v19</div>
   </div>
 </div>
 
@@ -3486,8 +3498,8 @@ const dataStore = {
   loadSettings() {
     try {
       const raw = localStorage.getItem('tcg_settings');
-      return raw ? JSON.parse(raw) : { marketplace: 'ebay.it', staleDays: 7, wishlistStaleDays: 14 };
-    } catch (e) { return { marketplace: 'ebay.it', staleDays: 7, wishlistStaleDays: 14 }; }
+      return raw ? JSON.parse(raw) : { marketplace: 'ebay.it', staleDays: 7, wishlistStaleDays: 14, psaToken: '' };
+    } catch (e) { return { marketplace: 'ebay.it', staleDays: 7, wishlistStaleDays: 14, psaToken: '' }; }
   },
   saveSettings(s) {
     try { localStorage.setItem('tcg_settings', JSON.stringify(s)); return true; } catch(e) { return false; }
@@ -4282,12 +4294,64 @@ function toggleGraderFields() {
   document.getElementById('custom-grader-group').style.display = isOther ? '' : 'none';
   document.getElementById('psa-cert-group').style.display = isPSA ? '' : 'none';
   document.getElementById('f-currentprice-label').textContent = isRaw ? '📊 Minimo CM (€)' : '📊 Ultimo Venduto (€)';
+  updatePsaScanBtn();
+}
+
+function updatePsaScanBtn() {
+  const btn = document.getElementById('psa-scan-btn');
+  if (!btn) return;
+  const grader = document.getElementById('f-grader').value;
+  const cert = document.getElementById('f-psa-cert').value.trim();
+  const token = settings.psaToken || '';
+  btn.style.display = (grader === 'PSA' && cert && token) ? '' : 'none';
 }
 
 // ============ PHOTO HANDLING (with crop editor) ============
 let currentPhoto = null; // base64 string of the photo (final cropped)
 let cropState = null; // { img, scale, offsetX, offsetY, ... }
 let imageSearchTarget = 'card'; // 'card' | 'wish' — where the chosen image goes
+
+// ============ PSA SCAN LOADER ============
+async function loadPsaScan() {
+  const cert = document.getElementById('f-psa-cert').value.trim().replace(/[^0-9]/g, '');
+  const token = settings.psaToken || '';
+  if (!cert) { showToast('⚠️ Inserisci il numero certificato PSA'); return; }
+  if (!token) { showToast('⚠️ Imposta il Token PSA nelle Impostazioni ⚙'); return; }
+
+  showToast('⏳ Caricamento scan PSA...');
+  try {
+    // Chiamata all'API PSA tramite Edge Function (evita CORS)
+    const url = `${SUPABASE_URL}/functions/v1/tcgdex-proxy?psa_cert=${cert}&psa_token=${encodeURIComponent(token)}`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    // L'Edge Function restituisce { front: url, back: url }
+    const imageUrl = data.front || data.imageUri || data.imageFrontUrl;
+    if (!imageUrl) throw new Error('Nessuna immagine nel certificato');
+
+    // Carica l'immagine nel crop editor
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      showToast('✓ Scan PSA caricato!');
+      openCropEditor(img, 'card');
+    };
+    img.onerror = async () => {
+      // Se CORS blocca il canvas, salva direttamente l'URL
+      showToast('✓ Scan PSA caricato!');
+      currentPhoto = imageUrl;
+      renderPhotoPreview();
+    };
+    img.src = imageUrl;
+  } catch (e) {
+    console.error('PSA scan error:', e);
+    showToast('❌ Errore PSA: ' + (e.message || 'riprova'));
+  }
+}
 
 // ============ POKEMON TCG API IMAGE SEARCH ============
 // ============ POKEAPI: ottieni nome giapponese ufficiale ============
@@ -5660,6 +5724,7 @@ function openSettingsModal() {
   document.querySelectorAll('#wish-stale-pills .threshold-pill').forEach(p => {
     p.classList.toggle('active', parseInt(p.dataset.wdays) === wdays);
   });
+  document.getElementById('s-psa-token').value = settings.psaToken || '';
   calcStorageUsage();
   openModal('settings-modal');
 }
@@ -5685,8 +5750,9 @@ function openLinksModal() {
 function saveSettings() {
   settings.staleDays = parseInt(document.getElementById('s-stale-days').value);
   settings.wishlistStaleDays = parseInt(document.getElementById('s-wish-stale-days').value);
+  settings.psaToken = document.getElementById('s-psa-token').value.trim();
   saveSettingsToStorage();
-  renderWishlist(); // refresh wishlist alerts with new threshold
+  renderWishlist();
   showToast('✓ Impostazioni salvate');
   closeModal('settings-modal');
   renderCards();
