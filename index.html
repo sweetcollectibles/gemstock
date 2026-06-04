@@ -3031,7 +3031,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v17</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v18</div>
   </div>
 </div>
 
@@ -4290,6 +4290,41 @@ let cropState = null; // { img, scale, offsetX, offsetY, ... }
 let imageSearchTarget = 'card'; // 'card' | 'wish' — where the chosen image goes
 
 // ============ POKEMON TCG API IMAGE SEARCH ============
+// ============ POKEAPI: ottieni nome giapponese ufficiale ============
+async function getJapanesePokemonName(englishName) {
+  // Rimuovi suffissi comuni delle carte
+  const noSuffix = englishName
+    .replace(/\b(ex|gx|v|vmax|vstar|mega|radiant|alt|break|prime|lv\.?\s*x?)\b/gi, '')
+    .trim();
+
+  const words = noSuffix.split(/\s+/).filter(Boolean);
+
+  // Prova dal nome più lungo al più corto (gestisce Mr. Mime, Tapu Koko, ecc.)
+  for (let len = Math.min(words.length, 3); len >= 1; len--) {
+    const candidate = words.slice(0, len)
+      .join('-').toLowerCase()
+      .replace(/['']/g, '')     // apostrofi (Farfetch'd)
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    if (!candidate) continue;
+    try {
+      const r = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${encodeURIComponent(candidate)}`);
+      if (r.ok) {
+        const d = await r.json();
+        // ja-Hrkt = katakana (es. リザードン) — quello usato sulle carte JAP
+        const ja = d.names.find(n => n.language.name === 'ja-Hrkt') ||
+                   d.names.find(n => n.language.name === 'ja');
+        if (ja?.name) {
+          console.log(`🇯🇵 ${englishName} → ${ja.name}`);
+          return ja.name;
+        }
+      }
+    } catch(e) { /* ignora e prova il prossimo */ }
+  }
+  return null;
+}
+
 function searchCardImage() {
   const name = document.getElementById('f-name').value.trim();
   const number = document.getElementById('f-number').value.trim();
@@ -4307,13 +4342,27 @@ async function doImageSearch(name, number, language) {
   const status = document.getElementById('imgsearch-status');
   const grid = document.getElementById('imgsearch-results');
   status.style.display = '';
-  status.textContent = '🔍 Ricerca in corso...';
   grid.innerHTML = '';
 
-  // Japanese cards → TCGdex API (multilingua). Others → pokemontcg.io
+  const isAlreadyJapanese = /[\u30a0-\u30ff\u3040-\u309f\u4e00-\u9fff]/.test(name);
+
   if (language === 'JAP') {
-    await searchTcgdex(name, number, 'ja');
+    let jaName = isAlreadyJapanese ? name : null;
+
+    if (!jaName) {
+      status.textContent = '🔍 Ricerca nome giapponese...';
+      jaName = await getJapanesePokemonName(name);
+    }
+
+    if (jaName) {
+      status.textContent = `🇯🇵 Cercando "${jaName}"...`;
+    } else {
+      status.textContent = '🔍 Ricerca in corso...';
+    }
+
+    await searchTcgdex(jaName || name, name, number);
   } else {
+    status.textContent = '🔍 Ricerca in corso...';
     await searchPokemonTcgIo(name, number);
   }
 }
@@ -4365,17 +4414,14 @@ async function searchPokemonTcgIo(name, number) {
   }
 }
 
-async function searchTcgdex(name, number, lang) {
+async function searchTcgdex(jaSearchName, enSearchName, number) {
   const status = document.getElementById('imgsearch-status');
   const PROXY_URL = `${SUPABASE_URL}/functions/v1/tcgdex-proxy`;
 
   async function queryProxy(language, cardName) {
     const url = `${PROXY_URL}?name=${encodeURIComponent(cardName)}&lang=${language}`;
     const res = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'apikey': SUPABASE_ANON_KEY
-      }
+      headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }
     });
     if (!res.ok) throw new Error('Proxy error ' + res.status);
     const json = await res.json();
@@ -4395,25 +4441,23 @@ async function searchTcgdex(name, number, lang) {
         name: c.name || '',
         img: base ? `${base}/low.webp` : '',
         imgLarge: base ? `${base}/high.webp` : '',
-        setName: flag,           // mostra 🇯🇵 o 🌍 come etichetta
+        setName: flag,
         number: c.localId || ''
       };
-    }).filter(c => c.img);       // solo carte con immagine
+    }).filter(c => c.img);
   }
 
   try {
-    status.textContent = '🔍 Ricerca carte giapponesi e internazionali...';
-
-    // Cerca in parallelo: giapponese + inglese
+    // Cerca in parallelo: giapponese (con nome JAP) + internazionale (con nome EN)
     const [jaRaw, enRaw] = await Promise.all([
-      queryProxy('ja', name).catch(e => { console.warn('Proxy ja:', e.message); return []; }),
-      queryProxy('en', name).catch(e => { console.warn('Proxy en:', e.message); return []; })
+      queryProxy('ja', jaSearchName).catch(e => { console.warn('Proxy ja:', e.message); return []; }),
+      queryProxy('en', enSearchName || jaSearchName).catch(e => { console.warn('Proxy en:', e.message); return []; })
     ]);
 
     const jaCards = normalizeTcgdex(jaRaw, number, '🇯🇵 JAP');
     const enCards = normalizeTcgdex(enRaw, number, '🌍 INT');
 
-    // Giapponesi prima, poi internazionali (max 30 totali)
+    // JAP prima, poi internazionali (max 30)
     const merged = [...jaCards, ...enCards].slice(0, 30);
 
     if (merged.length > 0) {
@@ -4421,11 +4465,11 @@ async function searchTcgdex(name, number, lang) {
       return;
     }
 
-    // Nessun risultato con immagine da TCGdex → fallback pokemontcg.io
+    // Nessun risultato con immagine → fallback pokemontcg.io
     status.textContent = '🔍 Ricerca database internazionale...';
-    await searchPokemonTcgIo(name, number);
+    await searchPokemonTcgIo(enSearchName || jaSearchName, number);
   } catch (e) {
-    console.error('JAP search failed:', e);
+    console.error('TCGdex search failed:', e);
     status.textContent = '⚠️ Ricerca non disponibile. Usa 📷 per caricare la foto.';
   }
 }
