@@ -3043,7 +3043,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v20</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v21</div>
   </div>
 </div>
 
@@ -3607,6 +3607,22 @@ const dataStore = {
   },
   loadNicknameLocal() {
     return localStorage.getItem('tcg_nickname') || '';
+  },
+
+  // === PSA Token (Supabase profiles — si sincronizza tra dispositivi) ===
+  async savePsaToken(token) {
+    if (!currentUser) { localStorage.setItem('tcg_psa_token', token || ''); return; }
+    await _supabase.from('profiles')
+      .upsert({ id: currentUser.id, psa_token: token || null, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    if (token) localStorage.setItem('tcg_psa_token', token);
+    else localStorage.removeItem('tcg_psa_token');
+  },
+  async loadPsaToken() {
+    if (!currentUser) return localStorage.getItem('tcg_psa_token') || '';
+    const { data } = await _supabase.from('profiles').select('psa_token').eq('id', currentUser.id).single();
+    const token = data?.psa_token || '';
+    if (token) localStorage.setItem('tcg_psa_token', token);
+    return token;
   }
 };
 
@@ -4302,8 +4318,8 @@ function updatePsaScanBtn() {
   if (!btn) return;
   const grader = document.getElementById('f-grader').value;
   const cert = document.getElementById('f-psa-cert').value.trim();
-  const token = settings.psaToken || '';
-  btn.style.display = (grader === 'PSA' && cert && token) ? '' : 'none';
+  // Mostra il pulsante quando grader=PSA e cert inserito (token opzionale qui)
+  btn.style.display = (grader === 'PSA' && cert) ? '' : 'none';
 }
 
 // ============ PHOTO HANDLING (with crop editor) ============
@@ -5750,8 +5766,11 @@ function openLinksModal() {
 function saveSettings() {
   settings.staleDays = parseInt(document.getElementById('s-stale-days').value);
   settings.wishlistStaleDays = parseInt(document.getElementById('s-wish-stale-days').value);
-  settings.psaToken = document.getElementById('s-psa-token').value.trim();
+  const newToken = document.getElementById('s-psa-token').value.trim();
+  settings.psaToken = newToken;
   saveSettingsToStorage();
+  // Salva token PSA su Supabase (si sincronizza tra dispositivi)
+  dataStore.savePsaToken(newToken);
   renderWishlist();
   showToast('✓ Impostazioni salvate');
   closeModal('settings-modal');
@@ -6200,21 +6219,20 @@ async function initApp() {
   document.getElementById('cards-list').innerHTML = '<div class="auth-loading"><div class="auth-spinner"></div> Caricamento dati...</div>';
 
   // Load all data from Supabase in parallel
-  const [loadedCards, loadedWishlist, loadedSealed, nickname] = await Promise.all([
+  const [loadedCards, loadedWishlist, loadedSealed, nickname, psaToken] = await Promise.all([
     dataStore.loadCards(),
     dataStore.loadWishlist(),
     dataStore.loadSealed(),
-    dataStore.loadNickname()
+    dataStore.loadNickname(),
+    dataStore.loadPsaToken()
   ]);
 
   cards = loadedCards;
   wishlist = loadedWishlist;
   sealed = loadedSealed;
 
-  // Set nickname
-  if (nickname) {
-    localStorage.setItem('tcg_nickname', nickname);
-  }
+  if (nickname) localStorage.setItem('tcg_nickname', nickname);
+  if (psaToken) settings.psaToken = psaToken;
   loadNickname();
   renderStats();
   renderCards();
