@@ -3043,7 +3043,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v21</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v22</div>
   </div>
 </div>
 
@@ -4883,6 +4883,7 @@ function openAddModal() {
   currentPhoto = null;
   renderPhotoPreview();
   toggleGraderFields();
+  updatePsaScanBtn();
   openModal('add-modal');
 }
 
@@ -4908,6 +4909,7 @@ function editCard(id) {
   currentPhoto = c.photo || null;
   renderPhotoPreview();
   toggleGraderFields();
+  updatePsaScanBtn();
   closeModal('detail-modal');
   setTimeout(() => openModal('add-modal'), 200);
 }
