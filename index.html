@@ -193,6 +193,7 @@
     left: 0;
     right: 0;
     bottom: 0;
+    background: var(--bg);
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
@@ -243,7 +244,6 @@
     color: var(--text);
     font-family: 'Inter', -apple-system, sans-serif;
     min-height: 100vh;
-    padding-bottom: env(safe-area-inset-bottom);
     scroll-behavior: smooth;
   }
 
@@ -416,7 +416,7 @@
   .main {
     max-width: 800px;
     margin: 0 auto;
-    padding: 8px 14px calc(env(safe-area-inset-bottom) + 24px);
+    padding: 8px 14px 0;
     position: relative;
     z-index: 1;
   }
@@ -424,6 +424,11 @@
   /* PAGE VIEWS — Home / List routing */
   .page-view {
     animation: viewFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* Spazio di sicurezza solo IN FONDO alle liste: il contenuto scorre edge-to-edge
+     fino al bordo fisico, ma l'ultimo elemento resta sopra la home-bar iOS. */
+  #cards-list, #sealed-list, #wishlist-grid, #home-tiles {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
   }
   @keyframes viewFadeIn {
     from { opacity: 0; transform: translateY(8px); }
