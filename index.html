@@ -13,6 +13,7 @@
 <title>Sweethome — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -3083,6 +3084,15 @@
 
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
 
+    <div class="form-label" style="margin-bottom:10px">📄 Esporta Liste PDF</div>
+    <div class="btn-row" style="flex-direction:column;gap:8px">
+      <button class="btn btn-secondary" onclick="exportListPDF('cards')">🃏 Lista Carte</button>
+      <button class="btn btn-secondary" onclick="exportListPDF('sealed')">📦 Lista Sealed</button>
+      <button class="btn btn-secondary" onclick="exportListPDF('wishlist')">💜 Wishlist</button>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
     <div class="form-label" style="margin-bottom:10px">📦 Gestione Dati</div>
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="exportData()">⬇ Esporta JSON</button>
@@ -3092,7 +3102,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v23</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v35</div>
   </div>
 </div>
 
@@ -6149,6 +6159,293 @@ function exportData() {
       showToast('✓ Backup aperto');
     } catch (e2) {
       showToast('⚠️ Errore export', 'error');
+    }
+  }
+}
+
+// ============ PDF EXPORT (liste) ============
+// Brand colors
+const PDF_BG = [26, 18, 40];      // header dark
+const PDF_PURPLE = [168, 85, 247];
+const PDF_GOLD = [184, 134, 11];
+const PDF_TEXT = [26, 26, 26];
+const PDF_MUTED = [106, 100, 88];
+
+function gradeLabel(c) {
+  if (c.grader === 'RAW') return c.condition ? ('RAW ' + c.condition) : 'RAW';
+  if (c.grader === 'ALTRO') return ((c.customGrader || 'ALTRO') + ' ' + (c.grade || '')).trim();
+  return ((c.grader || '') + ' ' + (c.grade || '')).trim();
+}
+
+// langFlag esiste già ma jsPDF non rende le emoji bandiera: usiamo il codice testuale
+function langCode(code) {
+  const map = { ENG:'ENG', ITA:'ITA', JAP:'JAP', KOR:'KOR', CS:'CHI', CT:'CHI-T', FRA:'FRA', GER:'GER', ESP:'ESP' };
+  return map[code] || '';
+}
+
+// Scarica un'immagine da URL e la ridimensiona/comprime a JPEG base64 leggero
+async function fetchCompressedImage(url, maxW) {
+  return new Promise((resolve) => {
+    if (!url) { resolve(null); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxW / img.naturalWidth);
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve({ data: canvas.toDataURL('image/jpeg', 0.72), w, h });
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+// Apre la scelta corretta a seconda della lista, poi genera
+function exportListPDF(type) {
+  if (type === 'wishlist') {
+    const list = (typeof wishlist !== 'undefined' && wishlist) ? wishlist : [];
+    if (!list.length) { showToast('⚠️ Wishlist vuota'); return; }
+    showPdfChoice('💜 Wishlist', [
+      { label: '🎯 HUNTLIST (con prezzi)', onPick: () => generatePDF('wishlist', { images: true, prices: true }) },
+      { label: '🛒 BUYLIST (senza prezzi)', onPick: () => generatePDF('wishlist', { images: true, prices: false }) }
+    ]);
+  } else {
+    const list = type === 'cards' ? cards : ((typeof sealed !== 'undefined' && sealed) ? sealed : []);
+    if (!list.length) { showToast(type === 'cards' ? '⚠️ Nessuna carta' : '⚠️ Nessun sealed'); return; }
+    showPdfChoice('Vuoi includere le immagini?', [
+      { label: '🖼 Sì, con foto', onPick: () => generatePDF(type, { images: true, prices: true }) },
+      { label: '📝 No, solo lista', onPick: () => generatePDF(type, { images: false, prices: true }) }
+    ]);
+  }
+}
+
+// Mini modal di scelta (riusa lo stile delle modali)
+function showPdfChoice(title, options) {
+  const existing = document.getElementById('pdf-choice-modal');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'pdf-choice-modal';
+  overlay.style.zIndex = '200';
+  const btns = options.map((o, i) =>
+    `<button class="btn btn-primary" style="margin-top:${i?10:0}px" data-idx="${i}">${o.label}</button>`
+  ).join('');
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header">
+        <div class="modal-title">${title}</div>
+        <button class="modal-close" id="pdf-choice-close">✕</button>
+      </div>
+      <div style="padding:4px 0 8px">
+        ${btns}
+        <button class="btn btn-secondary" style="margin-top:10px" id="pdf-choice-cancel">Annulla</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#pdf-choice-close').onclick = () => overlay.remove();
+  overlay.querySelector('#pdf-choice-cancel').onclick = () => overlay.remove();
+  overlay.querySelectorAll('button[data-idx]').forEach(b => {
+    b.onclick = () => {
+      const idx = parseInt(b.dataset.idx);
+      overlay.remove();
+      options[idx].onPick();
+    };
+  });
+}
+
+async function generatePDF(type, opts) {
+  const jsPDFns = window.jspdf;
+  if (!jsPDFns || !jsPDFns.jsPDF) { showToast('⚠️ Libreria PDF non caricata'); return; }
+  showToast('⏳ Genero PDF...');
+
+  // Normalizza i dati in righe uniformi
+  let items, titleRight, countLabel, priceHeader, fileBase;
+  if (type === 'cards') {
+    items = cards.map(c => ({
+      name: c.name, set: c.set, number: c.number,
+      grade: gradeLabel(c), lang: langCode(c.language),
+      price: getCurrentPrice(c), serial: c.psaCert || '', photo: c.photo
+    }));
+    titleRight = 'CARDS AVAILABLE';
+    countLabel = `${cards.length} ${cards.length===1?'carta':'carte'}`;
+    priceHeader = 'Last sold';
+    fileBase = 'sweethome-cards';
+  } else if (type === 'sealed') {
+    items = sealed.map(s => ({
+      name: s.name, set: '', number: '',
+      grade: 'SEALED', lang: '',
+      price: s.currentPrice, serial: '', photo: s.photo
+    }));
+    titleRight = 'SEALED AVAILABLE';
+    countLabel = `${sealed.length} ${sealed.length===1?'prodotto':'prodotti'}`;
+    priceHeader = 'Last sold';
+    fileBase = 'sweethome-sealed';
+  } else { // wishlist
+    items = wishlist.map(w => ({
+      name: w.name, set: w.set, number: w.number,
+      grade: '', lang: langCode(w.language),
+      price: w.psa10 || w.raw, serial: '', photo: w.photo
+    }));
+    titleRight = opts.prices ? 'HUNTLIST' : 'BUYLIST';
+    countLabel = `${wishlist.length} ${wishlist.length===1?'carta cercata':'carte cercate'}`;
+    priceHeader = 'Target';
+    fileBase = opts.prices ? 'sweethome-huntlist' : 'sweethome-buylist';
+  }
+
+  // Pre-carica le immagini compresse (se richieste)
+  let imgMap = {};
+  if (opts.images) {
+    const jobs = items.map(async (it, idx) => {
+      if (it.photo) { imgMap[idx] = await fetchCompressedImage(it.photo, 120); }
+    });
+    await Promise.all(jobs);
+  }
+
+  const doc = new jsPDFns.jsPDF({ unit: 'pt', format: 'a4' });
+  const PW = doc.internal.pageSize.getWidth();
+  const PH = doc.internal.pageSize.getHeight();
+  const M = 32;                       // margine laterale
+  const rowH = opts.images ? 66 : 40; // altezza riga
+  const headH = 96;
+
+  const today = new Date().toLocaleDateString('it-IT');
+
+  function drawHeader() {
+    // banda scura
+    doc.setFillColor(...PDF_BG);
+    doc.rect(0, 0, PW, headH, 'F');
+    // brand
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...PDF_PURPLE);
+    doc.text('S', M, 42);
+    doc.setTextColor(245, 242, 235);
+    const sW = doc.getTextWidth('S');
+    doc.text('WEETHOME', M + sW, 42);
+    // tag
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(138, 132, 120);
+    doc.text('BY SWEETCOLLECTIBLES', M, 56);
+    // count
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(201, 196, 184);
+    doc.text(countLabel, M, 74);
+    // right: list type + date
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(...PDF_PURPLE);
+    doc.text(titleRight, PW - M, 40, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(138, 132, 120);
+    doc.text(today, PW - M, 54, { align: 'right' });
+    // colonna prezzi header (solo se prezzi attivi)
+    if (opts.prices) {
+      doc.setFontSize(7);
+      doc.setTextColor(138, 132, 120);
+      doc.text(priceHeader.toUpperCase(), PW - M, headH - 8, { align: 'right' });
+    }
+  }
+
+  function drawFooter() {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.text('SWEETHOME · sweetcollectibles.tcg', PW / 2, PH - 18, { align: 'center' });
+  }
+
+  drawHeader();
+  let y = headH + 6;
+
+  items.forEach((it, idx) => {
+    if (y + rowH > PH - 30) {
+      drawFooter();
+      doc.addPage();
+      drawHeader();
+      y = headH + 6;
+    }
+    // zebra
+    if (idx % 2 === 1) {
+      doc.setFillColor(243, 239, 230);
+      doc.rect(0, y, PW, rowH, 'F');
+    }
+    let x = M;
+    // foto
+    if (opts.images) {
+      const im = imgMap[idx];
+      const ph = rowH - 14, pw = ph * (63/88);
+      if (im) {
+        try { doc.addImage(im.data, 'JPEG', x, y + 7, pw, ph); } catch(e) {}
+      } else {
+        doc.setFillColor(227, 221, 208);
+        doc.rect(x, y + 7, pw, ph, 'F');
+      }
+      x += pw + 12;
+    }
+    // nome
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...PDF_TEXT);
+    doc.text(it.name || '—', x, y + 20, { maxWidth: PW - x - 90 });
+    // meta (set · numero)
+    const metaParts = [];
+    if (it.number) metaParts.push('#' + it.number);
+    if (it.set) metaParts.push(it.set);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...PDF_MUTED);
+    if (metaParts.length) doc.text(metaParts.join(' · '), x, y + 33, { maxWidth: PW - x - 90 });
+    // grade + lang
+    const gl = [it.grade, it.lang].filter(Boolean).join('  ·  ');
+    if (gl) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...PDF_BG);
+      doc.text(gl, x, y + (opts.images ? 48 : 33) + (opts.images?0:0));
+    }
+    // prezzo (destra in alto)
+    if (opts.prices && it.price != null && it.price !== '') {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(...PDF_GOLD);
+      doc.text('€' + fmt(it.price), PW - M, y + 22, { align: 'right' });
+    }
+    // seriale (destra in basso, all'estremità)
+    if (it.serial) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(176, 169, 154);
+      doc.text(it.serial, PW - M, y + rowH - 8, { align: 'right' });
+    }
+    // separatore
+    doc.setDrawColor(232, 227, 216);
+    doc.setLineWidth(0.5);
+    doc.line(M, y + rowH, PW - M, y + rowH);
+    y += rowH;
+  });
+
+  drawFooter();
+
+  const fname = `${fileBase}-${new Date().toISOString().split('T')[0]}.pdf`;
+  try {
+    doc.save(fname);
+    showToast('✓ PDF generato');
+  } catch (e) {
+    // fallback mobile: apri in nuova tab
+    try {
+      const url = doc.output('bloburl');
+      window.open(url, '_blank');
+      showToast('✓ PDF aperto');
+    } catch (e2) {
+      showToast('⚠️ Errore PDF');
     }
   }
 }
