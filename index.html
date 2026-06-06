@@ -1010,30 +1010,40 @@
     padding: 3px 10px;
     border-radius: 8px;
   }
+  /* maniglia opzionale come indicatore visivo (non più obbligatoria da afferrare) */
   .list-drag-handle {
     display: none;
     flex-shrink: 0;
-    width: 28px;
+    width: 24px;
     align-items: center;
     justify-content: center;
-    color: var(--muted);
-    font-size: 1.25rem;
-    cursor: grab;
-    touch-action: none;
-    margin-right: -4px;
+    color: var(--muted2);
+    font-size: 1.15rem;
+    margin-right: -2px;
+    pointer-events: none;
   }
   body.reordering .list-drag-handle { display: flex; }
-  body.reordering .list-card { cursor: grab; }
-  body.reordering .list-card .list-prices { opacity: 0.45; }
-  .list-card.dragging {
-    opacity: 0.9;
-    border-color: var(--accent);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    transform: scale(1.02);
-    background: var(--surface2);
+  body.reordering .list-card {
+    cursor: grab;
+    touch-action: none;            /* fondamentale: il dito trascina, non scrolla la carta */
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.18s cubic-bezier(.2,.8,.2,1);
   }
-  .list-card.drag-over-top { border-top: 2px solid var(--accent); }
-  .list-card.drag-over-bottom { border-bottom: 2px solid var(--accent); }
+  body.reordering .list-card .list-prices { opacity: 0.5; }
+  /* la carta sollevata segue il dito: niente transition sul transform mentre trascina */
+  .list-card.dragging {
+    transition: none !important;
+    border-color: var(--accent);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.55);
+    background: var(--surface2);
+    will-change: transform;
+  }
+  /* durante il drag il pointer è catturato dalla carta: niente overflow:hidden
+     così l'auto-scroll programmatico via JS resta possibile */
+  body.drag-active .scroll-wrapper {
+    overscroll-behavior: contain;
+  }
   .reorder-hint {
     font-size: 0.72rem;
     color: var(--accent);
@@ -2771,7 +2781,7 @@
     </div>
 
     <!-- CARDS -->
-    <div class="reorder-hint">↕ Trascina le carte per riordinarle · tocca di nuovo "Ordina" per salvare</div>
+    <div class="reorder-hint">↕ Tieni premuto su una carta e trascinala · tocca "Fatto" per salvare</div>
     <div id="cards-list"></div>
 
   </div>
@@ -5872,63 +5882,153 @@ function persistOrderFromDOM() {
 function enableDragReorder() {
   const list = document.getElementById('cards-list');
   if (!list) return;
-  let dragEl = null;
-  let placeholderAfter = null;
 
-  const getCardUnderPoint = (y) => {
-    const cardsEls = [...list.querySelectorAll('.list-card:not(.dragging)')];
-    return cardsEls.reduce((closest, el) => {
-      const box = el.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset, el };
-      }
-      return closest;
-    }, { offset: -Infinity, el: null }).el;
-  };
-
-  const clearMarkers = () => {
-    list.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => {
-      el.classList.remove('drag-over-top', 'drag-over-bottom');
-    });
-  };
-
-  list.querySelectorAll('.list-drag-handle').forEach(handle => {
-    handle.onpointerdown = (e) => {
-      if (!reorderMode) return;
-      e.preventDefault();
-      dragEl = handle.closest('.list-card');
-      if (!dragEl) return;
-      dragEl.classList.add('dragging');
-      handle.setPointerCapture(e.pointerId);
-
-      const onMove = (ev) => {
-        const y = ev.clientY;
-        const target = getCardUnderPoint(y);
-        clearMarkers();
-        if (target) {
-          list.insertBefore(dragEl, target);
-        } else {
-          list.appendChild(dragEl);
-        }
-      };
-
-      const onUp = (ev) => {
-        handle.releasePointerCapture(e.pointerId);
-        handle.removeEventListener('pointermove', onMove);
-        handle.removeEventListener('pointerup', onUp);
-        handle.removeEventListener('pointercancel', onUp);
-        if (dragEl) dragEl.classList.remove('dragging');
-        clearMarkers();
-        persistOrderFromDOM();
-        dragEl = null;
-      };
-
-      handle.addEventListener('pointermove', onMove);
-      handle.addEventListener('pointerup', onUp);
-      handle.addEventListener('pointercancel', onUp);
-    };
+  // Evita doppia inizializzazione sugli stessi nodi
+  list.querySelectorAll('.list-card').forEach(card => {
+    if (card._dragBound) return;
+    card._dragBound = true;
+    bindLongPressDrag(card, list);
   });
+}
+
+function bindLongPressDrag(card, list) {
+  let pressTimer = null;
+  let dragging = false;
+  let startX = 0, startY = 0;
+  let pointerId = null;
+  let ghostOffsetY = 0;          // distanza fra dito e top della carta
+  let autoScrollRAF = null;
+  let lastClientY = 0;
+  const LONG_PRESS_MS = 220;
+  const MOVE_CANCEL_PX = 10;     // se muovi prima del long-press → è uno scroll, annulla
+
+  const scroller = document.querySelector('.scroll-wrapper') || document.scrollingElement || document.documentElement;
+
+  card.addEventListener('pointerdown', (e) => {
+    if (!reorderMode) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pointerId = e.pointerId;
+    startX = e.clientX; startY = e.clientY; lastClientY = e.clientY;
+
+    // long-press: dopo un attimo "solleva" la carta
+    pressTimer = setTimeout(() => {
+      startDrag(e);
+    }, LONG_PRESS_MS);
+
+    const cancelIfMoved = (ev) => {
+      if (dragging) return;
+      if (Math.abs(ev.clientY - startY) > MOVE_CANCEL_PX || Math.abs(ev.clientX - startX) > MOVE_CANCEL_PX) {
+        clearTimeout(pressTimer);
+        card.removeEventListener('pointermove', cancelIfMoved);
+      }
+    };
+    card.addEventListener('pointermove', cancelIfMoved);
+    card.addEventListener('pointerup', () => { clearTimeout(pressTimer); card.removeEventListener('pointermove', cancelIfMoved); }, { once: true });
+  });
+
+  function startDrag(e) {
+    dragging = true;
+    if (navigator.vibrate) navigator.vibrate(12); // haptic leggero
+    card.setPointerCapture(pointerId);
+
+    const rect = card.getBoundingClientRect();
+    ghostOffsetY = e.clientY - rect.top;
+
+    // "Solleva" la carta: resta nel flusso ma diventa il pezzo che segue il dito
+    card.classList.add('dragging');
+    card.style.width = rect.width + 'px';
+    card.style.zIndex = '50';
+    moveGhost(e.clientY);
+
+    document.body.classList.add('drag-active'); // blocca scroll pagina via CSS
+
+    card.addEventListener('pointermove', onMove);
+    card.addEventListener('pointerup', onUp);
+    card.addEventListener('pointercancel', onUp);
+    startAutoScroll();
+  }
+
+  function moveGhost(clientY) {
+    // Posiziona la carta in modo che il punto afferrato resti sotto il dito.
+    // Calcoliamo lo scostamento fra dove la carta si troverebbe nel flusso
+    // (il suo rect attuale senza transform) e dove vogliamo che stia.
+    const prev = card.style.transform;
+    card.style.transform = 'none';
+    const flowTop = card.getBoundingClientRect().top;
+    card.style.transform = prev;
+    const desiredTop = clientY - ghostOffsetY;
+    card.style.transform = `translateY(${desiredTop - flowTop}px) scale(1.03)`;
+  }
+
+  function reorderAround(clientY) {
+    const siblings = [...list.querySelectorAll('.list-card:not(.dragging)')];
+    let placed = false;
+    for (const sib of siblings) {
+      const box = sib.getBoundingClientRect();
+      const mid = box.top + box.height / 2;
+      if (clientY < mid) {
+        if (sib.previousElementSibling !== card) list.insertBefore(card, sib);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) list.appendChild(card);
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    lastClientY = e.clientY;
+    reorderAround(e.clientY);
+    moveGhost(e.clientY);
+  }
+
+  function onUp() {
+    if (!dragging) return;
+    dragging = false;
+    stopAutoScroll();
+    card.releasePointerCapture(pointerId);
+    card.removeEventListener('pointermove', onMove);
+    card.removeEventListener('pointerup', onUp);
+    card.removeEventListener('pointercancel', onUp);
+
+    // "Appoggia" la carta con una piccola animazione
+    card.classList.remove('dragging');
+    card.style.transform = '';
+    card.style.width = '';
+    card.style.zIndex = '';
+    document.body.classList.remove('drag-active');
+
+    persistOrderFromDOM();
+    if (navigator.vibrate) navigator.vibrate(6);
+  }
+
+  // ===== Auto-scroll ai bordi: se trascini vicino al top/bottom, la pagina scorre =====
+  function startAutoScroll() {
+    const EDGE = 90;        // zona sensibile in px dai bordi
+    const MAX_SPEED = 14;   // px per frame
+    const step = () => {
+      if (!dragging) return;
+      const vh = window.innerHeight;
+      let dy = 0;
+      if (lastClientY < EDGE) {
+        dy = -MAX_SPEED * (1 - lastClientY / EDGE);
+      } else if (lastClientY > vh - EDGE) {
+        dy = MAX_SPEED * (1 - (vh - lastClientY) / EDGE);
+      }
+      if (dy !== 0) {
+        scroller.scrollTop += dy;
+        reorderAround(lastClientY);
+        moveGhost(lastClientY);
+      }
+      autoScrollRAF = requestAnimationFrame(step);
+    };
+    autoScrollRAF = requestAnimationFrame(step);
+  }
+  function stopAutoScroll() {
+    if (autoScrollRAF) cancelAnimationFrame(autoScrollRAF);
+    autoScrollRAF = null;
+  }
 }
 
 // ============ SETTINGS ============
