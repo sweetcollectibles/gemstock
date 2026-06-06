@@ -6010,21 +6010,30 @@ function bindLongPressDrag(card, list) {
 
   // ===== Auto-scroll ai bordi: se trascini vicino al top/bottom, la pagina scorre =====
   function startAutoScroll() {
-    const EDGE = 90;        // zona sensibile in px dai bordi
-    const MAX_SPEED = 14;   // px per frame
+    const EDGE = 120;       // zona sensibile in px dai bordi (più ampia → più facile da innescare)
+    const MAX_SPEED = 16;   // px per frame
     const step = () => {
-      if (!dragging) return;
-      const vh = window.innerHeight;
+      if (!dragging) { autoScrollRAF = null; return; }
+      const rect = scroller.getBoundingClientRect();
+      const top = rect.top;
+      const bottom = rect.bottom;
       let dy = 0;
-      if (lastClientY < EDGE) {
-        dy = -MAX_SPEED * (1 - lastClientY / EDGE);
-      } else if (lastClientY > vh - EDGE) {
-        dy = MAX_SPEED * (1 - (vh - lastClientY) / EDGE);
+      if (lastClientY < top + EDGE) {
+        // più vicino al bordo alto → più veloce; clamp per non andare sotto 0
+        const intensity = Math.max(0, (top + EDGE - lastClientY) / EDGE);
+        dy = -MAX_SPEED * Math.min(1, intensity);
+      } else if (lastClientY > bottom - EDGE) {
+        const intensity = Math.max(0, (lastClientY - (bottom - EDGE)) / EDGE);
+        dy = MAX_SPEED * Math.min(1, intensity);
       }
       if (dy !== 0) {
-        scroller.scrollTop += dy;
-        reorderAround(lastClientY);
-        moveGhost(lastClientY);
+        const before = scroller.scrollTop;
+        scroller.scrollTop = before + dy;
+        // solo se lo scroll si è davvero mosso aggiorniamo posizione e ordine
+        if (scroller.scrollTop !== before) {
+          reorderAround(lastClientY);
+          moveGhost(lastClientY);
+        }
       }
       autoScrollRAF = requestAnimationFrame(step);
     };
