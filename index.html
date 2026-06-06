@@ -166,7 +166,6 @@
 
   html, body {
     height: 100%;
-    height: 100dvh;
     width: 100%;
     margin: 0;
     padding: 0;
@@ -186,17 +185,26 @@
     user-select: none;
     width: 100%;
     height: 100%;
-    height: 100dvh;
   }
 
   /* PWA scroll fix — only active when app is running (not on auth page) */
   body.in-app {
     position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow: hidden;
+    background: var(--bg);
   }
 
   body.in-app html {
     position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg);
   }
 
   /* SCROLL CONTAINER — unico elemento che scrolla, ancorato ai bordi fisici dello schermo.
@@ -206,9 +214,8 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 100vh;                              /* fallback base */
-    height: 100dvh;                             /* moderno */
-    height: var(--app-height, 100dvh);          /* misurato via JS: vince su iOS */
+    bottom: 0;                                  /* top+bottom ancorano ai bordi fisici:
+                                                   iOS lo calcola sempre giusto, anche a freddo */
     background: var(--bg);
     overflow-y: auto;
     overflow-x: hidden;
@@ -3111,7 +3118,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v37</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v38</div>
   </div>
 </div>
 
