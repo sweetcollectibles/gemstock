@@ -416,7 +416,7 @@
   .main {
     max-width: 800px;
     margin: 0 auto;
-    padding: 8px 14px calc(env(safe-area-inset-bottom) + 90px);
+    padding: 8px 14px calc(env(safe-area-inset-bottom) + 24px);
     position: relative;
     z-index: 1;
   }
@@ -1045,9 +1045,12 @@
   body.reordering .list-card:active { transform: none; }
   .list-card.dragging:active { transform: inherit; }
   /* durante il drag il pointer è catturato dalla carta: niente overflow:hidden
-     così l'auto-scroll programmatico via JS resta possibile */
+     così l'auto-scroll programmatico via JS resta possibile.
+     Disattiviamo lo smooth-scroll: con scroll-behavior:smooth gli incrementi
+     rapidi via JS si accavallano e l'auto-scroll non avanza. */
   body.drag-active .scroll-wrapper {
     overscroll-behavior: contain;
+    scroll-behavior: auto !important;
   }
   .reorder-hint {
     font-size: 0.72rem;
@@ -6618,16 +6621,21 @@ document.addEventListener('touchmove', e => {
   let lastScrollTop = 0;
   let scrollTimeout = null;
   const THRESHOLD = 6;
+  const atBottom = () => (wrapper.scrollTop + wrapper.clientHeight) >= (wrapper.scrollHeight - 8);
   wrapper.addEventListener('scroll', () => {
     if (document.body.classList.contains('auth-visible')) return;
     const st = wrapper.scrollTop;
     const delta = st - lastScrollTop;
     if (st < 40) { document.body.classList.remove('fab-hidden'); }
+    else if (atBottom()) { document.body.classList.add('fab-hidden'); }
     else if (delta > THRESHOLD) { document.body.classList.add('fab-hidden'); }
     else if (delta < -THRESHOLD) { document.body.classList.remove('fab-hidden'); }
     lastScrollTop = st;
     if (scrollTimeout) clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => { document.body.classList.remove('fab-hidden'); }, 600);
+    scrollTimeout = setTimeout(() => {
+      // non riportare il FAB se siamo in fondo (coprirebbe l'ultima carta)
+      if (!atBottom()) document.body.classList.remove('fab-hidden');
+    }, 600);
   }, { passive: true });
 })();
 </script>
