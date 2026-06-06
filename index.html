@@ -11,6 +11,15 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Sweethome — Portfolio</title>
+<script>
+  // Imposta l'altezza reale PRIMA del primo paint, così non c'è mai una fascia nera.
+  (function(){
+    try {
+      var h = Math.max(window.innerHeight||0, document.documentElement.clientHeight||0);
+      if (h>0) document.documentElement.style.setProperty('--app-height', h+'px');
+    } catch(e){}
+  })();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3102,7 +3111,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v35</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v37</div>
   </div>
 </div>
 
@@ -3427,13 +3436,29 @@
 // Su iOS in standalone, 100dvh/100% possono restituire un'altezza errata
 // lasciando una fascia nera in fondo. Misuriamo l'altezza reale e la fissiamo.
 function setAppHeight() {
-  const h = window.innerHeight;
-  document.documentElement.style.setProperty('--app-height', h + 'px');
+  // Su iOS a freddo innerHeight può non essere ancora assestato:
+  // usiamo il valore più affidabile disponibile.
+  const h = Math.max(
+    window.innerHeight || 0,
+    document.documentElement.clientHeight || 0
+  );
+  if (h > 0) document.documentElement.style.setProperty('--app-height', h + 'px');
 }
+// Misura subito e ripetutamente nei primi istanti, quando iOS assesta il viewport
 setAppHeight();
+[0, 50, 150, 300, 600, 1000].forEach(t => setTimeout(setAppHeight, t));
 window.addEventListener('resize', setAppHeight);
-window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 200));
-window.addEventListener('pageshow', setAppHeight);
+window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 250));
+window.addEventListener('load', () => { setAppHeight(); setTimeout(setAppHeight, 200); });
+window.addEventListener('pageshow', () => { setAppHeight(); setTimeout(setAppHeight, 150); });
+window.addEventListener('focus', setAppHeight);
+// Momento chiave: app riportata in primo piano (chiudi → riapri)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    setAppHeight();
+    [50, 200, 500].forEach(t => setTimeout(setAppHeight, t));
+  }
+});
 
 // ============ SUPABASE CLIENT ============
 const SUPABASE_URL = 'https://xoeyfbqplvmbrplqdbrq.supabase.co';
@@ -6435,18 +6460,43 @@ async function generatePDF(type, opts) {
   drawFooter();
 
   const fname = `${fileBase}-${new Date().toISOString().split('T')[0]}.pdf`;
+  const blob = doc.output('blob');
+  const file = new File([blob], fname, { type: 'application/pdf' });
+
+  // 1) Preferito su iOS/mobile: share sheet nativo con il FILE allegato.
+  //    Così parte il menu iOS e puoi salvare in File / inviare su WhatsApp ecc.
   try {
-    doc.save(fname);
-    showToast('✓ PDF generato');
-  } catch (e) {
-    // fallback mobile: apri in nuova tab
-    try {
-      const url = doc.output('bloburl');
-      window.open(url, '_blank');
-      showToast('✓ PDF aperto');
-    } catch (e2) {
-      showToast('⚠️ Errore PDF');
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: fname });
+      showToast('✓ PDF pronto');
+      return;
     }
+  } catch (e) {
+    // l'utente ha annullato lo share, oppure non supportato → passa ai fallback
+    if (e && e.name === 'AbortError') { return; }
+  }
+
+  // 2) Fallback desktop: download diretto del file
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showToast('✓ PDF scaricato');
+    return;
+  } catch (e) {}
+
+  // 3) Ultimo fallback: apri in nuova tab
+  try {
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    showToast('✓ PDF aperto');
+  } catch (e2) {
+    showToast('⚠️ Errore PDF');
   }
 }
 
