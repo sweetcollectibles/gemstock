@@ -196,7 +196,9 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 100dvh;
+    height: 100vh;                              /* fallback base */
+    height: 100dvh;                             /* moderno */
+    height: var(--app-height, 100dvh);          /* misurato via JS: vince su iOS */
     background: var(--bg);
     overflow-y: auto;
     overflow-x: hidden;
@@ -3411,6 +3413,18 @@
 </div>
 
 <script>
+// ============ APP HEIGHT FIX (iOS PWA) ============
+// Su iOS in standalone, 100dvh/100% possono restituire un'altezza errata
+// lasciando una fascia nera in fondo. Misuriamo l'altezza reale e la fissiamo.
+function setAppHeight() {
+  const h = window.innerHeight;
+  document.documentElement.style.setProperty('--app-height', h + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 200));
+window.addEventListener('pageshow', setAppHeight);
+
 // ============ SUPABASE CLIENT ============
 const SUPABASE_URL = 'https://xoeyfbqplvmbrplqdbrq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZXlmYnFwbHZtYnJwbHFkYnJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTkyMTUsImV4cCI6MjA5NTk5NTIxNX0.Md4LQkMGkErkFzOHrMuKUh9MVw-oAaJpXPPnZ2n8zVA';
