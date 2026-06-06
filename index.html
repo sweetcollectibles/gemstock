@@ -196,7 +196,6 @@
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
     height: 100dvh;
     background: var(--bg);
     overflow-y: auto;
@@ -430,10 +429,10 @@
   .page-view {
     animation: viewFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  /* Spazio di sicurezza solo IN FONDO alle liste: il contenuto scorre edge-to-edge
-     fino al bordo fisico, ma l'ultimo elemento resta sopra la home-bar iOS. */
+  /* Nessun padding di sicurezza in fondo: le carte riempiono fino al bordo fisico,
+     scorrendo anche sotto la home-bar (richiesta esplicita: riempire tutto). */
   #cards-list, #sealed-list, #wishlist-grid, #home-tiles {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+    padding-bottom: 0;
   }
   @keyframes viewFadeIn {
     from { opacity: 0; transform: translateY(8px); }
