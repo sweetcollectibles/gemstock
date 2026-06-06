@@ -1034,11 +1034,16 @@
   /* la carta sollevata segue il dito: niente transition sul transform mentre trascina */
   .list-card.dragging {
     transition: none !important;
+    position: relative;
+    z-index: 100;
     border-color: var(--accent);
     box-shadow: 0 12px 32px rgba(0,0,0,0.55);
     background: var(--surface2);
     will-change: transform;
   }
+  /* durante il riordino disattiva l'effetto :active che confligge col transform del drag */
+  body.reordering .list-card:active { transform: none; }
+  .list-card.dragging:active { transform: inherit; }
   /* durante il drag il pointer è catturato dalla carta: niente overflow:hidden
      così l'auto-scroll programmatico via JS resta possibile */
   body.drag-active .scroll-wrapper {
