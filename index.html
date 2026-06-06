@@ -922,7 +922,14 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+    aspect-ratio: 64 / 90;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
+  .list-photo img.loaded { opacity: 1; }
   .list-photo-ph {
     width: 100%; height: 100%;
     display: flex;
@@ -988,6 +995,56 @@
     letter-spacing: 0.3px;
     text-transform: none;
   }
+  .list-lang-flag {
+    font-size: 0.78rem;
+    line-height: 1;
+    filter: saturate(1.1);
+    vertical-align: -1px;
+    margin-left: 1px;
+  }
+
+  /* ====== REORDER MODE ====== */
+  .section-action.active {
+    color: var(--bg);
+    background: var(--accent);
+    padding: 3px 10px;
+    border-radius: 8px;
+  }
+  .list-drag-handle {
+    display: none;
+    flex-shrink: 0;
+    width: 28px;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 1.25rem;
+    cursor: grab;
+    touch-action: none;
+    margin-right: -4px;
+  }
+  body.reordering .list-drag-handle { display: flex; }
+  body.reordering .list-card { cursor: grab; }
+  body.reordering .list-card .list-prices { opacity: 0.45; }
+  .list-card.dragging {
+    opacity: 0.9;
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    transform: scale(1.02);
+    background: var(--surface2);
+  }
+  .list-card.drag-over-top { border-top: 2px solid var(--accent); }
+  .list-card.drag-over-bottom { border-bottom: 2px solid var(--accent); }
+  .reorder-hint {
+    font-size: 0.72rem;
+    color: var(--accent);
+    text-align: center;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    display: none;
+  }
+  body.reordering .reorder-hint { display: block; }
   .price-item-value {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.82rem;
@@ -2048,34 +2105,6 @@
     flex-wrap: wrap;
   }
 
-  .storage-meter {
-    margin-bottom: 4px;
-  }
-  .storage-bar-track {
-    width: 100%;
-    height: 10px;
-    background: var(--surface2);
-    border-radius: 5px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .storage-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
-    border-radius: 5px;
-    transition: width 0.4s ease, background 0.3s;
-    width: 0%;
-  }
-  .storage-bar-fill.warn { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-  .storage-bar-fill.danger { background: linear-gradient(90deg, #f87171, #dc2626); }
-  .storage-info {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--muted);
-    margin-top: 8px;
-    text-align: center;
-  }
-
   .detail-photo-wrap {
     display: flex;
     justify-content: center;
@@ -2735,10 +2764,14 @@
     <!-- SECTION TITLE (stat filter) -->
     <div class="section-title">
       <div class="section-title-text" id="section-text">📁 Portfolio</div>
-      <div class="section-action" id="section-clear" style="display:none" onclick="clearAllFilters()">✕ Rimuovi filtro</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-left:auto;">
+        <div class="section-action" id="section-clear" style="display:none" onclick="clearAllFilters()">✕ Rimuovi filtro</div>
+        <div class="section-action" id="reorder-toggle" onclick="toggleReorder()">↕ Ordina</div>
+      </div>
     </div>
 
     <!-- CARDS -->
+    <div class="reorder-hint">↕ Trascina le carte per riordinarle · tocca di nuovo "Ordina" per salvare</div>
     <div id="cards-list"></div>
 
   </div>
@@ -3018,16 +3051,6 @@
     </div>
 
     <button class="btn btn-primary" style="margin-top:16px" onclick="saveSettings()">💾 Salva Impostazioni</button>
-
-    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
-
-    <div class="form-label" style="margin-bottom:10px">💾 Spazio utilizzato</div>
-    <div class="storage-meter">
-      <div class="storage-bar-track">
-        <div class="storage-bar-fill" id="storage-bar-fill"></div>
-      </div>
-      <div class="storage-info" id="storage-info">Calcolo...</div>
-    </div>
 
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
 
@@ -3409,6 +3432,7 @@ function cardToDb(c, userId) {
     notes:         c.notes || null,
     photo_url:     c.photo || null,
     history:       c.history || [],
+    sort_index:    typeof c.sortIndex === 'number' ? c.sortIndex : null,
     updated_at:    new Date().toISOString()
   };
 }
@@ -3432,6 +3456,7 @@ function dbToCard(r) {
     photo:        r.photo_url || null,
     photoUrl:     r.photo_url || null,
     history:      Array.isArray(r.history) ? r.history : [],
+    sortIndex:    typeof r.sort_index === 'number' ? r.sort_index : undefined,
     createdAt:    r.created_at,
     updatedAt:    r.updated_at
   };
@@ -3505,9 +3530,28 @@ const dataStore = {
   // === Cards (Supabase) ===
   async loadCards() {
     if (!currentUser) return [];
-    const { data, error } = await _supabase.from('cards').select('*').order('created_at', { ascending: true });
+    let { data, error } = await _supabase.from('cards').select('*').order('created_at', { ascending: true });
     if (error) { console.error('loadCards:', error); return []; }
     return (data || []).map(dbToCard);
+  },
+  // Salva l'ordine manuale su Supabase (no-op silenzioso se la colonna sort_index non esiste ancora)
+  async saveOrder(cardsArr) {
+    if (!currentUser) return;
+    const updates = cardsArr
+      .filter(c => typeof c.sortIndex === 'number')
+      .map(c => ({ id: c.id, sortIndex: c.sortIndex }));
+    for (const u of updates) {
+      const { error } = await _supabase
+        .from('cards')
+        .update({ sort_index: u.sortIndex })
+        .eq('id', u.id)
+        .eq('user_id', currentUser.id);
+      if (error) {
+        // Colonna assente o altro errore → l'ordine resta comunque salvato in locale
+        console.warn('saveOrder (cloud) non riuscito, ordine mantenuto in locale:', error.message);
+        return;
+      }
+    }
   },
   async insertCard(card) {
     try {
@@ -3644,6 +3688,52 @@ function daysSince(dateStr) {
   if (!dateStr) return null;
   const diff = (Date.now() - new Date(dateStr).getTime()) / (1000*60*60*24);
   return Math.floor(diff);
+}
+
+// Salva l'ordine manuale: backup immediato in localStorage + sync cloud best-effort.
+function saveCards(cardsArr) {
+  try {
+    const order = (cardsArr || cards)
+      .filter(c => typeof c.sortIndex === 'number')
+      .map(c => ({ id: c.id, sortIndex: c.sortIndex }));
+    localStorage.setItem('tcg_card_order', JSON.stringify(order));
+  } catch (e) { /* ignora quota/errori locali */ }
+  // Sync su Supabase in background, senza bloccare la UI
+  if (typeof dataStore !== 'undefined' && dataStore.saveOrder) {
+    dataStore.saveOrder(cardsArr || cards);
+  }
+}
+
+// Applica l'ordine salvato in locale alle carte caricate (usato dopo loadCards
+// come fallback finché sort_index non è disponibile sul cloud).
+function applyLocalOrder(cardsArr) {
+  try {
+    const raw = localStorage.getItem('tcg_card_order');
+    if (!raw) return;
+    const order = JSON.parse(raw);
+    const idx = {};
+    order.forEach(o => { idx[o.id] = o.sortIndex; });
+    cardsArr.forEach(c => {
+      if (c.sortIndex === undefined && idx[c.id] !== undefined) c.sortIndex = idx[c.id];
+    });
+  } catch (e) { /* nessun ordine locale */ }
+}
+
+function langFlag(code) {
+  const map = {
+    ENG: '🇬🇧', ITA: '🇮🇹', JAP: '🇯🇵', KOR: '🇰🇷',
+    CS: '🇨🇳', CT: '🇹🇼', FRA: '🇫🇷', GER: '🇩🇪', ESP: '🇪🇸'
+  };
+  return map[code] || '';
+}
+
+// Mostra subito (senza attendere onload) le immagini lista già presenti in cache:
+// dopo un re-render l'evento onload inline potrebbe non scattare per le immagini complete.
+function markLoadedImages(root) {
+  const scope = root || document;
+  scope.querySelectorAll('.list-photo img:not(.loaded)').forEach(img => {
+    if (img.complete && img.naturalWidth > 0) img.classList.add('loaded');
+  });
 }
 
 function getCurrentPrice(card) {
@@ -4010,6 +4100,22 @@ function renderCards() {
   if (sectionText) sectionText.textContent = sectionLabels[activeFilter] || '📁 Portfolio';
   if (sectionClear) sectionClear.style.display = activeFilter === 'all' ? 'none' : '';
 
+  // Il riordino manuale ha senso solo sulla lista completa, senza filtri né ricerca attiva
+  const reorderBtn = document.getElementById('reorder-toggle');
+  if (reorderBtn) {
+    const canReorder = activeFilter === 'all' && !q;
+    reorderBtn.style.display = canReorder ? '' : 'none';
+    // Se un filtro/ricerca viene attivato mentre si è in riordino, esci dalla modalità
+    if (!canReorder && reorderMode) {
+      reorderMode = false;
+      document.body.classList.remove('reordering');
+      reorderBtn.classList.remove('active');
+      reorderBtn.textContent = '↕ Ordina';
+      persistOrderFromDOM();
+      saveCards(cards);
+    }
+  }
+
   // Filter — ricerca solo su nome e numero per essere stretta e precisa
   let filtered = cards.filter(c => {
     const matchesSearch = !q ||
@@ -4029,12 +4135,21 @@ function renderCards() {
     return true;
   });
 
-  // Sort: most profitable first
-  filtered.sort((a, b) => {
-    const pa = getPnLPct(a) ?? -999;
-    const pb = getPnLPct(b) ?? -999;
-    return pb - pa;
-  });
+  // Sort: ordine manuale (sortIndex) se l'utente ha riordinato, altrimenti per profitto
+  const hasManualOrder = cards.some(c => typeof c.sortIndex === 'number');
+  if (hasManualOrder) {
+    filtered.sort((a, b) => {
+      const ia = typeof a.sortIndex === 'number' ? a.sortIndex : 9999;
+      const ib = typeof b.sortIndex === 'number' ? b.sortIndex : 9999;
+      return ia - ib;
+    });
+  } else {
+    filtered.sort((a, b) => {
+      const pa = getPnLPct(a) ?? -999;
+      const pb = getPnLPct(b) ?? -999;
+      return pb - pa;
+    });
+  }
 
   const list = document.getElementById('cards-list');
 
@@ -4059,6 +4174,8 @@ function renderCards() {
   }
 
   list.innerHTML = renderListCards(filtered);
+  markLoadedImages(list);
+  if (reorderMode) enableDragReorder();
 }
 
 // ============ DETAIL VIEW ============
@@ -4993,6 +5110,11 @@ async function saveCard() {
       return; // NON aggiungere in memoria se non salvata sul cloud
     }
     cards.push(result.data);
+    // Se è attivo un ordine manuale, la nuova carta va in coda (mantiene la posizione attesa)
+    if (cards.some(c => typeof c.sortIndex === 'number')) {
+      const maxIdx = cards.reduce((m, c) => typeof c.sortIndex === 'number' && c.sortIndex > m ? c.sortIndex : m, -1);
+      result.data.sortIndex = maxIdx + 1;
+    }
     showToast('✓ Carta aggiunta al portfolio!');
   }
 
@@ -5069,6 +5191,9 @@ function closeModal(id) {
 
 // Click outside to close
 // Close modal only if click STARTED on overlay (not just ended there after text selection drag)
+// Modals listed here are NEVER closed by backdrop tap (only via ✕ / Annulla) to prevent
+// accidental data loss while filling a form.
+const noBackdropClose = ['add-modal', 'wish-modal', 'sealed-modal', 'crop-modal'];
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   let startedOnOverlay = false;
   overlay.addEventListener('mousedown', e => {
@@ -5081,6 +5206,8 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     // Don't close if user has text selected
     const hasSelection = window.getSelection && window.getSelection().toString().length > 0;
     if (hasSelection) return;
+    // Skip backdrop-close entirely for form modals
+    if (noBackdropClose.includes(overlay.id)) { startedOnOverlay = false; return; }
     // Only close if event started on overlay and ended on overlay
     if (e.target === overlay && startedOnOverlay) {
       // Use closeModal to properly handle stacking, scroll, FAB.
@@ -5647,6 +5774,7 @@ function onSearchInput() {
           </div>`;
       } else {
         resultsList.innerHTML = renderListCards(matches);
+        markLoadedImages(resultsList);
       }
     }
   } else {
@@ -5675,11 +5803,12 @@ function renderListCards(arr) {
 
     const initial = (c.name || '?').trim().charAt(0).toUpperCase();
     const photoHtml = c.photo
-      ? `<img src="${c.photo}" alt="${c.name}" loading="lazy"/>`
+      ? `<img src="${c.photo}" alt="${c.name}" loading="lazy" decoding="async" width="64" height="90" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"/>`
       : `<div class="list-photo-ph">${initial}</div>`;
 
     return `
-      <div class="list-card" onclick="openDetail(${c.id})">
+      <div class="list-card" data-id="${c.id}" onclick="onListCardClick(event, ${c.id})">
+        <div class="list-drag-handle" aria-label="Trascina per riordinare">⠿</div>
         <div class="list-photo">${photoHtml}</div>
         <div class="list-info">
           <div class="list-name">${c.name}<span class="list-name-meta">${metaText}</span></div>
@@ -5689,7 +5818,7 @@ function renderListCards(arr) {
               <span class="price-item-value acq">€${fmt(c.buyPrice)}</span>
             </div>
             <div class="price-item">
-              <span class="price-item-label">Last sold</span>
+              <span class="price-item-label">Last sold${c.language && langFlag(c.language) ? ` <span class="list-lang-flag">${langFlag(c.language)}</span>` : ''}</span>
               <span class="price-item-value mkt">${cur ? '€'+fmt(cur) : '—'}</span>
             </div>
             <div class="price-item price-pnl-item">
@@ -5703,35 +5832,106 @@ function renderListCards(arr) {
   }).join('');
 }
 
-// ============ SETTINGS ============
-function calcStorageUsage() {
-  // Calculate total localStorage usage in bytes
-  let total = 0;
-  for (let key in localStorage) {
-    if (localStorage.hasOwnProperty(key)) {
-      total += (localStorage[key].length + key.length) * 2; // UTF-16 = 2 bytes/char
-    }
-  }
-  // iOS Safari limit ~5MB
-  const limitBytes = 5 * 1024 * 1024;
-  const pct = Math.min(100, (total / limitBytes) * 100);
-  const usedKB = (total / 1024).toFixed(0);
-  const usedMB = (total / (1024 * 1024)).toFixed(2);
+// ============ REORDER MODE (drag & drop) ============
+let reorderMode = false;
 
-  const fill = document.getElementById('storage-bar-fill');
-  const info = document.getElementById('storage-info');
-  if (!fill || !info) return;
-
-  fill.style.width = pct.toFixed(1) + '%';
-  fill.classList.remove('warn', 'danger');
-  if (pct >= 80) fill.classList.add('danger');
-  else if (pct >= 60) fill.classList.add('warn');
-
-  const photoCount = cards.filter(c => c.photo).length;
-  const display = total > 1024 * 1024 ? `${usedMB} MB` : `${usedKB} KB`;
-  info.textContent = `${display} / 5 MB · ${pct.toFixed(0)}% · ${photoCount} foto su ${cards.length} carte`;
+function onListCardClick(e, id) {
+  // In modalità riordino il tap sulla tile non apre il dettaglio
+  if (reorderMode) return;
+  openDetail(id);
 }
 
+function toggleReorder() {
+  reorderMode = !reorderMode;
+  const btn = document.getElementById('reorder-toggle');
+  document.body.classList.toggle('reordering', reorderMode);
+  if (btn) {
+    btn.classList.toggle('active', reorderMode);
+    btn.textContent = reorderMode ? '✓ Fatto' : '↕ Ordina';
+  }
+  if (reorderMode) {
+    enableDragReorder();
+  } else {
+    // Uscendo, persistiamo l'ordine corrente del DOM in sortIndex e salviamo
+    persistOrderFromDOM();
+    saveCards(cards);
+    renderCards();
+  }
+}
+
+function persistOrderFromDOM() {
+  const list = document.getElementById('cards-list');
+  if (!list) return;
+  const ids = [...list.querySelectorAll('.list-card')].map(el => parseInt(el.dataset.id));
+  ids.forEach((id, idx) => {
+    const card = cards.find(c => c.id === id);
+    if (card) card.sortIndex = idx;
+  });
+}
+
+function enableDragReorder() {
+  const list = document.getElementById('cards-list');
+  if (!list) return;
+  let dragEl = null;
+  let placeholderAfter = null;
+
+  const getCardUnderPoint = (y) => {
+    const cardsEls = [...list.querySelectorAll('.list-card:not(.dragging)')];
+    return cardsEls.reduce((closest, el) => {
+      const box = el.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset, el };
+      }
+      return closest;
+    }, { offset: -Infinity, el: null }).el;
+  };
+
+  const clearMarkers = () => {
+    list.querySelectorAll('.drag-over-top, .drag-over-bottom').forEach(el => {
+      el.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+  };
+
+  list.querySelectorAll('.list-drag-handle').forEach(handle => {
+    handle.onpointerdown = (e) => {
+      if (!reorderMode) return;
+      e.preventDefault();
+      dragEl = handle.closest('.list-card');
+      if (!dragEl) return;
+      dragEl.classList.add('dragging');
+      handle.setPointerCapture(e.pointerId);
+
+      const onMove = (ev) => {
+        const y = ev.clientY;
+        const target = getCardUnderPoint(y);
+        clearMarkers();
+        if (target) {
+          list.insertBefore(dragEl, target);
+        } else {
+          list.appendChild(dragEl);
+        }
+      };
+
+      const onUp = (ev) => {
+        handle.releasePointerCapture(e.pointerId);
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+        handle.removeEventListener('pointercancel', onUp);
+        if (dragEl) dragEl.classList.remove('dragging');
+        clearMarkers();
+        persistOrderFromDOM();
+        dragEl = null;
+      };
+
+      handle.addEventListener('pointermove', onMove);
+      handle.addEventListener('pointerup', onUp);
+      handle.addEventListener('pointercancel', onUp);
+    };
+  });
+}
+
+// ============ SETTINGS ============
 function openSettingsModal() {
   const days = settings.staleDays || 7;
   document.getElementById('s-stale-days').value = days;
@@ -5744,7 +5944,6 @@ function openSettingsModal() {
     p.classList.toggle('active', parseInt(p.dataset.wdays) === wdays);
   });
   document.getElementById('s-psa-token').value = settings.psaToken || '';
-  calcStorageUsage();
   openModal('settings-modal');
 }
 
@@ -6231,6 +6430,7 @@ async function initApp() {
   ]);
 
   cards = loadedCards;
+  applyLocalOrder(cards);
   wishlist = loadedWishlist;
   sealed = loadedSealed;
 
