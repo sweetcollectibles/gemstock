@@ -164,8 +164,14 @@
     background: var(--bg);
   }
 
+  /* FIX iOS PWA: con viewport-fit=cover + black-translucent il documento viene
+     spostato su sotto la notch, creando un gap nero in fondo alto quanto la
+     safe-area superiore. Estendendo min-height dell'html compensiamo lo
+     spostamento e lo sfondo riempie fino al bordo fisico. */
   html {
     width: 100%;
+    min-height: calc(100% + env(safe-area-inset-top));
+    background: var(--bg);
   }
 
   body {
