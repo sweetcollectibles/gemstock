@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sweethome">
@@ -239,14 +239,6 @@
   /* Prevent zoom on input focus (iOS) */
   input, textarea, select {
     font-size: 16px !important;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', -apple-system, sans-serif;
-    min-height: 100vh;
-    scroll-behavior: smooth;
   }
 
   /* Background pattern - removed for uniform black look */
@@ -800,7 +792,7 @@
   .search-bar:focus { border-color: var(--accent); }
   .search-bar::placeholder { color: var(--muted); }
 
-  /* ===== BARRA RICERCA FISSA IN FONDO ===== */
+  /* ===== BARRA RICERCA IN FONDO (trigger) ===== */
   .bottom-search {
     position: fixed;
     left: 0; right: 0; bottom: 0;
@@ -810,61 +802,69 @@
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--border);
     padding: 12px 16px;
-    padding-bottom: 16px;
-  }
-  /* prolunga lo sfondo della barra verso il basso oltre il bordo,
-     così la zona della home-bar è SEMPRE coperta, qualunque sia il gap */
-  .bottom-search::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0;
-    top: 100%;
-    height: 240px;
-    background: rgba(13, 13, 13, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    /* spazio extra in fondo = riempie la zona della home-bar */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 28px);
+    cursor: pointer;
   }
   .bottom-search-inner {
     display: flex; align-items: center; gap: 10px;
     background: var(--surface2);
     border: 1.5px solid var(--accent);
     border-radius: 13px;
-    padding: 11px 14px;
+    padding: 12px 14px;
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
   }
-  .bottom-search-icon { font-size: 1rem; opacity: 0.8; }
-  .bottom-search-inner input {
-    flex: 1; background: none; border: none; outline: none;
-    color: var(--text); font-family: 'Inter', -apple-system, sans-serif;
-    font-size: 1rem;
+  .bottom-search-icon { font-size: 1rem; opacity: 0.8; flex-shrink: 0; }
+  .bottom-search-placeholder {
+    flex: 1; color: var(--muted); font-size: 1rem;
+    font-family: 'Inter', -apple-system, sans-serif;
   }
-  .bottom-search-inner input::placeholder { color: var(--muted); }
-  .bottom-search-clear {
-    background: none; border: none; color: var(--muted);
-    font-size: 1rem; cursor: pointer; padding: 2px 4px;
-    display: none;
-  }
-  .bottom-search-clear.show { display: block; }
   body.modal-open .bottom-search,
   body.reordering .bottom-search,
   body.drag-active .bottom-search { display: none !important; }
 
-  /* ===== OVERLAY RISULTATI RICERCA ===== */
-  .search-overlay {
+  /* ===== TAB DI RICERCA FULL-SCREEN ===== */
+  .search-tab {
     position: fixed;
-    top: 0; left: 0; right: 0;
-    bottom: 0;
-    z-index: 55;
-    background: var(--bg);
-  }
-  .search-overlay-scroll {
-    position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 120;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+  .search-tab-head {
+    flex-shrink: 0;
+    background: rgba(13, 13, 13, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: max(env(safe-area-inset-top), 52px) 14px 12px;
+  }
+  .search-tab-inner {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2);
+    border: 1.5px solid var(--accent);
+    border-radius: 13px;
+    padding: 12px 14px;
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+  }
+  .search-tab-inner input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 1rem; min-width: 0;
+  }
+  .search-tab-inner input::placeholder { color: var(--muted); }
+  .search-tab-cancel {
+    background: none; border: none; color: var(--accent);
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    flex-shrink: 0; padding: 2px 2px 2px 4px;
+    font-family: 'Inter', -apple-system, sans-serif;
+  }
+  .search-tab-results {
+    flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: max(env(safe-area-inset-top), 60px) 14px 0;
-    /* lascia spazio in fondo per non finire sotto la barra di ricerca */
-    padding-bottom: 120px;
+    padding: 12px 14px calc(env(safe-area-inset-bottom) + 24px);
   }
   .search-overlay-title {
     font-size: 0.62rem; letter-spacing: 1.5px; text-transform: uppercase;
@@ -2891,18 +2891,24 @@
 
 </div><!-- end scroll-wrapper / app-page -->
 
-<!-- ============ BARRA RICERCA FISSA IN FONDO (figlia diretta del body) ============ -->
-<div class="bottom-search" id="bottom-search" style="display:none">
+<!-- ============ BARRA RICERCA IN FONDO (trigger) ============ -->
+<div class="bottom-search" id="bottom-search" style="display:none" onclick="openSearchTab()">
   <div class="bottom-search-inner">
     <span class="bottom-search-icon">🔍</span>
-    <input type="text" id="search-input" placeholder="Cerca nel portfolio" oninput="onSearchInput()" autocomplete="off" autocorrect="off" autocapitalize="off">
-    <button class="bottom-search-clear" id="clear-search" onclick="clearSearch()">✕</button>
+    <span class="bottom-search-placeholder">Cerca nel portfolio</span>
   </div>
 </div>
 
-<!-- ============ OVERLAY RISULTATI RICERCA GLOBALE ============ -->
-<div class="search-overlay" id="search-overlay" style="display:none">
-  <div class="search-overlay-scroll" id="search-results-list"></div>
+<!-- ============ TAB DI RICERCA FULL-SCREEN (barra in alto, risultati sotto) ============ -->
+<div class="search-tab" id="search-tab" style="display:none">
+  <div class="search-tab-head">
+    <div class="search-tab-inner">
+      <span class="bottom-search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Cerca nel portfolio" oninput="onSearchInput()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="search-tab-cancel" onclick="closeSearchTab()">Annulla</button>
+    </div>
+  </div>
+  <div class="search-tab-results" id="search-results-list"></div>
 </div>
 
 <!-- AUTH PAGE — BEFORE the script so DOM exists when JS runs -->
@@ -3169,7 +3175,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v45</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v46</div>
   </div>
 </div>
 
@@ -5340,20 +5346,32 @@ document.querySelectorAll('.filter-pill').forEach(btn => {
   });
 });
 
-function clearSearch() {
+// Apre la tab di ricerca full-screen (barra in alto, risultati sotto)
+function openSearchTab() {
+  const tab = document.getElementById('search-tab');
   const input = document.getElementById('search-input');
-  if (input) { input.value = ''; input.blur(); }
-  const overlay = document.getElementById('search-overlay');
-  if (overlay) overlay.style.display = 'none';
-  const clearBtn = document.getElementById('clear-search');
-  if (clearBtn) clearBtn.classList.remove('show');
+  const results = document.getElementById('search-results-list');
+  if (!tab) return;
+  tab.style.display = 'flex';
+  if (results) results.innerHTML = '';
+  if (input) {
+    input.value = '';
+    // focus leggermente ritardato per far aprire la tastiera in modo affidabile su iOS
+    setTimeout(() => input.focus(), 60);
+  }
 }
 
-// Chiude i risultati di ricerca (usato quando si apre un dettaglio)
-function closeSearchOverlay() {
-  const overlay = document.getElementById('search-overlay');
-  if (overlay) overlay.style.display = 'none';
+// Chiude la tab di ricerca
+function closeSearchTab() {
+  const tab = document.getElementById('search-tab');
+  const input = document.getElementById('search-input');
+  if (input) { input.value = ''; input.blur(); }
+  if (tab) tab.style.display = 'none';
 }
+
+// alias per compatibilità con chiamate esistenti
+function clearSearch() { closeSearchTab(); }
+function closeSearchOverlay() { closeSearchTab(); }
 
 // ============ VIEW ROUTING (Home / List) ============
 let currentView = 'home'; // 'home' | 'list'
@@ -5856,13 +5874,11 @@ function onSearchInput() {
   const input = document.getElementById('search-input');
   if (!input) return;
   const q = input.value.trim().toLowerCase();
-  const clearBtn = document.getElementById('clear-search');
-  const overlay = document.getElementById('search-overlay');
   const list = document.getElementById('search-results-list');
-  if (clearBtn) clearBtn.classList.toggle('show', q.length > 0);
+  if (!list) return;
 
   if (q.length === 0) {
-    if (overlay) overlay.style.display = 'none';
+    list.innerHTML = '';
     return;
   }
 
@@ -5887,7 +5903,7 @@ function onSearchInput() {
   }
   if (sealedHits.length) {
     html += `<div class="search-overlay-title">📦 Sealed · ${sealedHits.length}</div>`;
-    html += sealedHits.map(s => searchRowSimple(s.name, s.notes || 'Sealed', s.photo, `closeSearchOverlay();openSealedEdit(${s.id})`)).join('');
+    html += sealedHits.map(s => searchRowSimple(s.name, s.notes || 'Sealed', s.photo, `closeSearchTab();openSealedEdit(${s.id})`)).join('');
   }
   if (wishHits.length) {
     html += `<div class="search-overlay-title">💜 Wishlist · ${wishHits.length}</div>`;
@@ -5904,11 +5920,8 @@ function onSearchInput() {
     </div>`;
   }
 
-  if (overlay) overlay.style.display = '';
-  if (list) {
-    list.innerHTML = html;
-    markLoadedImages(list);
-  }
+  list.innerHTML = html;
+  markLoadedImages(list);
 }
 
 // Riga semplice per sealed/wishlist nei risultati di ricerca
