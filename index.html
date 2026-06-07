@@ -430,7 +430,7 @@
   /* Nessun padding di sicurezza in fondo: le carte riempiono fino al bordo fisico,
      scorrendo anche sotto la home-bar (richiesta esplicita: riempire tutto). */
   #cards-list, #sealed-list, #wishlist-grid, #home-tiles {
-    padding-bottom: 0;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
   }
   @keyframes viewFadeIn {
     from { opacity: 0; transform: translateY(8px); }
@@ -799,6 +799,67 @@
 
   .search-bar:focus { border-color: var(--accent); }
   .search-bar::placeholder { color: var(--muted); }
+
+  /* ===== BARRA RICERCA FISSA IN FONDO ===== */
+  .bottom-search {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 60;
+    background: rgba(13, 13, 13, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    /* padding interno + spazio extra in fondo che riempie la zona della home-bar */
+    padding: 12px 16px calc(env(safe-area-inset-bottom) + 28px);
+  }
+  .bottom-search-inner {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2);
+    border: 1.5px solid var(--accent);
+    border-radius: 13px;
+    padding: 11px 14px;
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+  }
+  .bottom-search-icon { font-size: 1rem; opacity: 0.8; }
+  .bottom-search-inner input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 1rem;
+  }
+  .bottom-search-inner input::placeholder { color: var(--muted); }
+  .bottom-search-clear {
+    background: none; border: none; color: var(--muted);
+    font-size: 1rem; cursor: pointer; padding: 2px 4px;
+    display: none;
+  }
+  .bottom-search-clear.show { display: block; }
+  body.modal-open .bottom-search,
+  body.reordering .bottom-search,
+  body.drag-active .bottom-search { display: none !important; }
+
+  /* ===== OVERLAY RISULTATI RICERCA ===== */
+  .search-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    bottom: 0;
+    z-index: 55;
+    background: var(--bg);
+  }
+  .search-overlay-scroll {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: max(env(safe-area-inset-top), 16px) 14px 0;
+    /* lascia spazio in fondo per non finire sotto la barra di ricerca */
+    padding-bottom: 110px;
+  }
+  .search-overlay-title {
+    font-size: 0.62rem; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin: 14px 4px 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .search-overlay-title:first-child { margin-top: 4px; }
 
   .search-icon {
     position: absolute;
@@ -1709,7 +1770,7 @@
   /* FAB - Floating action button */
   .fab {
     position: fixed !important;
-    bottom: calc(env(safe-area-inset-bottom) + 18px);
+    bottom: calc(env(safe-area-inset-bottom) + 96px);
     right: 18px;
     left: auto;
     width: 62px; height: 62px;
@@ -2717,13 +2778,6 @@
     <!-- STATS -->
     <div class="stats-grid" id="stats-grid"></div>
 
-    <!-- SEARCH -->
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" class="search-bar" id="search-input" placeholder="Cerca carta nel portfolio..." oninput="onSearchInput()">
-      <button class="clear-search" id="clear-search" onclick="clearSearch()">✕</button>
-    </div>
-
     <!-- HOME TILES (hidden during search) -->
     <div id="home-tiles">
       <!-- "LE TUE CARTE" TILE -->
@@ -2755,14 +2809,6 @@
         </div>
         <div class="cards-tile-arrow">›</div>
       </div>
-    </div>
-
-    <!-- SEARCH RESULTS (visible only while searching) -->
-    <div id="search-results" style="display:none">
-      <div class="section-title">
-        <div class="section-title-text">🔍 Risultati ricerca</div>
-      </div>
-      <div id="search-results-list"></div>
     </div>
 
   </div>
@@ -2832,6 +2878,20 @@
 </div><!-- end .main -->
 
 </div><!-- end scroll-wrapper / app-page -->
+
+<!-- ============ BARRA RICERCA FISSA IN FONDO ============ -->
+<div class="bottom-search" id="bottom-search" style="display:none">
+  <div class="bottom-search-inner">
+    <span class="bottom-search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Cerca nel portfolio" oninput="onSearchInput()" autocomplete="off" autocorrect="off" autocapitalize="off">
+    <button class="bottom-search-clear" id="clear-search" onclick="clearSearch()">✕</button>
+  </div>
+</div>
+
+<!-- ============ OVERLAY RISULTATI RICERCA GLOBALE ============ -->
+<div class="search-overlay" id="search-overlay" style="display:none">
+  <div class="search-overlay-scroll" id="search-results-list"></div>
+</div>
 
 <!-- AUTH PAGE — BEFORE the script so DOM exists when JS runs -->
 <div id="auth-page-login" class="auth-page">
@@ -3097,7 +3157,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v41</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v42</div>
   </div>
 </div>
 
@@ -4281,6 +4341,7 @@ function buildPriceHistoryChart(card) {
 function openDetail(id) {
   const c = cards.find(x => x.id === id);
   if (!c) return;
+  closeSearchOverlay();
 
   const cur = getCurrentPrice(c);
   const pnl = getPnL(c);
@@ -5268,8 +5329,18 @@ document.querySelectorAll('.filter-pill').forEach(btn => {
 });
 
 function clearSearch() {
-  document.getElementById('search-input').value = '';
-  onSearchInput();
+  const input = document.getElementById('search-input');
+  if (input) { input.value = ''; input.blur(); }
+  const overlay = document.getElementById('search-overlay');
+  if (overlay) overlay.style.display = 'none';
+  const clearBtn = document.getElementById('clear-search');
+  if (clearBtn) clearBtn.classList.remove('show');
+}
+
+// Chiude i risultati di ricerca (usato quando si apre un dettaglio)
+function closeSearchOverlay() {
+  const overlay = document.getElementById('search-overlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 // ============ VIEW ROUTING (Home / List) ============
@@ -5770,51 +5841,79 @@ function removeSealedPhoto() {
 
 
 function onSearchInput() {
-  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const input = document.getElementById('search-input');
+  if (!input) return;
+  const q = input.value.trim().toLowerCase();
   const clearBtn = document.getElementById('clear-search');
-  const resultsBox = document.getElementById('search-results');
-  const resultsList = document.getElementById('search-results-list');
-  const homeTiles = document.getElementById('home-tiles');
-  const statsGrid = document.getElementById('stats-grid');
-  clearBtn.classList.toggle('show', q.length > 0);
+  const overlay = document.getElementById('search-overlay');
+  const list = document.getElementById('search-results-list');
+  if (clearBtn) clearBtn.classList.toggle('show', q.length > 0);
 
   if (q.length === 0) {
-    if (resultsBox) resultsBox.style.display = 'none';
-    if (homeTiles) homeTiles.style.display = '';
-    if (statsGrid) statsGrid.style.display = '';
-    // Also refresh list if user happened to be in list view
-    if (currentView === 'list') renderCards();
+    if (overlay) overlay.style.display = 'none';
     return;
   }
 
-  // Filter cards by query (name + number only — ricerca stretta)
-  const matches = cards.filter(c =>
-    c.name.toLowerCase().includes(q) ||
-    (c.number || '').toLowerCase().includes(q)
+  const match = (s) => (s || '').toString().toLowerCase().includes(q);
+
+  // Cerca in TUTTO il portfolio
+  const cardHits = cards.filter(c =>
+    match(c.name) || match(c.number) || match(c.set) ||
+    match(c.grader) || match(c.customGrader) || match(c.language) || match(c.psaCert)
+  );
+  const sealedHits = (typeof sealed !== 'undefined' && sealed ? sealed : []).filter(s =>
+    match(s.name) || match(s.notes)
+  );
+  const wishHits = (typeof wishlist !== 'undefined' && wishlist ? wishlist : []).filter(w =>
+    match(w.name) || match(w.number) || match(w.set) || match(w.language)
   );
 
-  if (currentView === 'home') {
-    // Hide tiles + stats, show only results for a clean focused view
-    if (homeTiles) homeTiles.style.display = 'none';
-    if (statsGrid) statsGrid.style.display = 'none';
-    if (resultsBox) {
-      resultsBox.style.display = '';
-      if (matches.length === 0) {
-        resultsList.innerHTML = `
-          <div class="empty-state" style="padding:24px 16px">
-            <div class="empty-icon">🔍</div>
-            <div class="empty-title">Nessun risultato</div>
-            <div class="empty-sub">Prova un altro termine di ricerca</div>
-          </div>`;
-      } else {
-        resultsList.innerHTML = renderListCards(matches);
-        markLoadedImages(resultsList);
-      }
-    }
-  } else {
-    // In list view → search filters renderCards as before
-    renderCards();
+  let html = '';
+  if (cardHits.length) {
+    html += `<div class="search-overlay-title">🃏 Carte · ${cardHits.length}</div>`;
+    html += renderListCards(cardHits);
   }
+  if (sealedHits.length) {
+    html += `<div class="search-overlay-title">📦 Sealed · ${sealedHits.length}</div>`;
+    html += sealedHits.map(s => searchRowSimple(s.name, s.notes || 'Sealed', s.photo, `closeSearchOverlay();openSealedEdit(${s.id})`)).join('');
+  }
+  if (wishHits.length) {
+    html += `<div class="search-overlay-title">💜 Wishlist · ${wishHits.length}</div>`;
+    html += wishHits.map(w => {
+      const meta = [w.number ? '#'+w.number : '', w.set || ''].filter(Boolean).join(' · ');
+      return searchRowSimple(w.name, meta, w.photo, '');
+    }).join('');
+  }
+  if (!html) {
+    html = `<div class="empty-state" style="padding:40px 16px">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">Nessun risultato</div>
+      <div class="empty-sub">Niente trovato per "${input.value}"</div>
+    </div>`;
+  }
+
+  if (overlay) overlay.style.display = '';
+  if (list) {
+    list.innerHTML = html;
+    markLoadedImages(list);
+  }
+}
+
+// Riga semplice per sealed/wishlist nei risultati di ricerca
+function searchRowSimple(name, meta, photo, onclickStr) {
+  const initial = (name || '?').trim().charAt(0).toUpperCase();
+  const photoHtml = photo
+    ? `<img src="${photo}" alt="" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"/>`
+    : `<div class="list-photo-ph">${initial}</div>`;
+  const clickAttr = onclickStr ? ` onclick="${onclickStr}"` : '';
+  return `
+    <div class="list-card"${clickAttr}>
+      <div class="list-photo">${photoHtml}</div>
+      <div class="list-info">
+        <div class="list-name">${name}</div>
+        <div class="list-prices"><div class="price-item"><span class="price-item-label">${meta}</span></div></div>
+      </div>
+    </div>`;
 }
 
 function renderListCards(arr) {
@@ -6752,6 +6851,8 @@ function showAuthPage() {
   document.getElementById('app-page').style.display = 'none';
   document.body.classList.add('auth-visible');
   document.body.classList.remove('in-app'); // rimuove position:fixed → click funzionano!
+  const bs = document.getElementById('bottom-search');
+  if (bs) bs.style.display = 'none';
 }
 
 function hideAuthPage() {
@@ -6759,6 +6860,8 @@ function hideAuthPage() {
   document.getElementById('app-page').style.display = '';
   document.body.classList.remove('auth-visible');
   document.body.classList.add('in-app'); // ripristina position:fixed per PWA scroll
+  const bs = document.getElementById('bottom-search');
+  if (bs) bs.style.display = '';
 }
 
 function showLoginForm() {
