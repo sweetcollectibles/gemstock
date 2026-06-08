@@ -798,32 +798,33 @@
   .search-bar:focus { border-color: var(--accent); }
   .search-bar::placeholder { color: var(--muted); }
 
-  /* ===== BARRA RICERCA IN FONDO (trigger) — glass iOS ===== */
+  /* ===== BARRA RICERCA IN FONDO (trigger) — pillola glass galleggiante ===== */
   .bottom-search {
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 60;
-    /* glass iOS: sfondo molto translucido + blur forte */
-    background: rgba(13, 13, 13, 0.45);
-    backdrop-filter: blur(28px) saturate(160%);
-    -webkit-backdrop-filter: blur(28px) saturate(160%);
-    /* nessuna linea separatrice */
+    /* contenitore TRASPARENTE: niente fascia nera, niente blur, niente bordo */
+    background: transparent;
     border-top: none;
-    padding: 10px 16px;
-    /* abbassata il più possibile: solo la safe-area del home indicator */
-    padding-bottom: calc(env(safe-area-inset-bottom) + 6px);
+    padding: 0 14px;
+    /* abbassata al massimo: appena sopra il home indicator */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 2px);
     cursor: pointer;
+    /* la fascia non cattura i tap fuori dalla pillola → il contenuto sotto resta visibile */
+    pointer-events: none;
   }
   .bottom-search-inner {
     display: flex; align-items: center; gap: 10px;
-    /* glass: vetro semitrasparente con bordo viola */
+    /* SOLO la pillola è glass viola */
     background: rgba(26, 26, 26, 0.55);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
     border: 1.5px solid var(--accent);
     border-radius: 14px;
     padding: 12px 14px;
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.35);
+    /* solo la pillola è cliccabile */
+    pointer-events: auto;
   }
   .bottom-search-icon { font-size: 1rem; opacity: 0.8; flex-shrink: 0; }
   .bottom-search-placeholder {

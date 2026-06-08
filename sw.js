@@ -1,5 +1,5 @@
 // Sweethome Service Worker — v4
-const CACHE_NAME = 'sweethome-v48';
+const CACHE_NAME = 'sweethome-v49';
 const ASSETS = [
   './',
   './index.html',
