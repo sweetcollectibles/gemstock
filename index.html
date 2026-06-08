@@ -798,39 +798,77 @@
   .search-bar:focus { border-color: var(--accent); }
   .search-bar::placeholder { color: var(--muted); }
 
-  /* ===== BARRA RICERCA IN FONDO (trigger) — pillola glass galleggiante ===== */
+  /* ===== DOCK RICERCA IN FONDO — pillola glass + tasto aggiungi ===== */
   .bottom-search {
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 60;
-    /* contenitore TRASPARENTE: niente fascia nera, niente blur, niente bordo */
     background: transparent;
     border-top: none;
     padding: 0 14px;
-    /* abbassata al massimo: appena sopra il home indicator */
     padding-bottom: calc(env(safe-area-inset-bottom) + 2px);
-    cursor: pointer;
-    /* la fascia non cattura i tap fuori dalla pillola → il contenuto sotto resta visibile */
+    /* dock = flex: pillola + tasto + */
+    display: flex;
+    align-items: center;
+    gap: 10px;
     pointer-events: none;
   }
+  /* la pillola di ricerca (tonda iOS, glass viola) */
   .bottom-search-inner {
+    flex: 1;
     display: flex; align-items: center; gap: 10px;
-    /* SOLO la pillola è glass viola */
     background: rgba(26, 26, 26, 0.55);
     backdrop-filter: blur(16px) saturate(160%);
     -webkit-backdrop-filter: blur(16px) saturate(160%);
     border: 1.5px solid var(--accent);
-    border-radius: 14px;
-    padding: 12px 14px;
+    border-radius: 999px;
+    padding: 13px 18px;
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.35);
-    /* solo la pillola è cliccabile */
     pointer-events: auto;
+    overflow: hidden;
+    transition: flex 0.32s cubic-bezier(0.4,0,0.2,1),
+                padding 0.32s cubic-bezier(0.4,0,0.2,1),
+                width 0.32s cubic-bezier(0.4,0,0.2,1);
   }
-  .bottom-search-icon { font-size: 1rem; opacity: 0.8; flex-shrink: 0; }
+  .bottom-search-icon { font-size: 1.05rem; opacity: 0.85; flex-shrink: 0; }
   .bottom-search-placeholder {
-    flex: 1; color: var(--muted); font-size: 1rem;
+    flex: 1; color: var(--muted); font-size: 0.95rem;
     font-family: 'Inter', -apple-system, sans-serif;
+    white-space: nowrap; overflow: hidden;
+    transition: opacity 0.22s ease, width 0.32s cubic-bezier(0.4,0,0.2,1);
   }
+  /* tasto aggiungi tondo (solo nelle sezioni) */
+  .dock-add-btn {
+    width: 50px; height: 50px; flex-shrink: 0;
+    border-radius: 999px; border: none;
+    background: var(--accent); color: #fff;
+    font-size: 1.7rem; font-weight: 300; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(168, 85, 247, 0.45);
+    pointer-events: auto; cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .dock-add-btn:active { transform: scale(0.9); }
+
+  /* COMPACT (stile Safari): scrollato → pillola si riduce a cerchietto con sola icona */
+  body.search-compact .bottom-search-inner {
+    flex: 0 0 50px;
+    width: 50px;
+    padding: 13px;
+    justify-content: center;
+  }
+  body.search-compact .bottom-search-placeholder {
+    opacity: 0; width: 0; flex: 0;
+  }
+  /* il dock si allinea a destra quando compatto */
+  body.search-compact .bottom-search { justify-content: flex-end; }
+
+  /* HOME: nessun tasto aggiungi, solo ricerca */
+  body.hide-fab .dock-add-btn { display: none; }
+
+  body.modal-open .bottom-search,
+  body.reordering .bottom-search,
+  body.drag-active .bottom-search { display: none !important; }
   body.modal-open .bottom-search,
   body.reordering .bottom-search,
   body.drag-active .bottom-search { display: none !important; }
@@ -2904,11 +2942,12 @@
 </div><!-- end scroll-wrapper / app-page -->
 
 <!-- ============ BARRA RICERCA IN FONDO (trigger) ============ -->
-<div class="bottom-search" id="bottom-search" style="display:none" onclick="openSearchTab()">
-  <div class="bottom-search-inner">
+<div class="bottom-search" id="bottom-search" style="display:none">
+  <div class="bottom-search-inner" id="search-pill" onclick="openSearchTab()">
     <span class="bottom-search-icon">🔍</span>
     <span class="bottom-search-placeholder">Cerca nel portfolio</span>
   </div>
+  <button class="dock-add-btn" id="dock-add-btn" onclick="fabAction()" title="Aggiungi">+</button>
 </div>
 
 <!-- ============ TAB DI RICERCA FULL-SCREEN (barra in alto, risultati sotto) ============ -->
@@ -2974,7 +3013,7 @@
 </div>
 
 <!-- FAB -->
-<button class="fab" onclick="fabAction()" title="Aggiungi">+</button>
+
 
 <!-- ADD/EDIT MODAL -->
 <div class="modal-overlay" id="add-modal">
@@ -5423,6 +5462,8 @@ function goToHome() {
 
 // Safety helper — call this anytime view changes or modals open/close
 function updateFabVisibility() {
+  // reset stato compatto al cambio vista (riparte grande in cima)
+  document.body.classList.remove('search-compact');
   if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
     document.body.classList.remove('hide-fab');
   } else {
@@ -7082,30 +7123,21 @@ document.addEventListener('touchmove', e => {
   }
 }, { passive: false });
 
-// ============ FAB SLIDE ON SCROLL ============
-(function setupFabScroll() {
+// ============ BARRA RICERCA: COMPATTA ALLO SCROLL (stile Safari) ============
+(function setupSearchCompact() {
   const wrapper = document.querySelector('.scroll-wrapper');
   if (!wrapper) return;
-  let lastScrollTop = 0;
-  let scrollTimeout = null;
-  const THRESHOLD = 6;
-  const atBottom = () => (wrapper.scrollTop + wrapper.clientHeight) >= (wrapper.scrollHeight - 8);
+  // In cima → grande. Appena scrolli → piccola e ci resta (indipendente dalla direzione).
   wrapper.addEventListener('scroll', () => {
     if (document.body.classList.contains('auth-visible')) return;
-    const st = wrapper.scrollTop;
-    const delta = st - lastScrollTop;
-    if (st < 40) { document.body.classList.remove('fab-hidden'); }
-    else if (atBottom()) { document.body.classList.add('fab-hidden'); }
-    else if (delta > THRESHOLD) { document.body.classList.add('fab-hidden'); }
-    else if (delta < -THRESHOLD) { document.body.classList.remove('fab-hidden'); }
-    lastScrollTop = st;
-    if (scrollTimeout) clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-      // non riportare il FAB se siamo in fondo (coprirebbe l'ultima carta)
-      if (!atBottom()) document.body.classList.remove('fab-hidden');
-    }, 600);
+    if (wrapper.scrollTop > 12) {
+      document.body.classList.add('search-compact');
+    } else {
+      document.body.classList.remove('search-compact');
+    }
   }, { passive: true });
 })();
+
 </script>
 
 </body>
