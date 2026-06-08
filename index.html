@@ -798,27 +798,32 @@
   .search-bar:focus { border-color: var(--accent); }
   .search-bar::placeholder { color: var(--muted); }
 
-  /* ===== BARRA RICERCA IN FONDO (trigger) ===== */
+  /* ===== BARRA RICERCA IN FONDO (trigger) — glass iOS ===== */
   .bottom-search {
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 60;
-    background: rgba(13, 13, 13, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    padding: 12px 16px;
-    /* spazio extra in fondo = riempie la zona della home-bar */
-    padding-bottom: calc(env(safe-area-inset-bottom) + 28px);
+    /* glass iOS: sfondo molto translucido + blur forte */
+    background: rgba(13, 13, 13, 0.45);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    /* nessuna linea separatrice */
+    border-top: none;
+    padding: 10px 16px;
+    /* abbassata il più possibile: solo la safe-area del home indicator */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 6px);
     cursor: pointer;
   }
   .bottom-search-inner {
     display: flex; align-items: center; gap: 10px;
-    background: var(--surface2);
+    /* glass: vetro semitrasparente con bordo viola */
+    background: rgba(26, 26, 26, 0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1.5px solid var(--accent);
-    border-radius: 13px;
+    border-radius: 14px;
     padding: 12px 14px;
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.3);
   }
   .bottom-search-icon { font-size: 1rem; opacity: 0.8; flex-shrink: 0; }
   .bottom-search-placeholder {
