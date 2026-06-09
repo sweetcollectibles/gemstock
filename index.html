@@ -379,6 +379,75 @@
   }
   /* ===== END HERO HEADER ===== */
 
+  /* ============ SPLASH SCREEN ============ */
+  .splash-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    will-change: transform, opacity;
+  }
+  .splash-logo {
+    width: 150px;
+    height: auto;
+    filter: drop-shadow(0 0 22px rgba(168, 85, 247, 0.45));
+    margin-bottom: 6px;
+  }
+  .splash-word {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.1rem;
+    font-weight: 900;
+    letter-spacing: 3.5px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .splash-word .purple-s { color: var(--accent); }
+  .splash-phrase {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    margin-top: 14px;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0 30px;
+    line-height: 1.6;
+  }
+  .splash-loadbar {
+    width: 150px;
+    height: 4px;
+    background: rgba(168, 85, 247, 0.15);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 30px;
+  }
+  .splash-loadbar-fill {
+    height: 100%;
+    width: 40%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    border-radius: 3px;
+    animation: splashLoad 1.3s ease-in-out infinite;
+  }
+  @keyframes splashLoad {
+    0% { margin-left: -40%; }
+    100% { margin-left: 100%; }
+  }
+  /* uscita: si ingrandisce e svela l'app */
+  .splash-screen.splash-exit {
+    animation: splashShrinkOut 0.6s cubic-bezier(0.5, 0, 0.3, 1) forwards;
+    pointer-events: none;
+  }
+  @keyframes splashShrinkOut {
+    to { opacity: 0; transform: scale(1.5); visibility: hidden; }
+  }
+  .splash-screen.splash-hidden { display: none; }
+
   .header-sub {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.6rem;
@@ -2816,6 +2885,14 @@
 </head>
 <body>
 
+<!-- ============ SPLASH SCREEN ============ -->
+<div class="splash-screen" id="splash-screen">
+  <img src="logo-neon.png" alt="" class="splash-logo"/>
+  <div class="splash-word"><span class="purple-s">S</span>WEETHOME</div>
+  <div class="splash-phrase">Smart trades, sweet returns.</div>
+  <div class="splash-loadbar"><div class="splash-loadbar-fill"></div></div>
+</div>
+
 <!-- ============ AUTH OVERLAY ============ -->
 
 
@@ -3231,7 +3308,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v56</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v57</div>
   </div>
 </div>
 
@@ -7173,12 +7250,32 @@ function predecodeFirstImages(list, n) {
   }
 }
 
+// ============ SPLASH SCREEN ============
+let splashHidden = false;
+const splashStart = Date.now();
+const SPLASH_MIN_MS = 1100; // tempo minimo a schermo (per non sparire in un lampo)
+function hideSplash() {
+  if (splashHidden) return;
+  splashHidden = true;
+  const splash = document.getElementById('splash-screen');
+  if (!splash) return;
+  const elapsed = Date.now() - splashStart;
+  const wait = Math.max(0, SPLASH_MIN_MS - elapsed);
+  setTimeout(() => {
+    requestAnimationFrame(() => {
+      splash.classList.add('splash-exit');
+      setTimeout(() => splash.classList.add('splash-hidden'), 650);
+    });
+  }, wait);
+}
+
 // ============ BOOT — check session on page load ============
 (async function boot() {
   showAuthPage();
 
   if (!_supabase) {
     console.warn('Supabase not available — running in offline mode');
+    hideSplash();
     return;
   }
 
@@ -7186,6 +7283,9 @@ function predecodeFirstImages(list, n) {
   if (session?.user) {
     currentUser = session.user;
     await initApp();
+    hideSplash(); // app pronta → via la splash
+  } else {
+    hideSplash(); // nessuna sessione → mostra login, via la splash
   }
 
   _supabase.auth.onAuthStateChange(async (event, session) => {
