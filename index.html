@@ -422,8 +422,10 @@
   }
 
   /* PAGE VIEWS — Home / List routing */
-  .page-view {
-    animation: viewFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  /* L'animazione di entrata parte solo dopo l'avvio (app-ready):
+     al cold start la home appare già pronta, senza scatto. */
+  body.app-ready .page-view {
+    animation: viewFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
   /* Nessun padding di sicurezza in fondo: le carte riempiono fino al bordo fisico,
      scorrendo anche sotto la home-bar (richiesta esplicita: riempire tutto). */
@@ -698,12 +700,16 @@
     border-radius: 50%;
     background: var(--red);
     box-shadow: 0 0 0 0 rgba(248,113,113,0.7);
+  }
+  body.app-ready .alert-dot {
     animation: alertPulse 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
   }
 
   .alert-dot.amber {
     background: #fbbf24;
     box-shadow: 0 0 0 0 rgba(251,191,36,0.7);
+  }
+  body.app-ready .alert-dot.amber {
     animation: alertPulseAmber 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
   }
 
@@ -723,6 +729,8 @@
   .stat-card.sell-alert {
     background: linear-gradient(135deg, rgba(248,113,113,0.06), var(--surface));
     border-color: rgba(248,113,113,0.2);
+  }
+  body.app-ready .stat-card.sell-alert {
     animation: sellGlow 2.4s infinite ease-in-out;
   }
   .stat-card.sell-alert::before {
@@ -3223,7 +3231,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v54</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v55</div>
   </div>
 </div>
 
@@ -7130,6 +7138,12 @@ async function initApp() {
   // Start in home view → hide FAB
   document.body.classList.add('hide-fab');
   goToHome();
+
+  // Avvio completato: abilita le animazioni (pulsazioni, fade tra viste)
+  // solo ORA, dopo il primo paint, così il cold start è senza scatti.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.body.classList.add('app-ready');
+  }));
 }
 
 // Decodifica in anticipo le thumbnail delle prime N carte con foto.
