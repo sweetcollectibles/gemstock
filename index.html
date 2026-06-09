@@ -46,19 +46,28 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     outline: none !important;
+    touch-action: manipulation; /* niente ritardo 300ms, niente doppio-tap zoom */
   }
   button:focus, a:focus, .cards-tile:focus, [onclick]:focus,
   button:focus-visible, a:focus-visible {
     outline: none !important;
   }
-  /* Hover effects solo su dispositivi con mouse vero (non touch) */
-  @media (hover: none) {
+  /* Hover effects solo su dispositivi con mouse vero (non touch).
+     Su touch gli :hover di iOS restano "appiccicati" al primo tocco causando
+     il doppio-tap e le icone che restano evidenziate: qui li annulliamo del tutto. */
+  @media (hover: none), (pointer: coarse) {
     .cards-tile:hover, .wish-card:hover, .sealed-card:hover,
     .wish-link-btn:hover, .filter-pill:hover, .list-card:hover,
-    .ebay-btn:hover, .detail-ebay-btn:hover {
-      /* annulla hover su touch — usa lo stato base */
+    .ebay-btn:hover, .detail-ebay-btn:hover, .icon-btn:hover,
+    .back-btn:hover, .stat-card.clickable:hover, .card:hover,
+    .ebay-link-btn:hover, .photo-upload-btn:hover, .imgsearch-item:hover,
+    .crop-zoom-btn:hover, .link-tile:hover, .welcome-text:hover,
+    .btn-primary:hover, .btn-danger.solid:hover, .history-entry-del:hover {
       border-color: inherit;
       background: inherit;
+      color: inherit;
+      filter: none;
+      transform: none;
     }
   }
 
@@ -920,27 +929,56 @@
   }
   /* tasto aggiungi tondo (solo nelle sezioni) */
   .dock-add-btn {
-    width: 50px; height: 50px; flex-shrink: 0;
+    width: 48px; height: 48px; flex-shrink: 0;
     border-radius: 999px; border: none;
     background: var(--accent); color: #fff;
     font-size: 1.7rem; font-weight: 300; line-height: 1;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 16px rgba(168, 85, 247, 0.45);
     pointer-events: auto; cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.3s ease, background 0.3s ease;
   }
   .dock-add-btn:active { transform: scale(0.9); }
 
-  /* COMPACT (stile Safari): la pillola si riduce a cerchietto, ancorata a DESTRA. */
+  /* COMPACT (stile Safari): la pillola diventa un CERCHIO perfetto, ancorato a DESTRA.
+     Più trasparente/glass e discreto quando non serve. */
   body.search-compact .bottom-search-inner {
     flex-grow: 0;
-    max-width: 50px;
-    padding: 13px;
+    width: 48px;
+    min-width: 48px;
+    max-width: 48px;
+    height: 48px;
+    padding: 0;
     justify-content: center;
+    align-items: center;
+    gap: 0;
+    background: rgba(26, 26, 26, 0.32);
+    border-color: rgba(168, 85, 247, 0.55);
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.06), 0 4px 14px rgba(0, 0, 0, 0.28);
+    opacity: 0.78;
+    transition: max-width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+                width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+                padding 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.3s ease, background 0.3s ease;
+  }
+  body.search-compact .bottom-search-inner:active {
+    opacity: 1;
+  }
+  body.search-compact .bottom-search-icon {
+    opacity: 1;
   }
   body.search-compact .bottom-search-placeholder {
     opacity: 0;
+    width: 0;
+    flex: 0;
   }
+  /* anche il tasto + diventa discreto quando compatto */
+  body.search-compact .dock-add-btn {
+    opacity: 0.78;
+    background: rgba(168, 85, 247, 0.62);
+    box-shadow: 0 4px 14px rgba(168, 85, 247, 0.25);
+  }
+  body.search-compact .dock-add-btn:active { opacity: 1; }
 
   /* HOME: nessun tasto aggiungi, solo ricerca */
   body.hide-fab .dock-add-btn { display: none; }
@@ -3310,7 +3348,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v58</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v61</div>
   </div>
 </div>
 
@@ -5538,8 +5576,10 @@ function openSearchTab() {
   if (results) results.innerHTML = '';
   if (input) {
     input.value = '';
-    // focus leggermente ritardato per far aprire la tastiera in modo affidabile su iOS
-    setTimeout(() => input.focus(), 60);
+    // IMPORTANTE: focus SINCRONO, nello stesso gesto del tocco.
+    // iOS apre la tastiera solo se .focus() avviene immediatamente
+    // come reazione diretta al tap (niente setTimeout di mezzo).
+    input.focus({ preventScroll: true });
   }
 }
 
@@ -7313,6 +7353,16 @@ document.addEventListener('touchstart', e => {
 document.addEventListener('touchmove', e => {
   const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
   const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+
+  // Appena il dito si muove in modo significativo (= sta scrollando, non toccando):
+  // togli lo stato "premuto" dall'elemento, così non resta evidenziato/flaggato.
+  if (deltaX > 8 || deltaY > 8) {
+    const a = document.activeElement;
+    if (a && a.blur && a.tagName !== 'INPUT' && a.tagName !== 'TEXTAREA') {
+      a.blur();
+    }
+  }
+
   if (deltaX > deltaY && deltaX > 10) {
     let el = e.target;
     let allow = false;
