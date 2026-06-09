@@ -888,6 +888,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    justify-content: flex-end;
     pointer-events: none;
   }
   /* la pillola di ricerca (tonda iOS, glass viola) */
@@ -903,10 +904,11 @@
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.35);
     pointer-events: auto;
     overflow: hidden;
-    /* animiamo max-width (fluido) invece di flex/width; origine a sinistra */
+    /* animiamo max-width (fluido) invece di flex/width; origine a DESTRA */
     max-width: 1000px;
-    transform-origin: left center;
+    transform-origin: right center;
     transition: max-width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+                flex-grow 0.36s cubic-bezier(0.22, 1, 0.36, 1),
                 padding 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .bottom-search-icon { font-size: 1.05rem; opacity: 0.85; flex-shrink: 0; }
@@ -929,9 +931,9 @@
   }
   .dock-add-btn:active { transform: scale(0.9); }
 
-  /* COMPACT (stile Safari): la pillola si riduce a cerchietto.
-     Resta ancorata a sinistra (niente salto di lato): solo max-width si stringe. */
+  /* COMPACT (stile Safari): la pillola si riduce a cerchietto, ancorata a DESTRA. */
   body.search-compact .bottom-search-inner {
+    flex-grow: 0;
     max-width: 50px;
     padding: 13px;
     justify-content: center;
@@ -3308,7 +3310,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v57</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v58</div>
   </div>
 </div>
 
@@ -5591,8 +5593,7 @@ function goToHome() {
 
 // Safety helper — call this anytime view changes or modals open/close
 function updateFabVisibility() {
-  // reset stato compatto al cambio vista (riparte grande in cima)
-  document.body.classList.remove('search-compact');
+  // la barra resta compatta al cambio vista (torna grande solo tornando in cima scrollando)
   if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
     document.body.classList.remove('hide-fab');
   } else {
