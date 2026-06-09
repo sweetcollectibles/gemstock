@@ -482,7 +482,7 @@
     font-size: 1.1rem;
   }
 
-  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn:active, .icon-btn.pressing { transform: scale(0.94); }
   .icon-btn:hover { border-color: var(--accent); }
   .icon-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
@@ -529,7 +529,7 @@
     cursor: pointer;
     transition: transform 0.15s, border-color 0.15s, background 0.15s;
   }
-  .cards-tile:active { transform: scale(0.985); }
+  .cards-tile:active, .cards-tile.pressing { transform: scale(0.985); }
   .cards-tile:hover {
     border-color: var(--accent);
     background: rgba(168,85,247,0.04);
@@ -634,7 +634,7 @@
     cursor: pointer;
     transition: all 0.15s;
   }
-  .back-btn:active { transform: scale(0.9); }
+  .back-btn:active, .back-btn.pressing { transform: scale(0.9); }
   .back-btn:hover { border-color: var(--accent); }
 
   .list-title {
@@ -754,7 +754,7 @@
     transition: all 0.15s;
   }
 
-  .stat-card.clickable:active { transform: scale(0.97); }
+  .stat-card.clickable:active, .stat-card.clickable.pressing { transform: scale(0.97); }
   .stat-card.clickable:hover { border-color: var(--border2); }
 
   .stat-card.clickable.active {
@@ -913,12 +913,15 @@
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.35);
     pointer-events: auto;
     overflow: hidden;
-    /* animiamo max-width (fluido) invece di flex/width; origine a DESTRA */
+    /* animiamo max-width (fluido) invece di flex/width; origine a DESTRA.
+       Curva morbida e durata più lunga = movimento soft, stile iOS. */
     max-width: 1000px;
     transform-origin: right center;
-    transition: max-width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-                flex-grow 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-                padding 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: max-width 0.55s cubic-bezier(0.33, 1, 0.45, 1),
+                flex-grow 0.55s cubic-bezier(0.33, 1, 0.45, 1),
+                width 0.55s cubic-bezier(0.33, 1, 0.45, 1),
+                padding 0.55s cubic-bezier(0.33, 1, 0.45, 1),
+                background 0.4s ease, opacity 0.4s ease;
   }
   .bottom-search-icon { font-size: 1.05rem; opacity: 0.85; flex-shrink: 0; }
   .bottom-search-placeholder {
@@ -938,7 +941,7 @@
     pointer-events: auto; cursor: pointer;
     transition: transform 0.2s ease, opacity 0.3s ease, background 0.3s ease;
   }
-  .dock-add-btn:active { transform: scale(0.9); }
+  .dock-add-btn:active, .dock-add-btn.pressing { transform: scale(0.9); }
 
   /* COMPACT (stile Safari): la pillola diventa un CERCHIO perfetto, ancorato a DESTRA.
      Più trasparente/glass e discreto quando non serve. */
@@ -956,10 +959,10 @@
     border-color: rgba(168, 85, 247, 0.55);
     box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.06), 0 4px 14px rgba(0, 0, 0, 0.28);
     opacity: 0.78;
-    transition: max-width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-                width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-                padding 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-                opacity 0.3s ease, background 0.3s ease;
+    transition: max-width 0.55s cubic-bezier(0.33, 1, 0.45, 1),
+                width 0.55s cubic-bezier(0.33, 1, 0.45, 1),
+                padding 0.55s cubic-bezier(0.33, 1, 0.45, 1),
+                opacity 0.4s ease, background 0.4s ease;
   }
   body.search-compact .bottom-search-inner:active {
     opacity: 1;
@@ -1009,11 +1012,13 @@
   }
   .search-tab-inner {
     display: flex; align-items: center; gap: 10px;
-    background: var(--surface2);
+    background: rgba(26, 26, 26, 0.55);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
     border: 1.5px solid var(--accent);
-    border-radius: 13px;
-    padding: 12px 14px;
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+    border-radius: 999px;
+    padding: 13px 18px;
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.35);
   }
   .search-tab-inner input {
     flex: 1; background: none; border: none; outline: none;
@@ -1098,7 +1103,7 @@
     flex-shrink: 0;
   }
 
-  .filter-pill:active { transform: scale(0.96); }
+  .filter-pill:active, .filter-pill.pressing { transform: scale(0.96); }
   .filter-pill.active {
     background: var(--accent);
     color: var(--bg);
@@ -1150,7 +1155,7 @@
     transition: transform 0.12s, border-color 0.15s;
     will-change: transform;
   }
-  .list-card:active { transform: scale(0.985); }
+  .list-card:active, .list-card.pressing { transform: scale(0.985); }
   .list-card:hover { border-color: var(--border2); }
 
   .list-photo {
@@ -1337,7 +1342,7 @@
     cursor: pointer;
     transition: border-color 0.15s, transform 0.12s;
   }
-  .wish-card:active { transform: scale(0.97); }
+  .wish-card:active, .wish-card.pressing { transform: scale(0.97); }
   .wish-card:hover { border-color: var(--border2); }
 
   .wish-photo {
@@ -1448,7 +1453,7 @@
     letter-spacing: 0.2px;
     white-space: nowrap;
   }
-  .wish-link-btn:active { transform: scale(0.94); }
+  .wish-link-btn:active, .wish-link-btn.pressing { transform: scale(0.94); }
   .wish-link-btn:hover { border-color: var(--accent); }
 
   /* ====== SEALED LIST ====== */
@@ -1463,7 +1468,7 @@
     cursor: pointer;
     transition: border-color 0.15s, transform 0.12s;
   }
-  .sealed-card:active { transform: scale(0.985); }
+  .sealed-card:active, .sealed-card.pressing { transform: scale(0.985); }
   .sealed-card:hover { border-color: var(--border2); }
   .sealed-photo {
     width: 70px; height: 70px;
@@ -1515,7 +1520,7 @@
     transform: translateZ(0);
   }
 
-  .card:active { transform: scale(0.99); }
+  .card:active, .card.pressing { transform: scale(0.99); }
   .card:hover { border-color: var(--border2); }
 
   .card-top {
@@ -1696,7 +1701,7 @@
     position: relative;
   }
 
-  .ebay-link-btn:active { transform: scale(0.92); }
+  .ebay-link-btn:active, .ebay-link-btn.pressing { transform: scale(0.92); }
   .ebay-link-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
   .ebay-link-btn::after {
@@ -1739,7 +1744,7 @@
     justify-content: center;
   }
 
-  .ebay-btn:active { transform: scale(0.94); }
+  .ebay-btn:active, .ebay-btn.pressing { transform: scale(0.94); }
   .ebay-btn:hover {
     border-color: var(--accent);
     background: rgba(168,85,247,0.08);
@@ -1802,7 +1807,7 @@
     border: none;
   }
 
-  .detail-ebay-btn:active { transform: scale(0.97); }
+  .detail-ebay-btn:active, .detail-ebay-btn.pressing { transform: scale(0.97); }
 
   .detail-ebay-btn.it,
   .detail-ebay-btn.us,
@@ -1966,7 +1971,7 @@
     font-weight: 300;
   }
 
-  .fab:active { transform: scale(0.92); }
+  .fab:active, .fab.pressing { transform: scale(0.92); }
 
   /* Slide out to the right while scrolling down */
   body.fab-hidden .fab {
@@ -2119,7 +2124,7 @@
     cursor: pointer;
     transition: all 0.15s;
   }
-  .photo-upload-btn:active { transform: scale(0.98); }
+  .photo-upload-btn:active, .photo-upload-btn.pressing { transform: scale(0.98); }
   .photo-upload-btn:hover { border-color: var(--accent); color: var(--text); }
 
   .photo-btn-row {
@@ -2158,7 +2163,7 @@
     background: var(--surface2);
     transition: transform 0.12s, border-color 0.15s;
   }
-  .imgsearch-item:active { transform: scale(0.95); }
+  .imgsearch-item:active, .imgsearch-item.pressing { transform: scale(0.95); }
   .imgsearch-item:hover { border-color: var(--accent); }
   .imgsearch-item img {
     width: 100%;
@@ -2317,7 +2322,7 @@
     gap: 8px;
   }
 
-  .btn:active { transform: scale(0.98); }
+  .btn:active, .btn.pressing { transform: scale(0.98); }
 
   .btn-primary {
     background: var(--accent);
@@ -2546,7 +2551,7 @@
     justify-content: center;
     transition: all 0.15s;
   }
-  .crop-zoom-btn:active { transform: scale(0.92); }
+  .crop-zoom-btn:active, .crop-zoom-btn.pressing { transform: scale(0.92); }
   .crop-zoom-btn:hover { border-color: var(--accent); }
 
   /* PRICE HISTORY CHART (detail modal) */
@@ -2630,7 +2635,7 @@
     border-color: var(--red);
     color: var(--red);
   }
-  .history-entry-del:active { transform: scale(0.9); }
+  .history-entry-del:active, .history-entry-del.pressing { transform: scale(0.9); }
 
   .history-empty {
     text-align: center;
@@ -2662,7 +2667,7 @@
     transition: all 0.15s;
   }
 
-  .threshold-pill:active { transform: scale(0.95); }
+  .threshold-pill:active, .threshold-pill.pressing { transform: scale(0.95); }
   .threshold-pill.active {
     background: var(--accent);
     color: var(--bg);
@@ -2691,7 +2696,7 @@
     font-family: 'Inter', -apple-system, sans-serif;
   }
 
-  .link-tile:active { transform: scale(0.97); }
+  .link-tile:active, .link-tile.pressing { transform: scale(0.97); }
   .link-tile:hover {
     border-color: var(--accent);
     background: var(--surface);
@@ -3348,7 +3353,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v61</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v62</div>
   </div>
 </div>
 
@@ -7345,6 +7350,19 @@ function hideSplash() {
 let touchStartX = 0;
 let touchStartY = 0;
 
+// ============ FEEDBACK PRESSIONE (classe .pressing) ============
+// Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
+// :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
+const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.dock-add-btn,.filter-pill,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.imgsearch-item,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile';
+let pressedEl = null;
+function clearPressed() {
+  if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
+}
+document.addEventListener('touchstart', e => {
+  const el = e.target.closest ? e.target.closest(PRESSABLE) : null;
+  if (el) { clearPressed(); pressedEl = el; el.classList.add('pressing'); }
+}, { passive: true });
+
 document.addEventListener('touchstart', e => {
   touchStartX = e.touches[0].clientX;
   touchStartY = e.touches[0].clientY;
@@ -7354,13 +7372,11 @@ document.addEventListener('touchmove', e => {
   const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
   const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
 
-  // Appena il dito si muove in modo significativo (= sta scrollando, non toccando):
-  // togli lo stato "premuto" dall'elemento, così non resta evidenziato/flaggato.
+  // Appena il dito si muove → non è un tap ma uno scroll: togli subito il "premuto".
   if (deltaX > 8 || deltaY > 8) {
+    clearPressed();
     const a = document.activeElement;
-    if (a && a.blur && a.tagName !== 'INPUT' && a.tagName !== 'TEXTAREA') {
-      a.blur();
-    }
+    if (a && a.blur && a.tagName !== 'INPUT' && a.tagName !== 'TEXTAREA') a.blur();
   }
 
   if (deltaX > deltaY && deltaX > 10) {
@@ -7373,6 +7389,10 @@ document.addEventListener('touchmove', e => {
     if (!allow) e.preventDefault();
   }
 }, { passive: false });
+
+// Al rilascio o annullamento: rimuovi sempre lo stato premuto.
+document.addEventListener('touchend', clearPressed, { passive: true });
+document.addEventListener('touchcancel', clearPressed, { passive: true });
 
 // ============ BARRA RICERCA: COMPATTA ALLO SCROLL (stile Safari) ============
 (function setupSearchCompact() {
