@@ -3349,7 +3349,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v63</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v64</div>
   </div>
 </div>
 
@@ -7228,13 +7228,20 @@ async function initApp() {
   document.getElementById('cards-list').innerHTML = '<div class="auth-loading"><div class="auth-spinner"></div> Caricamento dati...</div>';
 
   // Load all data from Supabase in parallel
-  const [loadedCards, loadedWishlist, loadedSealed, nickname, psaToken] = await Promise.all([
-    dataStore.loadCards(),
-    dataStore.loadWishlist(),
-    dataStore.loadSealed(),
-    dataStore.loadNickname(),
-    dataStore.loadPsaToken()
-  ]);
+  let loadedCards = [], loadedWishlist = [], loadedSealed = [], nickname = null, psaToken = null;
+  try {
+    [loadedCards, loadedWishlist, loadedSealed, nickname, psaToken] = await Promise.all([
+      dataStore.loadCards(),
+      dataStore.loadWishlist(),
+      dataStore.loadSealed(),
+      dataStore.loadNickname(),
+      dataStore.loadPsaToken()
+    ]);
+  } catch (e) {
+    console.error('Errore caricamento dati:', e);
+    showToast('⚠️ Errore di connessione. Riprova.');
+    // Non blocchiamo: l'app parte comunque con liste vuote / dati locali.
+  }
 
   cards = loadedCards;
   applyLocalOrder(cards);
@@ -7262,6 +7269,10 @@ async function initApp() {
   // Le liste (con foto) le prepariamo subito dopo, fuori dal percorso critico
   // della home. Pre-decodifica le prime foto poi renderizza le liste.
   predecodeFirstImages(cards, 15).then(() => {
+    renderCards();
+    renderWishlist();
+    renderSealed();
+  }).catch(() => {
     renderCards();
     renderWishlist();
     renderSealed();
