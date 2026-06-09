@@ -1054,12 +1054,9 @@
     object-fit: cover;
     display: block;
     aspect-ratio: 64 / 90;
-    opacity: 0;
-    transition: opacity 0.18s ease;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
   }
-  .list-photo img.loaded { opacity: 1; }
   .list-photo-ph {
     width: 100%; height: 100%;
     display: flex;
@@ -3226,7 +3223,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v46</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v53</div>
   </div>
 </div>
 
@@ -6048,7 +6045,7 @@ function searchRowSimple(name, meta, photo, onclickStr) {
 }
 
 function renderListCards(arr) {
-  return arr.map(c => {
+  return arr.map((c, _idx) => {
     const cur = getCurrentPrice(c);
     const pct = getPnLPct(c);
     const isRaw = c.grader === 'RAW';
@@ -6067,8 +6064,11 @@ function renderListCards(arr) {
 
     const initial = (c.name || '?').trim().charAt(0).toUpperCase();
     const listImg = c.thumb || c.photo;
+    // Le prime carte (subito visibili) si caricano subito; le altre lazy.
+    const lazyAttr = _idx < 12 ? 'eager' : 'lazy';
+    const fetchAttr = _idx < 12 ? ' fetchpriority="high"' : '';
     const photoHtml = listImg
-      ? `<img src="${listImg}" alt="${c.name}" loading="lazy" decoding="async" width="64" height="90" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"/>`
+      ? `<img src="${listImg}" alt="${c.name}" loading="${lazyAttr}"${fetchAttr} decoding="async" width="64" height="90"/>`
       : `<div class="list-photo-ph">${initial}</div>`;
 
     return `
