@@ -834,16 +834,18 @@
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.35);
     pointer-events: auto;
     overflow: hidden;
-    transition: flex 0.32s cubic-bezier(0.4,0,0.2,1),
-                padding 0.32s cubic-bezier(0.4,0,0.2,1),
-                width 0.32s cubic-bezier(0.4,0,0.2,1);
+    /* animiamo max-width (fluido) invece di flex/width; origine a sinistra */
+    max-width: 1000px;
+    transform-origin: left center;
+    transition: max-width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+                padding 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .bottom-search-icon { font-size: 1.05rem; opacity: 0.85; flex-shrink: 0; }
   .bottom-search-placeholder {
     flex: 1; color: var(--muted); font-size: 0.95rem;
     font-family: 'Inter', -apple-system, sans-serif;
     white-space: nowrap; overflow: hidden;
-    transition: opacity 0.22s ease, width 0.32s cubic-bezier(0.4,0,0.2,1);
+    transition: opacity 0.2s ease;
   }
   /* tasto aggiungi tondo (solo nelle sezioni) */
   .dock-add-btn {
@@ -858,18 +860,16 @@
   }
   .dock-add-btn:active { transform: scale(0.9); }
 
-  /* COMPACT (stile Safari): scrollato → pillola si riduce a cerchietto con sola icona */
+  /* COMPACT (stile Safari): la pillola si riduce a cerchietto.
+     Resta ancorata a sinistra (niente salto di lato): solo max-width si stringe. */
   body.search-compact .bottom-search-inner {
-    flex: 0 0 50px;
-    width: 50px;
+    max-width: 50px;
     padding: 13px;
     justify-content: center;
   }
   body.search-compact .bottom-search-placeholder {
-    opacity: 0; width: 0; flex: 0;
+    opacity: 0;
   }
-  /* il dock si allinea a destra quando compatto */
-  body.search-compact .bottom-search { justify-content: flex-end; }
 
   /* HOME: nessun tasto aggiungi, solo ricerca */
   body.hide-fab .dock-add-btn { display: none; }
@@ -3231,7 +3231,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v55</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v56</div>
   </div>
 </div>
 
@@ -7126,24 +7126,27 @@ async function initApp() {
   if (psaToken) settings.psaToken = psaToken;
   loadNickname();
 
-  // Pre-decodifica le foto delle prime carte PRIMA del render: evita il
-  // momento "grigio" in cui i riquadri appaiono vuoti e poi compaiono le foto.
-  await predecodeFirstImages(cards, 15);
-
+  // Render della HOME subito: statistiche + grafico appaiono immediati,
+  // senza aspettare le foto (che stanno in un'altra vista).
   renderStats();
-  renderCards();
-  renderWishlist();
-  renderSealed();
 
   // Start in home view → hide FAB
   document.body.classList.add('hide-fab');
+  document.body.classList.add('search-compact'); // barra ricerca parte piccola
   goToHome();
 
-  // Avvio completato: abilita le animazioni (pulsazioni, fade tra viste)
-  // solo ORA, dopo il primo paint, così il cold start è senza scatti.
+  // Avvio completato: abilita le animazioni dopo il primo paint.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     document.body.classList.add('app-ready');
   }));
+
+  // Le liste (con foto) le prepariamo subito dopo, fuori dal percorso critico
+  // della home. Pre-decodifica le prime foto poi renderizza le liste.
+  predecodeFirstImages(cards, 15).then(() => {
+    renderCards();
+    renderWishlist();
+    renderSealed();
+  });
 }
 
 // Decodifica in anticipo le thumbnail delle prime N carte con foto.
