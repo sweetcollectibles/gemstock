@@ -3594,6 +3594,7 @@ function cardToDb(c, userId) {
     buy_date:      c.buyDate || null,
     notes:         c.notes || null,
     photo_url:     c.photo || null,
+    thumb_url:     c.thumb || null,
     history:       c.history || [],
     sort_index:    typeof c.sortIndex === 'number' ? c.sortIndex : null,
     updated_at:    new Date().toISOString()
@@ -3618,6 +3619,7 @@ function dbToCard(r) {
     notes:        r.notes || '',
     photo:        r.photo_url || null,
     photoUrl:     r.photo_url || null,
+    thumb:        r.thumb_url || r.photo_url || null,
     history:      Array.isArray(r.history) ? r.history : [],
     sortIndex:    typeof r.sort_index === 'number' ? r.sort_index : undefined,
     createdAt:    r.created_at,
@@ -3634,6 +3636,7 @@ function wishToDb(w, userId) {
     psa10_price: w.psa10 || null,
     raw_price:  w.raw || null,
     photo_url:  w.photo || null,
+    thumb_url:  w.thumb || null,
     updated_at: new Date().toISOString()
   };
 }
@@ -3648,6 +3651,7 @@ function dbToWish(r) {
     psa10:     r.psa10_price || null,
     raw:       r.raw_price || null,
     photo:     r.photo_url || null,
+    thumb:     r.thumb_url || r.photo_url || null,
     createdAt: r.created_at,
     updatedAt: r.updated_at
   };
@@ -3660,6 +3664,7 @@ function sealedToDb(s, userId) {
     current_price: s.currentPrice || null,
     notes:         s.notes || null,
     photo_url:     s.photo || null,
+    thumb_url:     s.thumb || null,
     updated_at:    new Date().toISOString()
   };
 }
@@ -3672,6 +3677,7 @@ function dbToSealed(r) {
     currentPrice: r.current_price || null,
     notes:        r.notes || '',
     photo:        r.photo_url || null,
+    thumb:        r.thumb_url || r.photo_url || null,
     createdAt:    r.created_at,
     updatedAt:    r.updated_at
   };
@@ -4597,6 +4603,7 @@ function updatePsaScanBtn() {
 
 // ============ PHOTO HANDLING (with crop editor) ============
 let currentPhoto = null; // base64 string of the photo (final cropped)
+let currentThumb = null; // thumbnail url/dataurl
 let cropState = null; // { img, scale, offsetX, offsetY, ... }
 let imageSearchTarget = 'card'; // 'card' | 'wish' — where the chosen image goes
 
@@ -4632,7 +4639,7 @@ async function loadPsaScan() {
     img.onerror = async () => {
       // Se CORS blocca il canvas, salva direttamente l'URL
       showToast('✓ Scan PSA caricato!');
-      currentPhoto = imageUrl;
+      currentPhoto = imageUrl; currentThumb = imageUrl;
       renderPhotoPreview();
     };
     img.src = imageUrl;
@@ -4867,10 +4874,10 @@ function selectCardImage(imageUrl) {
   img.onerror = function() {
     // If CORS blocks canvas export, store the URL directly as photo
     if (target === 'wish') {
-      currentWishPhoto = imageUrl;
+      currentWishPhoto = imageUrl; currentWishThumb = imageUrl;
       renderWishPhotoPreview();
     } else {
-      currentPhoto = imageUrl;
+      currentPhoto = imageUrl; currentThumb = imageUrl;
       renderPhotoPreview();
     }
     showToast('✓ Foto selezionata');
@@ -5038,28 +5045,62 @@ function cropZoom(delta) {
 }
 
 // ============ SUPABASE STORAGE — UPLOAD FOTO ============
+// Genera una versione ridotta (thumbnail) di un dataURL immagine
+async function makeThumbnail(dataUrl, maxW) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxW / img.naturalWidth);
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.72));
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+// Carica un singolo blob/dataUrl su Supabase Storage, restituisce l'URL pubblico
+async function uploadBlobToStorage(dataUrl, path) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const { error } = await _supabase.storage
+    .from('card-photos')
+    .upload(path, blob, { contentType: blob.type, upsert: false });
+  if (error) { console.error('Storage upload:', error); return null; }
+  const { data: { publicUrl } } = _supabase.storage
+    .from('card-photos')
+    .getPublicUrl(path);
+  return publicUrl;
+}
+
+// Carica foto PIENA + THUMBNAIL. Restituisce { photo, thumb }.
 async function uploadPhotoToStorage(dataUrl, prefix) {
-  if (!currentUser) return dataUrl;
+  if (!currentUser) return { photo: dataUrl, thumb: dataUrl };
   try {
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const ext = blob.type === 'image/png' ? 'png' : 'jpg';
-    const path = `${currentUser.id}/${prefix}_${Date.now()}.${ext}`;
+    const ts = Date.now();
+    const fullUrl = await uploadBlobToStorage(dataUrl, `${currentUser.id}/${prefix}_${ts}.jpg`);
+    if (!fullUrl) return { photo: dataUrl, thumb: dataUrl };
 
-    const { error } = await _supabase.storage
-      .from('card-photos')
-      .upload(path, blob, { contentType: blob.type, upsert: false });
-
-    if (error) { console.error('Storage upload:', error); return dataUrl; }
-
-    const { data: { publicUrl } } = _supabase.storage
-      .from('card-photos')
-      .getPublicUrl(path);
-
-    return publicUrl;
+    // genera + carica thumbnail (best-effort: se fallisce usiamo la piena)
+    let thumbUrl = fullUrl;
+    const thumbData = await makeThumbnail(dataUrl, 150);
+    if (thumbData) {
+      const t = await uploadBlobToStorage(thumbData, `${currentUser.id}/${prefix}_${ts}_thumb.jpg`);
+      if (t) thumbUrl = t;
+    }
+    return { photo: fullUrl, thumb: thumbUrl };
   } catch (e) {
     console.error('Upload failed:', e);
-    return dataUrl; // fallback a base64 in caso di errore
+    return { photo: dataUrl, thumb: dataUrl };
   }
 }
 
@@ -5088,16 +5129,19 @@ async function cropConfirm() {
 
   // Upload to Supabase Storage and get public URL
   showToast('⏳ Caricamento foto...');
-  const photoUrl = await uploadPhotoToStorage(dataUrl, target);
+  const up = await uploadPhotoToStorage(dataUrl, target);
 
   if (target === 'wish') {
-    currentWishPhoto = photoUrl;
+    currentWishPhoto = up.photo;
+    currentWishThumb = up.thumb;
     renderWishPhotoPreview();
   } else if (target === 'sealed') {
-    currentSealedPhoto = photoUrl;
+    currentSealedPhoto = up.photo;
+    currentSealedThumb = up.thumb;
     renderSealedPhotoPreview();
   } else {
-    currentPhoto = photoUrl;
+    currentPhoto = up.photo;
+    currentThumb = up.thumb;
     renderPhotoPreview();
   }
   showToast('✓ Foto caricata!');
@@ -5146,7 +5190,7 @@ function renderPhotoPreview() {
 }
 
 function removePhoto() {
-  currentPhoto = null;
+  currentPhoto = null; currentThumb = null;
   document.getElementById('f-photo-input').value = '';
   renderPhotoPreview();
 }
@@ -5162,7 +5206,7 @@ function openAddModal() {
   document.getElementById('f-condition').value = 'MT';
   document.getElementById('f-language').value = '';
   document.getElementById('f-buydate').value = new Date().toISOString().split('T')[0];
-  currentPhoto = null;
+  currentPhoto = null; currentThumb = null;
   renderPhotoPreview();
   toggleGraderFields();
   updatePsaScanBtn();
@@ -5189,6 +5233,7 @@ function editCard(id) {
   document.getElementById('f-buydate').value = c.buyDate || '';
   document.getElementById('f-notes').value = c.notes || '';
   currentPhoto = c.photo || null;
+  currentThumb = c.thumb || c.photo || null;
   renderPhotoPreview();
   toggleGraderFields();
   updatePsaScanBtn();
@@ -5233,6 +5278,7 @@ async function saveCard() {
       c.buyDate = document.getElementById('f-buydate').value;
       c.notes = document.getElementById('f-notes').value.trim();
       c.photo = currentPhoto || null;
+      c.thumb = currentThumb || currentPhoto || null;
       c.updatedAt = new Date().toISOString();
       if (!isNaN(currentPrice) && currentPrice > 0) {
         if (!c.history) c.history = [];
@@ -5259,6 +5305,7 @@ async function saveCard() {
       buyDate: document.getElementById('f-buydate').value,
       notes: document.getElementById('f-notes').value.trim(),
       photo: currentPhoto || null,
+      thumb: currentThumb || currentPhoto || null,
       history: [],
       createdAt: now, updatedAt: now
     };
@@ -5474,6 +5521,7 @@ function updateFabVisibility() {
 // ============ WISHLIST ============
 let editingWishId = null;
 let currentWishPhoto = null;
+let currentWishThumb = null;
 
 // FAB routes to the correct "add" modal depending on the current view
 function fabAction() {
@@ -5536,8 +5584,9 @@ function renderWishlist() {
   grid.style.display = 'grid';
   grid.innerHTML = wishlist.map(w => {
     const initial = (w.name || '?').trim().charAt(0).toUpperCase();
-    const photoHtml = w.photo
-      ? `<img src="${w.photo}" alt="${w.name}" loading="lazy"/>`
+    const wImg = w.thumb || w.photo;
+    const photoHtml = wImg
+      ? `<img src="${wImg}" alt="${w.name}" loading="lazy" decoding="async"/>`
       : `<div class="wish-photo-ph">${initial}</div>`;
 
     const setLine = [w.set, w.number ? '#' + w.number : ''].filter(Boolean).join(' · ') || '—';
@@ -5592,7 +5641,7 @@ function buildWishCardmarketUrl(w) {
 
 function openWishAddModal() {
   editingWishId = null;
-  currentWishPhoto = null;
+  currentWishPhoto = null; currentWishThumb = null;
   document.getElementById('wish-modal-title').textContent = '💜 Aggiungi alla Wishlist';
   ['wf-name','wf-set','wf-number','wf-psa10','wf-raw'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('wf-language').value = '';
@@ -5606,6 +5655,7 @@ function openWishEdit(id) {
   if (!w) return;
   editingWishId = id;
   currentWishPhoto = w.photo || null;
+  currentWishThumb = w.thumb || w.photo || null;
   document.getElementById('wish-modal-title').textContent = '✏️ Modifica carta';
   document.getElementById('wf-name').value = w.name || '';
   document.getElementById('wf-set').value = w.set || '';
@@ -5632,19 +5682,19 @@ async function saveWishCard() {
     const w = wishlist.find(x => x.id === editingWishId);
     if (w) {
       w.name = name; w.set = set; w.number = number; w.language = language;
-      w.psa10 = psa10; w.raw = raw; w.photo = currentWishPhoto || null; w.updatedAt = now;
+      w.psa10 = psa10; w.raw = raw; w.photo = currentWishPhoto || null; w.thumb = currentWishThumb || currentWishPhoto || null; w.updatedAt = now;
       await dataStore.updateWish(w);
     }
     showToast('✓ Wishlist aggiornata');
   } else {
-    const item = { userId: currentUser?.id, name, set, number, language, psa10, raw, photo: currentWishPhoto || null, createdAt: now, updatedAt: now };
+    const item = { userId: currentUser?.id, name, set, number, language, psa10, raw, photo: currentWishPhoto || null, thumb: currentWishThumb || currentWishPhoto || null, createdAt: now, updatedAt: now };
     const result = await dataStore.insertWish(item);
     if (result.error) { showToast('❌ Errore: ' + (result.error.message || 'riprova')); return; }
     wishlist.push(result.data);
     showToast('💜 Aggiunta alla wishlist!');
   }
 
-  editingWishId = null; currentWishPhoto = null;
+  editingWishId = null; currentWishPhoto = null; currentWishThumb = null;
   closeModal('wish-modal');
   renderWishlist();
 }
@@ -5708,7 +5758,7 @@ function renderWishPhotoPreview() {
 }
 
 function removeWishPhoto() {
-  currentWishPhoto = null;
+  currentWishPhoto = null; currentWishThumb = null;
   document.getElementById('wf-photo-input').value = '';
   renderWishPhotoPreview();
 }
@@ -5716,6 +5766,7 @@ function removeWishPhoto() {
 // ============ SEALED ============
 let editingSealedId = null;
 let currentSealedPhoto = null;
+let currentSealedThumb = null;
 
 function goToSealed() {
   currentView = 'sealed';
@@ -5782,8 +5833,9 @@ function renderSealed() {
       pnlClass = pct >= 0 ? 'green' : 'red';
       pnlText = `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
     }
-    const photoHtml = s.photo
-      ? `<img src="${s.photo}" alt="${s.name}" loading="lazy"/>`
+    const sImg = s.thumb || s.photo;
+    const photoHtml = sImg
+      ? `<img src="${sImg}" alt="${s.name}" loading="lazy" decoding="async"/>`
       : `<div class="sealed-photo-ph">📦</div>`;
     const noteHtml = s.notes
       ? `<div class="sealed-note ${/difett|ammacc|rovin|graffi|apert|danneg|piega/i.test(s.notes) ? 'warn' : ''}">${/difett|ammacc|rovin|graffi|apert|danneg|piega/i.test(s.notes) ? '⚠️ ' : ''}${s.notes}</div>`
@@ -5820,7 +5872,7 @@ function buildSealedCardmarketUrl(s) {
 
 function openSealedAddModal() {
   editingSealedId = null;
-  currentSealedPhoto = null;
+  currentSealedPhoto = null; currentSealedThumb = null;
   document.getElementById('sealed-modal-title').textContent = '📦 Aggiungi Sealed';
   ['sf-name','sf-buy','sf-current','sf-notes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('sealed-delete-btn').style.display = 'none';
@@ -5833,6 +5885,7 @@ function openSealedEdit(id) {
   if (!s) return;
   editingSealedId = id;
   currentSealedPhoto = s.photo || null;
+  currentSealedThumb = s.thumb || s.photo || null;
   document.getElementById('sealed-modal-title').textContent = '✏️ Modifica prodotto';
   document.getElementById('sf-name').value = s.name || '';
   document.getElementById('sf-buy').value = s.buyPrice ?? '';
@@ -5857,19 +5910,19 @@ async function saveSealed() {
     const s = sealed.find(x => x.id === editingSealedId);
     if (s) {
       s.name = name; s.buyPrice = buyPrice; s.currentPrice = currentPrice;
-      s.notes = notes; s.photo = currentSealedPhoto || null; s.updatedAt = now;
+      s.notes = notes; s.photo = currentSealedPhoto || null; s.thumb = currentSealedThumb || currentSealedPhoto || null; s.updatedAt = now;
       await dataStore.updateSealed(s);
     }
     showToast('✓ Prodotto aggiornato');
   } else {
-    const item = { userId: currentUser?.id, name, buyPrice, currentPrice, notes, photo: currentSealedPhoto || null, createdAt: now, updatedAt: now };
+    const item = { userId: currentUser?.id, name, buyPrice, currentPrice, notes, photo: currentSealedPhoto || null, thumb: currentSealedThumb || currentSealedPhoto || null, createdAt: now, updatedAt: now };
     const result = await dataStore.insertSealed(item);
     if (result.error) { showToast('❌ Errore: ' + (result.error.message || 'riprova')); return; }
     sealed.push(result.data);
     showToast('📦 Prodotto aggiunto!');
   }
 
-  editingSealedId = null; currentSealedPhoto = null;
+  editingSealedId = null; currentSealedPhoto = null; currentSealedThumb = null;
   closeModal('sealed-modal');
   renderSealed();
 }
@@ -5917,7 +5970,7 @@ function renderSealedPhotoPreview() {
 }
 
 function removeSealedPhoto() {
-  currentSealedPhoto = null;
+  currentSealedPhoto = null; currentSealedThumb = null;
   document.getElementById('sf-photo-input').value = '';
   renderSealedPhotoPreview();
 }
@@ -5956,13 +6009,13 @@ function onSearchInput() {
   }
   if (sealedHits.length) {
     html += `<div class="search-overlay-title">📦 Sealed · ${sealedHits.length}</div>`;
-    html += sealedHits.map(s => searchRowSimple(s.name, s.notes || 'Sealed', s.photo, `closeSearchTab();openSealedEdit(${s.id})`)).join('');
+    html += sealedHits.map(s => searchRowSimple(s.name, s.notes || 'Sealed', s.thumb || s.photo, `closeSearchTab();openSealedEdit(${s.id})`)).join('');
   }
   if (wishHits.length) {
     html += `<div class="search-overlay-title">💜 Wishlist · ${wishHits.length}</div>`;
     html += wishHits.map(w => {
       const meta = [w.number ? '#'+w.number : '', w.set || ''].filter(Boolean).join(' · ');
-      return searchRowSimple(w.name, meta, w.photo, '');
+      return searchRowSimple(w.name, meta, w.thumb || w.photo, '');
     }).join('');
   }
   if (!html) {
@@ -6013,8 +6066,9 @@ function renderListCards(arr) {
     }
 
     const initial = (c.name || '?').trim().charAt(0).toUpperCase();
-    const photoHtml = c.photo
-      ? `<img src="${c.photo}" alt="${c.name}" loading="lazy" decoding="async" width="64" height="90" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"/>`
+    const listImg = c.thumb || c.photo;
+    const photoHtml = listImg
+      ? `<img src="${listImg}" alt="${c.name}" loading="lazy" decoding="async" width="64" height="90" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"/>`
       : `<div class="list-photo-ph">${initial}</div>`;
 
     return `
