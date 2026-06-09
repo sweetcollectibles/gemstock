@@ -53,8 +53,8 @@
     outline: none !important;
   }
   /* Hover effects solo su dispositivi con mouse vero (non touch).
-     Su touch gli :hover di iOS restano "appiccicati" al primo tocco causando
-     il doppio-tap e le icone che restano evidenziate: qui li annulliamo del tutto. */
+     Su touch annulliamo SOLO transform/filter (l'effetto "premuto" visibile),
+     senza toccare colori/sfondi che variano da elemento a elemento. */
   @media (hover: none), (pointer: coarse) {
     .cards-tile:hover, .wish-card:hover, .sealed-card:hover,
     .wish-link-btn:hover, .filter-pill:hover, .list-card:hover,
@@ -63,11 +63,8 @@
     .ebay-link-btn:hover, .photo-upload-btn:hover, .imgsearch-item:hover,
     .crop-zoom-btn:hover, .link-tile:hover, .welcome-text:hover,
     .btn-primary:hover, .btn-danger.solid:hover, .history-entry-del:hover {
-      border-color: inherit;
-      background: inherit;
-      color: inherit;
-      filter: none;
-      transform: none;
+      transform: none !important;
+      filter: none !important;
     }
   }
 
@@ -482,7 +479,7 @@
     font-size: 1.1rem;
   }
 
-  .icon-btn:active, .icon-btn.pressing { transform: scale(0.94); }
+.icon-btn.pressing { transform: scale(0.94); }
   .icon-btn:hover { border-color: var(--accent); }
   .icon-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
@@ -529,7 +526,7 @@
     cursor: pointer;
     transition: transform 0.15s, border-color 0.15s, background 0.15s;
   }
-  .cards-tile:active, .cards-tile.pressing { transform: scale(0.985); }
+.cards-tile.pressing { transform: scale(0.985); }
   .cards-tile:hover {
     border-color: var(--accent);
     background: rgba(168,85,247,0.04);
@@ -634,7 +631,7 @@
     cursor: pointer;
     transition: all 0.15s;
   }
-  .back-btn:active, .back-btn.pressing { transform: scale(0.9); }
+.back-btn.pressing { transform: scale(0.9); }
   .back-btn:hover { border-color: var(--accent); }
 
   .list-title {
@@ -754,7 +751,7 @@
     transition: all 0.15s;
   }
 
-  .stat-card.clickable:active, .stat-card.clickable.pressing { transform: scale(0.97); }
+.stat-card.clickable.pressing { transform: scale(0.97); }
   .stat-card.clickable:hover { border-color: var(--border2); }
 
   .stat-card.clickable.active {
@@ -913,15 +910,14 @@
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.35);
     pointer-events: auto;
     overflow: hidden;
-    /* animiamo max-width (fluido) invece di flex/width; origine a DESTRA.
-       Curva morbida e durata più lunga = movimento soft, stile iOS. */
-    max-width: 1000px;
+    /* max-width realistico (non 1000px): così l'animazione è TUTTA visibile e fluida.
+       will-change + transform accelerano via GPU. */
+    max-width: 420px;
     transform-origin: right center;
-    transition: max-width 0.55s cubic-bezier(0.33, 1, 0.45, 1),
-                flex-grow 0.55s cubic-bezier(0.33, 1, 0.45, 1),
-                width 0.55s cubic-bezier(0.33, 1, 0.45, 1),
-                padding 0.55s cubic-bezier(0.33, 1, 0.45, 1),
-                background 0.4s ease, opacity 0.4s ease;
+    will-change: max-width, padding;
+    transition: max-width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+                padding 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+                background 0.35s ease, opacity 0.35s ease;
   }
   .bottom-search-icon { font-size: 1.05rem; opacity: 0.85; flex-shrink: 0; }
   .bottom-search-placeholder {
@@ -941,7 +937,7 @@
     pointer-events: auto; cursor: pointer;
     transition: transform 0.2s ease, opacity 0.3s ease, background 0.3s ease;
   }
-  .dock-add-btn:active, .dock-add-btn.pressing { transform: scale(0.9); }
+.dock-add-btn.pressing { transform: scale(0.9); }
 
   /* COMPACT (stile Safari): la pillola diventa un CERCHIO perfetto, ancorato a DESTRA.
      Più trasparente/glass e discreto quando non serve. */
@@ -959,10 +955,10 @@
     border-color: rgba(168, 85, 247, 0.55);
     box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.06), 0 4px 14px rgba(0, 0, 0, 0.28);
     opacity: 0.78;
-    transition: max-width 0.55s cubic-bezier(0.33, 1, 0.45, 1),
-                width 0.55s cubic-bezier(0.33, 1, 0.45, 1),
-                padding 0.55s cubic-bezier(0.33, 1, 0.45, 1),
-                opacity 0.4s ease, background 0.4s ease;
+    transition: max-width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+                width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+                padding 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+                opacity 0.35s ease, background 0.35s ease;
   }
   body.search-compact .bottom-search-inner:active {
     opacity: 1;
@@ -1103,7 +1099,7 @@
     flex-shrink: 0;
   }
 
-  .filter-pill:active, .filter-pill.pressing { transform: scale(0.96); }
+.filter-pill.pressing { transform: scale(0.96); }
   .filter-pill.active {
     background: var(--accent);
     color: var(--bg);
@@ -1155,7 +1151,7 @@
     transition: transform 0.12s, border-color 0.15s;
     will-change: transform;
   }
-  .list-card:active, .list-card.pressing { transform: scale(0.985); }
+.list-card.pressing { transform: scale(0.985); }
   .list-card:hover { border-color: var(--border2); }
 
   .list-photo {
@@ -1342,7 +1338,7 @@
     cursor: pointer;
     transition: border-color 0.15s, transform 0.12s;
   }
-  .wish-card:active, .wish-card.pressing { transform: scale(0.97); }
+.wish-card.pressing { transform: scale(0.97); }
   .wish-card:hover { border-color: var(--border2); }
 
   .wish-photo {
@@ -1453,7 +1449,7 @@
     letter-spacing: 0.2px;
     white-space: nowrap;
   }
-  .wish-link-btn:active, .wish-link-btn.pressing { transform: scale(0.94); }
+.wish-link-btn.pressing { transform: scale(0.94); }
   .wish-link-btn:hover { border-color: var(--accent); }
 
   /* ====== SEALED LIST ====== */
@@ -1468,7 +1464,7 @@
     cursor: pointer;
     transition: border-color 0.15s, transform 0.12s;
   }
-  .sealed-card:active, .sealed-card.pressing { transform: scale(0.985); }
+.sealed-card.pressing { transform: scale(0.985); }
   .sealed-card:hover { border-color: var(--border2); }
   .sealed-photo {
     width: 70px; height: 70px;
@@ -1520,7 +1516,7 @@
     transform: translateZ(0);
   }
 
-  .card:active, .card.pressing { transform: scale(0.99); }
+  .card.pressing { transform: scale(0.99); }
   .card:hover { border-color: var(--border2); }
 
   .card-top {
@@ -1701,7 +1697,7 @@
     position: relative;
   }
 
-  .ebay-link-btn:active, .ebay-link-btn.pressing { transform: scale(0.92); }
+.ebay-link-btn.pressing { transform: scale(0.92); }
   .ebay-link-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
   .ebay-link-btn::after {
@@ -1744,7 +1740,7 @@
     justify-content: center;
   }
 
-  .ebay-btn:active, .ebay-btn.pressing { transform: scale(0.94); }
+.ebay-btn.pressing { transform: scale(0.94); }
   .ebay-btn:hover {
     border-color: var(--accent);
     background: rgba(168,85,247,0.08);
@@ -1807,7 +1803,7 @@
     border: none;
   }
 
-  .detail-ebay-btn:active, .detail-ebay-btn.pressing { transform: scale(0.97); }
+.detail-ebay-btn.pressing { transform: scale(0.97); }
 
   .detail-ebay-btn.it,
   .detail-ebay-btn.us,
@@ -1971,7 +1967,7 @@
     font-weight: 300;
   }
 
-  .fab:active, .fab.pressing { transform: scale(0.92); }
+  .fab.pressing { transform: scale(0.92); }
 
   /* Slide out to the right while scrolling down */
   body.fab-hidden .fab {
@@ -2124,7 +2120,7 @@
     cursor: pointer;
     transition: all 0.15s;
   }
-  .photo-upload-btn:active, .photo-upload-btn.pressing { transform: scale(0.98); }
+.photo-upload-btn.pressing { transform: scale(0.98); }
   .photo-upload-btn:hover { border-color: var(--accent); color: var(--text); }
 
   .photo-btn-row {
@@ -2163,7 +2159,7 @@
     background: var(--surface2);
     transition: transform 0.12s, border-color 0.15s;
   }
-  .imgsearch-item:active, .imgsearch-item.pressing { transform: scale(0.95); }
+.imgsearch-item.pressing { transform: scale(0.95); }
   .imgsearch-item:hover { border-color: var(--accent); }
   .imgsearch-item img {
     width: 100%;
@@ -2322,7 +2318,7 @@
     gap: 8px;
   }
 
-  .btn:active, .btn.pressing { transform: scale(0.98); }
+  .btn.pressing { transform: scale(0.98); }
 
   .btn-primary {
     background: var(--accent);
@@ -2551,7 +2547,7 @@
     justify-content: center;
     transition: all 0.15s;
   }
-  .crop-zoom-btn:active, .crop-zoom-btn.pressing { transform: scale(0.92); }
+.crop-zoom-btn.pressing { transform: scale(0.92); }
   .crop-zoom-btn:hover { border-color: var(--accent); }
 
   /* PRICE HISTORY CHART (detail modal) */
@@ -2635,7 +2631,7 @@
     border-color: var(--red);
     color: var(--red);
   }
-  .history-entry-del:active, .history-entry-del.pressing { transform: scale(0.9); }
+.history-entry-del.pressing { transform: scale(0.9); }
 
   .history-empty {
     text-align: center;
@@ -2667,7 +2663,7 @@
     transition: all 0.15s;
   }
 
-  .threshold-pill:active, .threshold-pill.pressing { transform: scale(0.95); }
+.threshold-pill.pressing { transform: scale(0.95); }
   .threshold-pill.active {
     background: var(--accent);
     color: var(--bg);
@@ -2696,7 +2692,7 @@
     font-family: 'Inter', -apple-system, sans-serif;
   }
 
-  .link-tile:active, .link-tile.pressing { transform: scale(0.97); }
+.link-tile.pressing { transform: scale(0.97); }
   .link-tile:hover {
     border-color: var(--accent);
     background: var(--surface);
@@ -3353,7 +3349,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v62</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v63</div>
   </div>
 </div>
 
@@ -7393,6 +7389,9 @@ document.addEventListener('touchmove', e => {
 // Al rilascio o annullamento: rimuovi sempre lo stato premuto.
 document.addEventListener('touchend', clearPressed, { passive: true });
 document.addEventListener('touchcancel', clearPressed, { passive: true });
+// Anche durante lo scroll (momentum iOS può non lanciare touchmove): pulisci.
+window.addEventListener('scroll', clearPressed, { passive: true, capture: true });
+document.addEventListener('scroll', clearPressed, { passive: true, capture: true });
 
 // ============ BARRA RICERCA: COMPATTA ALLO SCROLL (stile Safari) ============
 (function setupSearchCompact() {
