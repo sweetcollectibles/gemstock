@@ -496,21 +496,14 @@
     z-index: 1;
   }
 
-  /* PAGE VIEWS — Home / List routing */
-  /* L'animazione di entrata parte solo dopo l'avvio (app-ready):
-     al cold start la home appare già pronta, senza scatto. */
-  body.app-ready .page-view {
-    animation: viewFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  }
+  /* PAGE VIEWS — Home / List routing
+     Le transizioni tra viste sono gestite via JS (push/pop stile iOS). */
   /* Nessun padding di sicurezza in fondo: le carte riempiono fino al bordo fisico,
      scorrendo anche sotto la home-bar (richiesta esplicita: riempire tutto). */
   #cards-list, #sealed-list, #wishlist-grid, #home-tiles {
     padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
   }
-  @keyframes viewFadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  /* (keyframes viewFadeIn rimossi — sostituiti dal push/pop JS) */
 
   /* "Le tue carte" tile */
   .cards-tile {
@@ -3349,7 +3342,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v64</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v65</div>
   </div>
 </div>
 
@@ -5597,39 +5590,138 @@ function clearSearch() { closeSearchTab(); }
 function closeSearchOverlay() { closeSearchTab(); }
 
 // ============ VIEW ROUTING (Home / List) ============
-let currentView = 'home'; // 'home' | 'list'
+let currentView = 'home'; // 'home' | 'list' | 'wishlist' | 'sealed'
+
+// ============ TRANSIZIONI VISTA — iOS PUSH/POP ============
+// La vista nuova scivola da destra sopra la vecchia, che arretra (parallasse)
+// e si scurisce. Tornando, il contrario. Solo transform/opacity/filter → GPU 60fps.
+const VIEW_IDS = { home: 'home-view', list: 'list-view', wishlist: 'wishlist-view', sealed: 'sealed-view' };
+let navAnimating = false;
+const NAV_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+const NAV_DUR = 420;
+
+function hideViewsExcept(keepIds) {
+  Object.values(VIEW_IDS).forEach(id => {
+    if (!keepIds.includes(id)) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+  });
+}
+
+function transitionViews(fromEl, toEl, direction) {
+  return new Promise(resolve => {
+    const wrapper = document.querySelector('.scroll-wrapper');
+    // Niente animazione: primo avvio, vista mancante o stessa vista
+    if (!fromEl || !toEl || fromEl === toEl || !document.body.classList.contains('app-ready')) {
+      if (toEl) toEl.style.display = '';
+      if (fromEl && fromEl !== toEl) fromEl.style.display = 'none';
+      if (wrapper) wrapper.scrollTop = 0;
+      resolve(); return;
+    }
+    const main = document.querySelector('.main');
+    navAnimating = true;
+    const st = wrapper.scrollTop;
+    const vh = window.innerHeight;
+    const cs = getComputedStyle(main);
+
+    wrapper.scrollTop = 0;
+    wrapper.style.overflow = 'hidden';
+    main.style.minHeight = vh + 'px';
+
+    const prep = (v, z) => {
+      v.style.position = 'absolute';
+      v.style.top = cs.paddingTop;
+      v.style.left = cs.paddingLeft;
+      v.style.right = cs.paddingRight;
+      v.style.minHeight = vh + 'px';
+      v.style.zIndex = z;
+      v.style.transition = 'none';
+      v.style.willChange = 'transform, filter';
+    };
+
+    toEl.style.display = '';
+    if (direction === 'forward') {
+      prep(fromEl, '1'); prep(toEl, '5');
+      // la vista uscente resta visivamente dov'era (compensa lo scroll)
+      fromEl.style.transform = `translate(0px, ${-st}px)`;
+      toEl.style.transform = 'translateX(105%)';
+      toEl.style.boxShadow = '-18px 0 44px rgba(0,0,0,0.55)';
+    } else {
+      prep(fromEl, '5'); prep(toEl, '1');
+      fromEl.style.transform = `translate(0px, ${-st}px)`;
+      fromEl.style.boxShadow = '-18px 0 44px rgba(0,0,0,0.55)';
+      toEl.style.transform = 'translateX(-28%)';
+      toEl.style.filter = 'brightness(0.62)';
+    }
+
+    void toEl.offsetWidth; // forza il reflow prima di animare
+
+    [fromEl, toEl].forEach(v => {
+      v.style.transition = `transform ${NAV_DUR}ms ${NAV_EASE}, filter ${NAV_DUR}ms ${NAV_EASE}`;
+    });
+
+    if (direction === 'forward') {
+      fromEl.style.transform = `translate(-28%, ${-st}px)`;
+      fromEl.style.filter = 'brightness(0.62)';
+      toEl.style.transform = 'translateX(0)';
+    } else {
+      fromEl.style.transform = `translate(105%, ${-st}px)`;
+      toEl.style.transform = 'translateX(0)';
+      toEl.style.filter = 'brightness(1)';
+    }
+
+    setTimeout(() => {
+      [fromEl, toEl].forEach(v => {
+        v.style.position = ''; v.style.top = ''; v.style.left = ''; v.style.right = '';
+        v.style.minHeight = ''; v.style.zIndex = ''; v.style.transition = '';
+        v.style.transform = ''; v.style.filter = ''; v.style.boxShadow = '';
+        v.style.willChange = '';
+      });
+      fromEl.style.display = 'none';
+      main.style.minHeight = '';
+      wrapper.style.overflow = '';
+      wrapper.scrollTop = 0;
+      navAnimating = false;
+      resolve();
+    }, NAV_DUR + 50);
+  });
+}
 
 function goToList() {
+  if (navAnimating || currentView === 'list') return;
+  const fromEl = document.getElementById(VIEW_IDS[currentView]);
   currentView = 'list';
-  document.getElementById('home-view').style.display = 'none';
-  document.getElementById('wishlist-view').style.display = 'none';
-  document.getElementById('sealed-view').style.display = 'none';
-  document.getElementById('list-view').style.display = '';
-  // Reset scroll
-  const wrapper = document.querySelector('.scroll-wrapper');
-  if (wrapper) wrapper.scrollTop = 0;
-  // Reset horizontal scroll of filter row
+  // prepara il contenuto PRIMA dell'animazione, così entra già pronto
   const filterRow = document.getElementById('filter-row');
   if (filterRow) filterRow.scrollLeft = 0;
-  // Apply current filters/render
   renderCards();
   updateFabVisibility();
+  hideViewsExcept(['list-view', fromEl ? fromEl.id : '']);
+  transitionViews(fromEl, document.getElementById('list-view'), 'forward');
 }
 
 function goToHome() {
+  // Primo avvio o già in home: nessuna animazione, solo stato corretto
+  if (navAnimating) return;
+  if (currentView === 'home') {
+    hideViewsExcept(['home-view']);
+    const h = document.getElementById('home-view');
+    if (h) h.style.display = '';
+    const wrapper = document.querySelector('.scroll-wrapper');
+    if (wrapper) wrapper.scrollTop = 0;
+    updateFabVisibility();
+    return;
+  }
+  const fromEl = document.getElementById(VIEW_IDS[currentView]);
   currentView = 'home';
-  document.getElementById('list-view').style.display = 'none';
-  document.getElementById('wishlist-view').style.display = 'none';
-  document.getElementById('sealed-view').style.display = 'none';
-  document.getElementById('home-view').style.display = '';
-  const wrapper = document.querySelector('.scroll-wrapper');
-  if (wrapper) wrapper.scrollTop = 0;
-  // Clear search when going back
-  document.getElementById('search-input').value = '';
-  onSearchInput();
+  const si = document.getElementById('search-input');
+  if (si) { si.value = ''; onSearchInput(); }
   renderWishlist(); // refresh tile counter
   renderSealed();   // refresh tile counter
   updateFabVisibility();
+  hideViewsExcept(['home-view', fromEl ? fromEl.id : '']);
+  transitionViews(fromEl, document.getElementById('home-view'), 'back');
 }
 
 // Safety helper — call this anytime view changes or modals open/close
@@ -5659,14 +5751,13 @@ function fabAction() {
 }
 
 function goToWishlist() {
+  if (navAnimating || currentView === 'wishlist') return;
+  const fromEl = document.getElementById(VIEW_IDS[currentView]);
   currentView = 'wishlist';
-  document.getElementById('home-view').style.display = 'none';
-  document.getElementById('list-view').style.display = 'none';
-  document.getElementById('wishlist-view').style.display = '';
-  const wrapper = document.querySelector('.scroll-wrapper');
-  if (wrapper) wrapper.scrollTop = 0;
   renderWishlist();
   updateFabVisibility();
+  hideViewsExcept(['wishlist-view', fromEl ? fromEl.id : '']);
+  transitionViews(fromEl, document.getElementById('wishlist-view'), 'forward');
 }
 
 function renderWishlist() {
@@ -5893,15 +5984,13 @@ let currentSealedPhoto = null;
 let currentSealedThumb = null;
 
 function goToSealed() {
+  if (navAnimating || currentView === 'sealed') return;
+  const fromEl = document.getElementById(VIEW_IDS[currentView]);
   currentView = 'sealed';
-  document.getElementById('home-view').style.display = 'none';
-  document.getElementById('list-view').style.display = 'none';
-  document.getElementById('wishlist-view').style.display = 'none';
-  document.getElementById('sealed-view').style.display = '';
-  const wrapper = document.querySelector('.scroll-wrapper');
-  if (wrapper) wrapper.scrollTop = 0;
   renderSealed();
   updateFabVisibility();
+  hideViewsExcept(['sealed-view', fromEl ? fromEl.id : '']);
+  transitionViews(fromEl, document.getElementById('sealed-view'), 'forward');
 }
 
 function renderSealed() {
@@ -7261,21 +7350,15 @@ async function initApp() {
   document.body.classList.add('search-compact'); // barra ricerca parte piccola
   goToHome();
 
-  // Avvio completato: abilita le animazioni dopo il primo paint.
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    document.body.classList.add('app-ready');
-  }));
-
-  // Le liste (con foto) le prepariamo subito dopo, fuori dal percorso critico
-  // della home. Pre-decodifica le prime foto poi renderizza le liste.
-  predecodeFirstImages(cards, 15).then(() => {
-    renderCards();
-    renderWishlist();
-    renderSealed();
-  }).catch(() => {
-    renderCards();
-    renderWishlist();
-    renderSealed();
+  // SEQUENZA ANTI-SFARFALLIO: tutto il lavoro pesante (animazioni infinite,
+  // pre-decodifica foto, render liste) parte SOLO quando la splash è
+  // completamente sparita, così l'uscita della splash ha tutti i frame per sé.
+  splashGone.then(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.body.classList.add('app-ready');
+    }));
+    const renderLists = () => { renderCards(); renderWishlist(); renderSealed(); };
+    predecodeFirstImages(cards, 15).then(renderLists).catch(renderLists);
   });
 }
 
@@ -7307,17 +7390,22 @@ function predecodeFirstImages(list, n) {
 let splashHidden = false;
 const splashStart = Date.now();
 const SPLASH_MIN_MS = 1100; // tempo minimo a schermo (per non sparire in un lampo)
+let _splashGoneResolve;
+const splashGone = new Promise(r => { _splashGoneResolve = r; }); // risolta quando la splash è completamente sparita
 function hideSplash() {
   if (splashHidden) return;
   splashHidden = true;
   const splash = document.getElementById('splash-screen');
-  if (!splash) return;
+  if (!splash) { _splashGoneResolve(); return; }
   const elapsed = Date.now() - splashStart;
   const wait = Math.max(0, SPLASH_MIN_MS - elapsed);
   setTimeout(() => {
     requestAnimationFrame(() => {
       splash.classList.add('splash-exit');
-      setTimeout(() => splash.classList.add('splash-hidden'), 650);
+      setTimeout(() => {
+        splash.classList.add('splash-hidden');
+        _splashGoneResolve(); // ora l'app è completamente svelata
+      }, 650);
     });
   }, wait);
 }
