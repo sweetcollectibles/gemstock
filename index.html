@@ -1073,6 +1073,85 @@
   }
   .search-overlay-title:first-child { margin-top: 4px; }
 
+  /* ============ PAGINA CERT PSA ============ */
+  .psa-view {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 140;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+  .psa-view-head {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 12px;
+    padding: max(env(safe-area-inset-top), 52px) 16px 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13,13,13,0.96);
+  }
+  .psa-view-title {
+    font-weight: 800; font-size: 1.05rem;
+  }
+  .psa-view-title .mono { font-family: 'JetBrains Mono', monospace; color: var(--gold); }
+  .psa-view-scroll {
+    flex: 1; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 18px calc(env(safe-area-inset-bottom) + 40px);
+  }
+  .psa-slab-wrap {
+    display: flex; justify-content: center; margin-bottom: 14px;
+    min-height: 280px; align-items: center;
+  }
+  .psa-slab-wrap img {
+    max-width: 78%; max-height: 46vh;
+    border-radius: 10px;
+    filter: drop-shadow(0 14px 34px rgba(0,0,0,0.6));
+  }
+  .psa-flip-row {
+    display: flex; justify-content: center; gap: 8px; margin-bottom: 22px;
+  }
+  .psa-flip-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 999px;
+    padding: 8px 20px; font-size: 0.78rem; font-weight: 600;
+    font-family: 'Inter', sans-serif;
+  }
+  .psa-flip-btn.on {
+    background: rgba(168,85,247,0.12); border-color: var(--accent); color: var(--text);
+  }
+  .psa-card-title {
+    text-align: center; font-weight: 700; font-size: 1.05rem;
+    line-height: 1.5; letter-spacing: 0.4px; text-transform: uppercase;
+    margin: 0 6px 24px;
+  }
+  .psa-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;
+  }
+  .psa-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px 16px;
+  }
+  .psa-box-label {
+    font-size: 0.78rem; color: var(--muted); font-weight: 500; margin-bottom: 10px;
+  }
+  .psa-box-value {
+    font-size: 1.45rem; font-weight: 800; letter-spacing: 0.3px;
+  }
+  .psa-box-value.gold { color: var(--gold); font-family: 'JetBrains Mono', monospace; }
+  .psa-save-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff;
+    border: none; border-radius: 16px; padding: 17px 24px;
+    font-size: 1rem; font-weight: 700; font-family: 'Inter', sans-serif;
+    box-shadow: 0 8px 26px rgba(168,85,247,0.35);
+  }
+  .psa-save-btn:disabled { opacity: 0.6; }
+  .psa-loading {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; padding: 80px 20px; color: var(--muted); font-size: 0.85rem;
+  }
+
   .search-icon {
     position: absolute;
     left: 14px;
@@ -3131,6 +3210,15 @@
   <div class="search-tab-results" id="search-results-list"></div>
 </div>
 
+<!-- ============ PAGINA CERT PSA (interna, stile app PSA + Sweethome) ============ -->
+<div class="psa-view" id="psa-view" style="display:none">
+  <div class="psa-view-head">
+    <button class="back-btn" onclick="closePsaView()">←</button>
+    <div class="psa-view-title">🏅 PSA Cert · <span id="psa-view-cert" class="mono"></span></div>
+  </div>
+  <div class="psa-view-scroll" id="psa-view-body"></div>
+</div>
+
 <!-- AUTH PAGE — BEFORE the script so DOM exists when JS runs -->
 <div id="auth-page-login" class="auth-page">
   <div class="auth-box">
@@ -3395,7 +3483,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v70</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v71</div>
   </div>
 </div>
 
@@ -4681,7 +4769,7 @@ function openDetail(id) {
       </div>
       ${c.grader === 'PSA' && c.psaCert ? `
         <div class="detail-ebay-row" style="margin-top: 8px;">
-          <a href="psa.html?cert=${encodeURIComponent(c.psaCert)}" target="_blank" rel="noopener" class="detail-ebay-btn psa" style="grid-column: span 2;" onclick="event.stopPropagation()">
+          <a href="#" class="detail-ebay-btn psa" style="grid-column: span 2;" onclick="event.preventDefault(); event.stopPropagation(); openPsaView(${c.id})">
             <span class="detail-ebay-flag">🔍</span> PSA Cert · ${c.psaCert}
           </a>
         </div>
@@ -4775,6 +4863,173 @@ let currentPhoto = null; // base64 string of the photo (final cropped)
 let currentThumb = null; // thumbnail url/dataurl
 let cropState = null; // { img, scale, offsetX, offsetY, ... }
 let imageSearchTarget = 'card'; // 'card' | 'wish' — where the chosen image goes
+
+// ============ PAGINA CERT PSA (interna) ============
+let psaViewState = null; // { front, back, cert, showing }
+
+async function openPsaView(cardId) {
+  const c = cards.find(x => x.id === cardId);
+  if (!c || !c.psaCert) return;
+  const token = settings.psaToken || '';
+  if (!token) { showToast('⚠️ Imposta il Token PSA nelle Impostazioni ⚙'); return; }
+
+  const view = document.getElementById('psa-view');
+  const body = document.getElementById('psa-view-body');
+  document.getElementById('psa-view-cert').textContent = c.psaCert;
+  view.style.display = 'flex';
+  body.innerHTML = `<div class="psa-loading">
+    <span class="auth-spinner" style="width:30px;height:30px"></span>
+    <span>Recupero i dati dal database PSA…</span>
+  </div>`;
+
+  try {
+    const url = `${SUPABASE_URL}/functions/v1/psa-cert?cert=${encodeURIComponent(c.psaCert)}&token=${encodeURIComponent(token)}`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const d = data.cert || {};
+
+    psaViewState = { front: data.front || null, back: data.back || null, cert: c.psaCert, showing: 'front' };
+
+    const title = [d.Year, d.Brand, d.CardNumber ? '#' + d.CardNumber : '', d.Subject, d.Variety]
+      .filter(Boolean).join(' ');
+    const gradeTxt = [d.GradeDescription, d.CardGrade].filter(Boolean).join(' ') || '—';
+    const pop = (d.TotalPopulation != null) ? Number(d.TotalPopulation).toLocaleString('it-IT') : '—';
+    const popHi = (d.PopulationHigher != null) ? Number(d.PopulationHigher).toLocaleString('it-IT') : '—';
+    const lastSold = getCurrentPrice(c);
+    const lastSoldTxt = lastSold ? '€' + fmt(lastSold) : '—';
+
+    const imgSrc = psaViewState.front || psaViewState.back;
+    const flipRow = (psaViewState.front && psaViewState.back) ? `
+      <div class="psa-flip-row">
+        <button class="psa-flip-btn on" id="psa-flip-front" onclick="psaFlip('front')">Fronte</button>
+        <button class="psa-flip-btn" id="psa-flip-back" onclick="psaFlip('back')">Retro</button>
+      </div>` : '';
+
+    body.innerHTML = `
+      <div class="psa-slab-wrap">
+        ${imgSrc
+          ? `<img src="${imgSrc}" id="psa-slab-img" alt="PSA slab"/>`
+          : `<div class="psa-loading" style="padding:30px">📷 Scan non disponibile per questo certificato</div>`}
+      </div>
+      ${flipRow}
+      ${title ? `<div class="psa-card-title">${title}</div>` : ''}
+      <div class="psa-grid">
+        <div class="psa-box">
+          <div class="psa-box-label">Item Grade</div>
+          <div class="psa-box-value">${gradeTxt}</div>
+        </div>
+        <div class="psa-box">
+          <div class="psa-box-label">Last sold <span style="color:var(--accent)">· Sweethome</span></div>
+          <div class="psa-box-value gold">${lastSoldTxt}</div>
+        </div>
+        <div class="psa-box">
+          <div class="psa-box-label">Population</div>
+          <div class="psa-box-value">${pop}</div>
+        </div>
+        <div class="psa-box">
+          <div class="psa-box-label">Pop Higher</div>
+          <div class="psa-box-value">${popHi}</div>
+        </div>
+      </div>
+      ${imgSrc ? `
+        <button class="psa-save-btn" id="psa-save-btn" onclick="savePsaScan()">
+          <span>⬇️</span><span>Salva scan fronte + retro</span>
+        </button>` : ''}
+    `;
+  } catch (e) {
+    console.error('PSA cert view:', e);
+    body.innerHTML = `<div class="psa-loading">
+      <span style="font-size:2rem">⚠️</span>
+      <span>Impossibile recuperare i dati PSA.<br>Controlla il token nelle Impostazioni e riprova.</span>
+      <button class="btn btn-secondary" style="width:auto;padding:10px 24px" onclick="openPsaView(${cardId})">↻ Riprova</button>
+    </div>`;
+  }
+}
+
+function closePsaView() {
+  const view = document.getElementById('psa-view');
+  if (view) view.style.display = 'none';
+  psaViewState = null;
+}
+
+function psaFlip(side) {
+  if (!psaViewState) return;
+  psaViewState.showing = side;
+  const img = document.getElementById('psa-slab-img');
+  if (img) img.src = side === 'front' ? psaViewState.front : psaViewState.back;
+  document.getElementById('psa-flip-front')?.classList.toggle('on', side === 'front');
+  document.getElementById('psa-flip-back')?.classList.toggle('on', side === 'back');
+}
+
+// Scarica un'immagine PSA passando dal proxy (aggiunge gli header CORS
+// necessari per poterla disegnare su canvas senza "tainting")
+async function fetchPsaImageBlob(imgUrl) {
+  const u = `${SUPABASE_URL}/functions/v1/psa-cert?img=${encodeURIComponent(imgUrl)}`;
+  const r = await fetch(u, {
+    headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }
+  });
+  if (!r.ok) throw new Error('img HTTP ' + r.status);
+  return await r.blob();
+}
+
+function blobToImage(blob) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(blob);
+  });
+}
+
+// Combina fronte+retro in UN'unica immagine e la condivide (→ "Salva immagine"
+// nella share sheet iOS = finisce direttamente nella libreria foto)
+async function savePsaScan() {
+  const s = psaViewState;
+  if (!s || (!s.front && !s.back)) return;
+  const btn = document.getElementById('psa-save-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="auth-spinner" style="width:18px;height:18px;border-width:2px"></span><span>Preparo lo scan…</span>'; }
+  try {
+    const blobs = await Promise.all([
+      s.front ? fetchPsaImageBlob(s.front) : null,
+      s.back ? fetchPsaImageBlob(s.back) : null
+    ]);
+    const imgs = await Promise.all(blobs.map(b => b ? blobToImage(b) : null));
+    const valid = imgs.filter(Boolean);
+    if (!valid.length) throw new Error('nessuna immagine');
+
+    const H = 1400, GAP = 40, PAD = 50;
+    const widths = valid.map(i => Math.round(i.naturalWidth * H / i.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = PAD * 2 + widths.reduce((a, b) => a + b, 0) + GAP * (valid.length - 1);
+    canvas.height = PAD * 2 + H;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    let x = PAD;
+    valid.forEach((img, i) => { ctx.drawImage(img, x, PAD, widths[i], H); x += widths[i] + GAP; });
+
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.92));
+    const file = new File([blob], `PSA_${s.cert}.jpg`, { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: `PSA ${s.cert}` });
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = file.name;
+      a.click();
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.error('savePsaScan:', e);
+      showToast('❌ Errore nel preparare lo scan');
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>⬇️</span><span>Salva scan fronte + retro</span>'; }
+  }
+}
 
 // ============ PSA SCAN LOADER ============
 let psaScanLoading = false;
