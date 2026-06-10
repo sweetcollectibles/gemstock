@@ -11,6 +11,8 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Sweethome — Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -438,12 +440,16 @@
     width: 40%;
     background: linear-gradient(90deg, var(--accent), var(--gold));
     border-radius: 3px;
+    will-change: transform;
     animation: splashLoad 1.3s ease-in-out infinite;
   }
   @keyframes splashLoad {
-    0% { margin-left: -40%; }
-    100% { margin-left: 100%; }
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
   }
+  /* durante l'uscita la barretta si ferma: il layer della splash resta statico
+     e l'animazione di svelamento (scale+fade) gira su pura GPU senza repaint */
+  .splash-exit .splash-loadbar-fill { animation: none; }
   /* uscita: si ingrandisce e svela l'app */
   .splash-screen.splash-exit {
     animation: splashShrinkOut 0.6s cubic-bezier(0.5, 0, 0.3, 1) forwards;
@@ -3342,7 +3348,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v65</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v66</div>
   </div>
 </div>
 
@@ -5597,6 +5603,7 @@ let currentView = 'home'; // 'home' | 'list' | 'wishlist' | 'sealed'
 // e si scurisce. Tornando, il contrario. Solo transform/opacity/filter → GPU 60fps.
 const VIEW_IDS = { home: 'home-view', list: 'list-view', wishlist: 'wishlist-view', sealed: 'sealed-view' };
 let navAnimating = false;
+let searchExpandArmed = false; // la barra si espande solo dopo uno scroll attivo dell'utente
 const NAV_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
 const NAV_DUR = 420;
 
@@ -5631,13 +5638,17 @@ function transitionViews(fromEl, toEl, direction) {
 
     const prep = (v, z) => {
       v.style.position = 'absolute';
-      v.style.top = cs.paddingTop;
-      v.style.left = cs.paddingLeft;
-      v.style.right = cs.paddingRight;
+      v.style.top = '0';
+      v.style.left = '0';
+      v.style.right = '0';
+      v.style.paddingTop = cs.paddingTop;
+      v.style.paddingLeft = cs.paddingLeft;
+      v.style.paddingRight = cs.paddingRight;
       v.style.minHeight = vh + 'px';
       v.style.zIndex = z;
       v.style.transition = 'none';
       v.style.willChange = 'transform, filter';
+      v.style.background = 'var(--bg)'; // opaco da bordo a bordo: niente trasparenze
     };
 
     toEl.style.display = '';
@@ -5674,9 +5685,10 @@ function transitionViews(fromEl, toEl, direction) {
     setTimeout(() => {
       [fromEl, toEl].forEach(v => {
         v.style.position = ''; v.style.top = ''; v.style.left = ''; v.style.right = '';
+        v.style.paddingTop = ''; v.style.paddingLeft = ''; v.style.paddingRight = '';
         v.style.minHeight = ''; v.style.zIndex = ''; v.style.transition = '';
         v.style.transform = ''; v.style.filter = ''; v.style.boxShadow = '';
-        v.style.willChange = '';
+        v.style.willChange = ''; v.style.background = '';
       });
       fromEl.style.display = 'none';
       main.style.minHeight = '';
@@ -5726,7 +5738,10 @@ function goToHome() {
 
 // Safety helper — call this anytime view changes or modals open/close
 function updateFabVisibility() {
-  // la barra resta compatta al cambio vista (torna grande solo tornando in cima scrollando)
+  // a ogni cambio pagina la barra di ricerca riparte SEMPRE piccola;
+  // si espande solo se l'utente scrolla giù e poi risale in cima (gesto attivo)
+  document.body.classList.add('search-compact');
+  searchExpandArmed = false;
   if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
     document.body.classList.remove('hide-fab');
   } else {
@@ -7311,10 +7326,7 @@ async function authSignOut() {
 // ============ INIT APP (async — runs after login) ============
 async function initApp() {
   hideAuthPage();
-
-  // Show loading state
-  renderStats();
-  document.getElementById('cards-list').innerHTML = '<div class="auth-loading"><div class="auth-spinner"></div> Caricamento dati...</div>';
+  // (niente render preliminari: sono invisibili dietro la splash, solo lavoro sprecato)
 
   // Load all data from Supabase in parallel
   let loadedCards = [], loadedWishlist = [], loadedSealed = [], nickname = null, psaToken = null;
@@ -7357,7 +7369,17 @@ async function initApp() {
     requestAnimationFrame(() => requestAnimationFrame(() => {
       document.body.classList.add('app-ready');
     }));
-    const renderLists = () => { renderCards(); renderWishlist(); renderSealed(); };
+    // Render delle liste SCAGLIONATO su frame separati: mai più di un
+    // lavoro pesante per frame → niente blocchi percepibili dopo la splash.
+    const renderLists = () => {
+      requestAnimationFrame(() => {
+        renderCards();
+        requestAnimationFrame(() => {
+          renderWishlist();
+          requestAnimationFrame(() => renderSealed());
+        });
+      });
+    };
     predecodeFirstImages(cards, 15).then(renderLists).catch(renderLists);
   });
 }
@@ -7496,12 +7518,16 @@ document.addEventListener('scroll', clearPressed, { passive: true, capture: true
 (function setupSearchCompact() {
   const wrapper = document.querySelector('.scroll-wrapper');
   if (!wrapper) return;
-  // In cima → grande. Appena scrolli → piccola e ci resta (indipendente dalla direzione).
+  // La barra parte SEMPRE piccola. Si "arma" quando l'utente scrolla giù;
+  // solo allora, risalendo in cima, si espande. I reset programmatici
+  // dello scroll (navigazione) non la espandono mai.
   wrapper.addEventListener('scroll', () => {
     if (document.body.classList.contains('auth-visible')) return;
+    if (navAnimating) return;
     if (wrapper.scrollTop > 12) {
       document.body.classList.add('search-compact');
-    } else {
+      searchExpandArmed = true; // gesto attivo dell'utente: ora può riespandersi in cima
+    } else if (searchExpandArmed) {
       document.body.classList.remove('search-compact');
     }
   }, { passive: true });
