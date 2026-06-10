@@ -3483,7 +3483,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v71</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v72</div>
   </div>
 </div>
 
@@ -4887,7 +4887,16 @@ async function openPsaView(cardId) {
     const res = await fetch(url, {
       headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) {
+      let hint = 'Controlla il token nelle Impostazioni e riprova.';
+      if (res.status === 404) hint = 'La Edge Function "psa-cert" non risulta deployata su Supabase.<br>Va creata dal Dashboard (Edge Functions → New function → nome "psa-cert").';
+      else if (res.status === 401 || res.status === 403) hint = 'La funzione "psa-cert" rifiuta la richiesta:<br>disattiva "Verify JWT" nelle impostazioni della funzione su Supabase.';
+      else if (res.status >= 500) hint = 'Il database PSA non ha risposto correttamente.<br>Riprova tra qualche secondo, o verifica il token PSA.';
+      const err = new Error('HTTP ' + res.status);
+      err.userHint = hint;
+      err.httpStatus = res.status;
+      throw err;
+    }
     const data = await res.json();
     const d = data.cert || {};
 
@@ -4941,9 +4950,11 @@ async function openPsaView(cardId) {
     `;
   } catch (e) {
     console.error('PSA cert view:', e);
+    const hint = e.userHint || 'Controlla la connessione e riprova.';
+    const statusTxt = e.httpStatus ? `<span class="mono" style="color:var(--muted);font-size:0.7rem">(errore ${e.httpStatus})</span>` : '';
     body.innerHTML = `<div class="psa-loading">
       <span style="font-size:2rem">⚠️</span>
-      <span>Impossibile recuperare i dati PSA.<br>Controlla il token nelle Impostazioni e riprova.</span>
+      <span>Impossibile recuperare i dati PSA. ${statusTxt}<br><br>${hint}</span>
       <button class="btn btn-secondary" style="width:auto;padding:10px 24px" onclick="openPsaView(${cardId})">↻ Riprova</button>
     </div>`;
   }
