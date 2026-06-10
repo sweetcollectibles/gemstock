@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script>
+  // Smart App Banner nativo iOS: inserito SUBITO con il cert nell'app-argument,
+  // così iOS mostra il banner "APRI" che porta dritto all'app PSA sul certificato.
+  (function(){
+    var cert = (new URLSearchParams(location.search).get('cert') || '').replace(/[^0-9]/g, '');
+    if (cert) {
+      var m = document.createElement('meta');
+      m.name = 'apple-itunes-app';
+      m.content = 'app-id=996239729, app-argument=https://www.psacard.com/cert/' + cert;
+      document.head.appendChild(m);
+    }
+  })();
+</script>
+<title>Apri in PSA — Sweethome</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@600;700&family=Outfit:wght@900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0a0a0a; --surface:#131313; --border:#2a2a2a; --text:#f5f2eb; --muted:#8a8478; --accent:#a855f7; --gold:#d4a847; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; background:var(--bg); }
+  body {
+    font-family:'Inter',-apple-system,sans-serif; color:var(--text);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px; padding:30px 24px calc(env(safe-area-inset-bottom) + 30px);
+    text-align:center;
+  }
+  .word { font-family:'Outfit',sans-serif; font-weight:900; font-size:1.3rem; letter-spacing:3px; text-transform:uppercase; }
+  .word .s { color:var(--accent); }
+  .badge { font-size:2.6rem; }
+  .cert-label { font-size:0.62rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+  .cert { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.6rem; color:var(--gold); letter-spacing:1px; margin-top:4px; }
+  .open-btn {
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    width:100%; max-width:340px;
+    background:linear-gradient(135deg,#a855f7,#7e22ce); color:#fff;
+    border:none; border-radius:16px; padding:18px 24px;
+    font-size:1.05rem; font-weight:700; font-family:'Inter',sans-serif;
+    text-decoration:none;
+    box-shadow:0 8px 28px rgba(168,85,247,0.4);
+  }
+  .open-btn:active { transform:scale(0.97); }
+  .hint { font-size:0.74rem; color:var(--muted); line-height:1.6; max-width:300px; }
+</style>
+</head>
+<body>
+  <div class="word"><span class="s">S</span>WEETHOME</div>
+  <div class="badge">🏅</div>
+  <div>
+    <div class="cert-label">Certificato PSA</div>
+    <div class="cert" id="cert-num">—</div>
+  </div>
+  <a class="open-btn" id="open-link" href="https://www.psacard.com/cert">
+    <span>🏅</span><span>Apri nell'app PSA</span>
+  </a>
+  <div class="hint">
+    Se l'app PSA è installata si aprirà direttamente sul certificato.<br>
+    Altrimenti si aprirà la pagina web di verifica PSA.
+  </div>
+<script>
+  (function(){
+    var cert = (new URLSearchParams(location.search).get('cert') || '').replace(/[^0-9]/g, '');
+    if (cert) {
+      document.getElementById('cert-num').textContent = cert;
+      document.getElementById('open-link').href = 'https://www.psacard.com/cert/' + cert;
+    }
+  })();
+</script>
+</body>
+</html>

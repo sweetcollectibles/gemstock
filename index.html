@@ -68,6 +68,17 @@
       transform: none !important;
       filter: none !important;
     }
+    /* Bordi/sfondi hover che su iOS restano "appiccicati" dopo il tocco:
+       riportati ai valori base (guardie :not(.active) per gli stati attivi) */
+    .cards-tile:hover { border-color: var(--border) !important; background: var(--surface) !important; }
+    .icon-btn:hover { border-color: var(--border) !important; }
+    .back-btn:hover { border-color: var(--border) !important; }
+    .wish-link-btn:hover { border-color: var(--border) !important; }
+    .stat-card.clickable:not(.active):hover { border-color: var(--border) !important; }
+    .list-card:hover { border-color: var(--border) !important; }
+    .wish-card:hover { border-color: var(--border) !important; }
+    .sealed-card:hover { border-color: var(--border) !important; }
+    .filter-pill:not(.active):hover { border-color: var(--border) !important; background: var(--surface) !important; color: var(--muted) !important; }
   }
 
   /* AUTH PAGE — stessa struttura del scroll-wrapper, mostrata/nascosta alternativamente */
@@ -823,6 +834,20 @@
   @keyframes sellGlow {
     0%, 100% { box-shadow: 0 0 0 1px rgba(248,113,113,0.1); }
     50% { box-shadow: 0 0 16px 2px rgba(248,113,113,0.18); }
+  }
+
+  /* Durante le transizioni di navigazione: in pausa le animazioni infinite
+     (box-shadow = repaint a ogni frame sulla vista in movimento) e
+     niente blur sulla barra (compositing costoso su contenuto che scorre) */
+  body.nav-anim .alert-dot,
+  body.nav-anim .alert-dot.amber,
+  body.nav-anim .stat-card.sell-alert {
+    animation-play-state: paused !important;
+  }
+  body.nav-anim .bottom-search,
+  body.nav-anim .bottom-search-inner {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   /* Stale card subtle warning */
@@ -3370,7 +3395,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v67</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v69</div>
   </div>
 </div>
 
@@ -4656,7 +4681,7 @@ function openDetail(id) {
       </div>
       ${c.grader === 'PSA' && c.psaCert ? `
         <div class="detail-ebay-row" style="margin-top: 8px;">
-          <a href="${buildPsaCertUrl(c)}" target="_blank" rel="noopener" class="detail-ebay-btn psa" style="grid-column: span 2;" onclick="event.preventDefault(); openLink(event, '${buildPsaCertUrl(c)}')">
+          <a href="psa.html?cert=${encodeURIComponent(c.psaCert)}" target="_blank" rel="noopener" class="detail-ebay-btn psa" style="grid-column: span 2;" onclick="event.stopPropagation()">
             <span class="detail-ebay-flag">🔍</span> PSA Cert · ${c.psaCert}
           </a>
         </div>
@@ -5675,6 +5700,7 @@ function transitionViews(fromEl, toEl, direction) {
     }
     const main = document.querySelector('.main');
     navAnimating = true;
+    document.body.classList.add('nav-anim');
     const st = wrapper.scrollTop;
     const vh = window.innerHeight;
     const cs = getComputedStyle(main);
@@ -5715,19 +5741,23 @@ function transitionViews(fromEl, toEl, direction) {
 
     void toEl.offsetWidth; // forza il reflow prima di animare
 
-    [fromEl, toEl].forEach(v => {
-      v.style.transition = `transform ${NAV_DUR}ms ${NAV_EASE}, filter ${NAV_DUR}ms ${NAV_EASE}`;
-    });
+    // Parte UN FRAME dopo: il contenuto appena renderizzato viene
+    // rasterizzato in layer prima di muoversi → primo frame pulito.
+    requestAnimationFrame(() => {
+      [fromEl, toEl].forEach(v => {
+        v.style.transition = `transform ${NAV_DUR}ms ${NAV_EASE}, filter ${NAV_DUR}ms ${NAV_EASE}`;
+      });
 
-    if (direction === 'forward') {
-      fromEl.style.transform = `translate(-28%, ${-st}px)`;
-      fromEl.style.filter = 'brightness(0.62)';
-      toEl.style.transform = 'translateX(0)';
-    } else {
-      fromEl.style.transform = `translate(105%, ${-st}px)`;
-      toEl.style.transform = 'translateX(0)';
-      toEl.style.filter = 'brightness(1)';
-    }
+      if (direction === 'forward') {
+        fromEl.style.transform = `translate(-28%, ${-st}px)`;
+        fromEl.style.filter = 'brightness(0.62)';
+        toEl.style.transform = 'translateX(0)';
+      } else {
+        fromEl.style.transform = `translate(105%, ${-st}px)`;
+        toEl.style.transform = 'translateX(0)';
+        toEl.style.filter = 'brightness(1)';
+      }
+    });
 
     setTimeout(() => {
       [fromEl, toEl].forEach(v => {
@@ -5741,9 +5771,10 @@ function transitionViews(fromEl, toEl, direction) {
       main.style.minHeight = '';
       wrapper.style.overflow = '';
       wrapper.scrollTop = 0;
+      document.body.classList.remove('nav-anim');
       navAnimating = false;
       resolve();
-    }, NAV_DUR + 50);
+    }, NAV_DUR + 80);
   });
 }
 
@@ -7231,6 +7262,7 @@ async function saveNickname() {
     const st = wrapper.scrollTop;
     const vh = window.innerHeight;
     navAnimating = true;
+    document.body.classList.add('nav-anim');
     wrapper.scrollTop = 0;
     wrapper.style.overflow = 'hidden';
     main.style.minHeight = vh + 'px';
@@ -7313,6 +7345,7 @@ async function saveNickname() {
         gg.toEl.style.display = 'none';
         gg.wrapper.scrollTop = gg.st; // ripristina dov'eri nella lista
       }
+      document.body.classList.remove('nav-anim');
       navAnimating = false;
     }, dur + 40);
   }
