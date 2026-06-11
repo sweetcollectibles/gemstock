@@ -1090,8 +1090,16 @@
     background: rgba(13,13,13,0.96);
   }
   .psa-view-title {
-    font-weight: 800; font-size: 1.05rem;
+    font-weight: 800; font-size: 0.98rem;
   }
+  .psa-ic { font-size: 0.85em; }
+
+  /* TOUCH-ACTION: il browser gestisce nativamente quali gesti sono permessi,
+     senza JavaScript sul percorso dello scroll → fluidità massima */
+  .scroll-wrapper { touch-action: pan-y; }   /* solo scroll verticale */
+  .filter-row { touch-action: pan-x; }        /* le pillole scorrono in orizzontale */
+  .psa-view-scroll { touch-action: pan-y; }
+  #crop-canvas { touch-action: none; }        /* pan/zoom del crop tutto in JS */
   .psa-view-title .mono { font-family: 'JetBrains Mono', monospace; color: var(--gold); }
   .psa-view-scroll {
     flex: 1; overflow-y: auto;
@@ -3214,7 +3222,7 @@
 <div class="psa-view" id="psa-view" style="display:none">
   <div class="psa-view-head">
     <button class="back-btn" onclick="closePsaView()">←</button>
-    <div class="psa-view-title">🏅 PSA Cert · <span id="psa-view-cert" class="mono"></span></div>
+    <div class="psa-view-title"><span class="psa-ic">🏅</span> PSA Cert · <span id="psa-view-cert" class="mono"></span></div>
   </div>
   <div class="psa-view-scroll" id="psa-view-body"></div>
 </div>
@@ -3483,7 +3491,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v72</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v74</div>
   </div>
 </div>
 
@@ -4904,7 +4912,13 @@ async function openPsaView(cardId) {
 
     const title = [d.Year, d.Brand, d.CardNumber ? '#' + d.CardNumber : '', d.Subject, d.Variety]
       .filter(Boolean).join(' ');
-    const gradeTxt = [d.GradeDescription, d.CardGrade].filter(Boolean).join(' ') || '—';
+    const gd = (d.GradeDescription || '').toString().trim();
+    const cg = (d.CardGrade != null ? String(d.CardGrade) : '').trim();
+    // GradeDescription spesso contiene già il numero (es. "GEM MT 10"):
+    // aggiungi CardGrade solo se non è già incluso, niente doppioni
+    let gradeTxt = '—';
+    if (gd && cg) gradeTxt = gd.includes(cg) ? gd : `${gd} ${cg}`;
+    else gradeTxt = gd || cg || '—';
     const pop = (d.TotalPopulation != null) ? Number(d.TotalPopulation).toLocaleString('it-IT') : '—';
     const popHi = (d.PopulationHigher != null) ? Number(d.PopulationHigher).toLocaleString('it-IT') : '—';
     const lastSold = getCurrentPrice(c);
@@ -4945,7 +4959,7 @@ async function openPsaView(cardId) {
       </div>
       ${imgSrc ? `
         <button class="psa-save-btn" id="psa-save-btn" onclick="savePsaScan()">
-          <span>⬇️</span><span>Salva scan fronte + retro</span>
+          <span class="psa-ic">⬇️</span><span>Salva scan fronte + retro</span>
         </button>` : ''}
     `;
   } catch (e) {
@@ -4953,7 +4967,7 @@ async function openPsaView(cardId) {
     const hint = e.userHint || 'Controlla la connessione e riprova.';
     const statusTxt = e.httpStatus ? `<span class="mono" style="color:var(--muted);font-size:0.7rem">(errore ${e.httpStatus})</span>` : '';
     body.innerHTML = `<div class="psa-loading">
-      <span style="font-size:2rem">⚠️</span>
+      <span style="font-size:1.5rem">⚠️</span>
       <span>Impossibile recuperare i dati PSA. ${statusTxt}<br><br>${hint}</span>
       <button class="btn btn-secondary" style="width:auto;padding:10px 24px" onclick="openPsaView(${cardId})">↻ Riprova</button>
     </div>`;
@@ -4965,6 +4979,68 @@ function closePsaView() {
   if (view) view.style.display = 'none';
   psaViewState = null;
 }
+
+// Swipe dal bordo sinistro → la tab PSA segue il dito e si chiude
+(function setupPsaSwipeClose() {
+  const view = document.getElementById('psa-view');
+  if (!view) return;
+  let st = null;
+
+  function onPsaSwipeMove(e) {
+    if (!st) { detachPsaSwipe(); return; }
+    const dx = e.touches[0].clientX - st.x;
+    const dy = Math.abs(e.touches[0].clientY - st.y);
+    if (!st.active) {
+      if (dy > Math.abs(dx) && dy > 14) { st = null; detachPsaSwipe(); return; } // scroll verticale
+      if (dx > 12 && dx > dy) { st.active = true; view.style.transition = 'none'; }
+      else return;
+    }
+    view.style.transform = `translateX(${Math.max(0, dx)}px)`;
+    e.preventDefault();
+  }
+  function detachPsaSwipe() {
+    view.removeEventListener('touchmove', onPsaSwipeMove);
+  }
+
+  view.addEventListener('touchstart', e => {
+    const x = e.touches[0].clientX;
+    if (x > 30) return; // solo dal bordo sinistro
+    st = { x, y: e.touches[0].clientY, active: false };
+    view.addEventListener('touchmove', onPsaSwipeMove, { passive: false });
+  }, { passive: true });
+
+  function endSwipe(x) {
+    if (!st) return;
+    const wasActive = st.active;
+    const dx = Math.max(0, x - st.x);
+    st = null;
+    if (!wasActive) return;
+    const EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+    if (dx > window.innerWidth * 0.3) {
+      view.style.transition = `transform 0.25s ${EASE}`;
+      view.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        closePsaView();
+        view.style.transition = '';
+        view.style.transform = '';
+      }, 260);
+    } else {
+      view.style.transition = `transform 0.25s ${EASE}`;
+      view.style.transform = 'translateX(0)';
+      setTimeout(() => { view.style.transition = ''; }, 260);
+    }
+  }
+
+  view.addEventListener('touchend', e => {
+    detachPsaSwipe();
+    endSwipe(e.changedTouches[0].clientX);
+  }, { passive: true });
+  view.addEventListener('touchcancel', () => {
+    detachPsaSwipe();
+    if (st && st.active) { view.style.transition = ''; view.style.transform = ''; }
+    st = null;
+  }, { passive: true });
+})();
 
 function psaFlip(side) {
   if (!psaViewState) return;
@@ -4989,9 +5065,10 @@ async function fetchPsaImageBlob(imgUrl) {
 function blobToImage(blob) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
   });
 }
 
@@ -5028,9 +5105,11 @@ async function savePsaScan() {
       await navigator.share({ files: [file], title: `PSA ${s.cert}` });
     } else {
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
+      const dlUrl = URL.createObjectURL(blob);
+      a.href = dlUrl;
       a.download = file.name;
       a.click();
+      setTimeout(() => URL.revokeObjectURL(dlUrl), 5000);
     }
   } catch (e) {
     if (e.name !== 'AbortError') {
@@ -5038,7 +5117,7 @@ async function savePsaScan() {
       showToast('❌ Errore nel preparare lo scan');
     }
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '<span>⬇️</span><span>Salva scan fronte + retro</span>'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span class="psa-ic">⬇️</span><span>Salva scan fronte + retro</span>'; }
   }
 }
 
@@ -5419,7 +5498,7 @@ function renderCropEditor() {
     const canvas = getCanvas();
     if (!canvas) return;
     if (e.target !== canvas) return;
-    e.preventDefault();
+    // niente preventDefault: il canvas ha touch-action:none via CSS
     if (isPanning && e.touches.length === 1) {
       const dx = e.touches[0].clientX - lastX;
       const dy = e.touches[0].clientY - lastY;
@@ -5439,7 +5518,7 @@ function renderCropEditor() {
       clampCropOffsets();
       renderCropEditor();
     }
-  }, { passive: false });
+  }, { passive: true });
 
   document.addEventListener('touchend', () => {
     isPanning = false;
@@ -7474,28 +7553,34 @@ async function saveNickname() {
     dragState = null;
   }
 
+  // Il listener non-passive viene agganciato SOLO mentre un drag è in corso:
+  // a riposo lo scroll dell'app resta 100% passive (fluidità nativa).
+  function onDragDocMove(e) {
+    if (!dragState) return;
+    onMove(e.touches[0].clientX, e.touches[0].clientY);
+    if (dragState && (dragState.axisLock === 'v' || dragState.axisLock === 'h')) {
+      e.preventDefault();
+    }
+  }
+  function detachDragMove() {
+    document.removeEventListener('touchmove', onDragDocMove);
+  }
+
   document.addEventListener('touchstart', e => {
     // Skip the crop modal (it has its own pan/zoom on canvas)
     if (e.target.closest('#crop-modal')) return;
     onStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
+    if (dragState) document.addEventListener('touchmove', onDragDocMove, { passive: false });
   }, { passive: true });
 
-  document.addEventListener('touchmove', e => {
-    if (dragState) {
-      onMove(e.touches[0].clientX, e.touches[0].clientY);
-      // Prevent native scroll only once we've locked into a dismiss gesture
-      if (dragState.axisLock === 'v' || dragState.axisLock === 'h') {
-        e.preventDefault();
-      }
-    }
-  }, { passive: false });
-
   document.addEventListener('touchend', () => {
+    detachDragMove();
     if (dragState) onEnd();
-  });
+  }, { passive: true });
   document.addEventListener('touchcancel', () => {
+    detachDragMove();
     if (dragState) onEnd();
-  });
+  }, { passive: true });
 
   // Mouse support for desktop testing (handle area only, to avoid interfering with clicks)
   document.addEventListener('mousedown', e => {
@@ -7626,31 +7711,40 @@ async function saveNickname() {
     const x = e.touches[0].clientX;
     if (x > 30) return; // solo dal bordo sinistro
     candidate = { x, y: e.touches[0].clientY };
+    document.addEventListener('touchmove', onSwipeBackMove, { passive: false });
   }, { passive: true });
 
-  document.addEventListener('touchmove', e => {
+  // Listener non-passive agganciato SOLO quando un tocco parte dal bordo:
+  // lo scroll normale dell'app non paga mai il costo del gesto.
+  function onSwipeBackMove(e) {
     const t = e.touches[0];
     if (g) {
       moveGesture(t.clientX);
       e.preventDefault();
       return;
     }
-    if (!candidate) return;
+    if (!candidate) { detachSwipeBack(); return; }
     const dx = t.clientX - candidate.x;
     const dy = Math.abs(t.clientY - candidate.y);
-    if (dy > Math.abs(dx) && dy > 14) { candidate = null; return; } // è uno scroll verticale
+    if (dy > Math.abs(dx) && dy > 14) { candidate = null; detachSwipeBack(); return; } // scroll verticale
     if (dx > 12 && dx > dy) {
       g = beginGesture(candidate.x, candidate.y);
       candidate = null;
       if (g) { moveGesture(t.clientX); e.preventDefault(); }
+      else detachSwipeBack();
     }
-  }, { passive: false });
+  }
+  function detachSwipeBack() {
+    document.removeEventListener('touchmove', onSwipeBackMove);
+  }
 
   document.addEventListener('touchend', e => {
+    detachSwipeBack();
     candidate = null;
     if (g) endGesture(e.changedTouches[0].clientX);
   }, { passive: true });
   document.addEventListener('touchcancel', () => {
+    detachSwipeBack();
     candidate = null;
     if (g) endGesture(g.lastX);
   }, { passive: true });
@@ -7948,17 +8042,9 @@ document.addEventListener('touchmove', e => {
     const a = document.activeElement;
     if (a && a.blur && a.tagName !== 'INPUT' && a.tagName !== 'TEXTAREA') a.blur();
   }
-
-  if (deltaX > deltaY && deltaX > 10) {
-    let el = e.target;
-    let allow = false;
-    while (el && el !== document.body) {
-      if (el.classList && (el.classList.contains('filter-row'))) { allow = true; break; }
-      el = el.parentElement;
-    }
-    if (!allow) e.preventDefault();
-  }
-}, { passive: false });
+  // (il blocco dello scroll orizzontale è ora gestito da CSS touch-action,
+  //  nativamente dal browser: questo listener può essere passive → scroll libero)
+}, { passive: true });
 
 // Al rilascio o annullamento: rimuovi sempre lo stato premuto.
 document.addEventListener('touchend', clearPressed, { passive: true });
