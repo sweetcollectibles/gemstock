@@ -1095,15 +1095,21 @@
   .psa-ic { font-size: 0.85em; }
 
   /* ============ SET DI CARTE ============ */
-  .set-flag-btn {
+  .add-mode-switch {
+    display: flex; align-items: center;
     background: var(--surface); border: 1px solid var(--border);
-    color: var(--muted); border-radius: 999px;
-    padding: 6px 14px; font-size: 0.74rem; font-weight: 700;
-    font-family: 'Inter', sans-serif; margin-left: auto; margin-right: 10px;
-    flex-shrink: 0;
+    border-radius: 999px; padding: 3px;
+    margin-left: auto; margin-right: 10px; flex-shrink: 0;
   }
-  .set-flag-btn.on {
-    background: rgba(168,85,247,0.14); border-color: var(--accent); color: var(--accent);
+  .mode-opt {
+    background: transparent; border: none;
+    color: var(--muted); font-size: 0.66rem; font-weight: 700;
+    padding: 5px 10px; border-radius: 999px;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s, color 0.2s;
+  }
+  .mode-opt.on {
+    background: rgba(168,85,247,0.16); color: var(--accent);
   }
   .set-progress {
     display: flex; align-items: center; gap: 8px;
@@ -3374,7 +3380,10 @@
     <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
       <div class="modal-title" id="add-modal-title">➕ Nuova Carta</div>
-      <button type="button" class="set-flag-btn" id="set-flag-btn" onclick="toggleSetMode()">📦 Set</button>
+      <div class="add-mode-switch" id="add-mode-switch">
+        <button type="button" class="mode-opt on" id="mode-single" onclick="setAddMode(false)">Singola</button>
+        <button type="button" class="mode-opt" id="mode-set" onclick="setAddMode(true)">📦 Set</button>
+      </div>
       <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
     </div>
 
@@ -3590,7 +3599,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v76</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v77</div>
   </div>
 </div>
 
@@ -6052,16 +6061,13 @@ function removePhoto() {
 // setDraft tiene il set "in corso" durante l'inserimento multiplo
 let setDraft = null; // { id, name, count }
 
-function toggleSetMode() {
-  const btn = document.getElementById('set-flag-btn');
-  const section = document.getElementById('set-section');
-  const nextBtn = document.getElementById('set-next-btn');
-  const on = !btn.classList.contains('on');
-  btn.classList.toggle('on', on);
-  section.style.display = on ? '' : 'none';
+function setAddMode(setOn) {
+  document.getElementById('mode-single').classList.toggle('on', !setOn);
+  document.getElementById('mode-set').classList.toggle('on', setOn);
+  document.getElementById('set-section').style.display = setOn ? '' : 'none';
   // il bottone "salva e aggiungi" ha senso solo per nuove carte, non in modifica
-  nextBtn.style.display = (on && editingId === null) ? '' : 'none';
-  if (!on) { setDraft = null; updateSetProgress(); }
+  document.getElementById('set-next-btn').style.display = (setOn && editingId === null) ? '' : 'none';
+  if (!setOn) { setDraft = null; updateSetProgress(); }
 }
 
 function updateSetProgress() {
@@ -6076,10 +6082,12 @@ function updateSetProgress() {
 }
 
 function resetSetUI() {
-  const btn = document.getElementById('set-flag-btn');
+  const ms = document.getElementById('mode-single');
+  const mt = document.getElementById('mode-set');
+  if (ms) ms.classList.add('on');
+  if (mt) mt.classList.remove('on');
   const section = document.getElementById('set-section');
   const nextBtn = document.getElementById('set-next-btn');
-  if (btn) btn.classList.remove('on');
   if (section) section.style.display = 'none';
   if (nextBtn) nextBtn.style.display = 'none';
   const nameEl = document.getElementById('f-set-name');
@@ -6129,8 +6137,7 @@ function editCard(id) {
   // stato set: il flag riflette l'appartenenza; spegnerlo = rimuovi dal set
   resetSetUI();
   if (c.groupId) {
-    document.getElementById('set-flag-btn').classList.add('on');
-    document.getElementById('set-section').style.display = '';
+    setAddMode(true);
     document.getElementById('f-set-name').value = c.groupName || '';
   }
   currentPhoto = c.photo || null;
@@ -6165,7 +6172,7 @@ async function saveCard(keepForSet = false) {
   if (isOther && !customGrader) { showToast('⚠️ Inserisci il nome della casa di grading'); return; }
 
   // ---- SET di più carte ----
-  const setOn = document.getElementById('set-flag-btn').classList.contains('on');
+  const setOn = document.getElementById('mode-set').classList.contains('on');
   const setName = setOn ? document.getElementById('f-set-name').value.trim() : '';
   if (setOn && !setName) { showToast('⚠️ Inserisci il nome del set'); return; }
 
