@@ -1094,6 +1094,53 @@
   }
   .psa-ic { font-size: 0.85em; }
 
+  /* ============ REGISTRO ATTIVITÀ ============ */
+  .reg-years { display: flex; gap: 7px; margin-bottom: 13px; flex-wrap: wrap; }
+  .reg-yp {
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 999px; padding: 6px 16px; font-size: 0.72rem; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace; cursor: pointer;
+  }
+  .reg-yp.on { background: rgba(168,85,247,0.14); border-color: var(--accent); color: var(--accent); }
+  .reg-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 13px; }
+  .reg-hbox { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+  .reg-hlabel { font-size: 0.56rem; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+  .reg-hval { font-size: 1.3rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 6px; color: var(--gold); }
+  .reg-hval.pos { color: var(--green); }
+  .reg-hval.neg { color: var(--red); }
+  .reg-hsub { font-size: 0.56rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+  .reg-actions { display: flex; gap: 8px; margin-bottom: 14px; }
+  .reg-abtn {
+    flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    border-radius: 11px; padding: 10px; font-size: 0.72rem; font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+  .reg-abtn.primary { background: linear-gradient(135deg, #a855f7, #7e22ce); border: none; color: #fff; }
+  .reg-month { font-size: 0.58rem; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; font-family: 'JetBrains Mono', monospace; margin: 14px 2px 8px; }
+  .reg-row { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; margin-bottom: 8px; cursor: pointer; }
+  .reg-row-top { display: flex; align-items: baseline; gap: 8px; }
+  .reg-row-name { font-weight: 700; font-size: 0.88rem; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .reg-row-pnl { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.88rem; flex-shrink: 0; }
+  .reg-row-pnl.pos { color: var(--green); }
+  .reg-row-pnl.neg { color: var(--red); }
+  .reg-row-meta { font-size: 0.62rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .reg-row.expense { background: rgba(248,113,113,0.05); border-color: rgba(248,113,113,0.25); }
+  .reg-row.setrow { background: linear-gradient(135deg, rgba(168,85,247,0.06), var(--surface) 60%); border-color: rgba(168,85,247,0.3); }
+  .reg-chip { font-size: 0.54rem; letter-spacing: 1px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; border-radius: 999px; padding: 2px 8px; flex-shrink: 0; }
+  .reg-chip.set { background: rgba(168,85,247,0.12); color: var(--accent); }
+  .reg-chip.exp { background: rgba(248,113,113,0.12); color: var(--red); }
+  .reg-chip.sealed { background: rgba(212,168,71,0.12); color: var(--gold); }
+  .reg-empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 0.8rem; line-height: 1.7; }
+  .reg-sell-info {
+    background: rgba(168,85,247,0.07); border: 1px solid rgba(168,85,247,0.25);
+    border-radius: 11px; padding: 10px 13px; margin-bottom: 14px;
+    font-size: 0.7rem; color: #cbb6e8; font-family: 'JetBrains Mono', monospace; line-height: 1.6;
+  }
+  .reg-qty-row { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 6px 0; }
+  .reg-qbtn { width: 42px; height: 42px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--accent); font-size: 1.3rem; font-weight: 700; }
+  .reg-qnum { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.5rem; color: var(--text); min-width: 70px; text-align: center; }
+  .reg-qhint { font-size: 0.6rem; color: var(--muted); text-align: center; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; }
+
   /* ============ SET DI CARTE ============ */
   .add-mode-switch {
     display: flex; align-items: center;
@@ -3278,6 +3325,40 @@
 
   </div>
 
+  <!-- ============ REGISTRO ATTIVITÀ ============ -->
+  <div id="registry-view" class="page-view" style="display:none">
+
+    <div class="list-header-bar">
+      <button class="back-btn" onclick="goToHome()">←</button>
+      <div class="list-title">🧾 Registro Attività</div>
+      <div class="list-count-badge" id="registry-count-badge">0</div>
+    </div>
+
+    <div class="reg-years" id="reg-years"></div>
+
+    <div class="reg-hero">
+      <div class="reg-hbox">
+        <div class="reg-hlabel">💼 Capitale investito</div>
+        <div class="reg-hval" id="reg-capital">€0</div>
+        <div class="reg-hsub">portfolio attuale</div>
+      </div>
+      <div class="reg-hbox">
+        <div class="reg-hlabel" id="reg-profit-label">🏆 Profitto</div>
+        <div class="reg-hval" id="reg-profit">€0</div>
+        <div class="reg-hsub" id="reg-profit-sub">—</div>
+      </div>
+    </div>
+
+    <div class="reg-actions">
+      <button class="reg-abtn primary" onclick="openExpenseModal()">➕ Spesa</button>
+      <button class="reg-abtn" onclick="generateRegistryPDF()">📄 PDF</button>
+      <button class="reg-abtn" onclick="exportRegistryExcel()">📊 Excel</button>
+    </div>
+
+    <div id="registry-list"></div>
+
+  </div>
+
 </div><!-- end .main -->
 
 </div><!-- end scroll-wrapper / app-page -->
@@ -3599,7 +3680,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v77</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v78</div>
   </div>
 </div>
 
@@ -3868,6 +3949,10 @@
         <label class="form-label">📊 Valore attuale</label>
         <input type="number" class="form-input mono" id="sf-current" placeholder="€" inputmode="decimal">
       </div>
+      <div class="form-group" style="flex:0 0 76px">
+        <label class="form-label">×Qtà</label>
+        <input type="number" class="form-input mono" id="sf-qty" value="1" min="1" inputmode="numeric">
+      </div>
     </div>
 
     <div class="form-group">
@@ -3887,7 +3972,64 @@
     </div>
 
     <button class="btn btn-primary" onclick="saveSealed()">💾 Salva</button>
+    <button class="btn btn-primary" id="sealed-sell-btn" style="margin-top:8px;display:none;background:linear-gradient(135deg,#d4a847,#a87b2f)" onclick="openSellModal('sealed', editingSealedId)">💰 Ho venduto</button>
     <button class="btn btn-secondary" id="sealed-delete-btn" onclick="deleteSealed()" style="margin-top:8px;display:none">🗑 Rimuovi prodotto</button>
+  </div>
+</div>
+
+<!-- ============ MODALE VENDITA ============ -->
+<div class="modal-overlay" id="sell-modal">
+  <div class="modal">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title" id="sell-modal-title">💰 Vendita</div>
+      <button class="modal-close" onclick="closeModal('sell-modal')">✕</button>
+    </div>
+    <div class="reg-sell-info" id="sell-info"></div>
+    <div id="sell-qty-block" style="display:none">
+      <label class="form-label" style="margin-bottom:6px">Quantità venduta</label>
+      <div class="reg-qty-row">
+        <button type="button" class="reg-qbtn" onclick="sellQtyDelta(-1)">−</button>
+        <div class="reg-qnum" id="sell-qty-num">1</div>
+        <button type="button" class="reg-qbtn" onclick="sellQtyDelta(1)">+</button>
+      </div>
+      <div class="reg-qhint" id="sell-qty-hint"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">💰 Prezzo di vendita totale (€) *</label>
+      <input type="number" class="form-input mono" id="sell-price" placeholder="0.00" inputmode="decimal" oninput="updateSellPreview()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">📅 Data vendita</label>
+      <input type="date" class="form-input" id="sell-date">
+    </div>
+    <button class="btn btn-primary" id="sell-confirm-btn" onclick="confirmSale()">💰 Registra vendita</button>
+    <button class="btn btn-secondary" onclick="closeModal('sell-modal')" style="margin-top:8px">Annulla</button>
+  </div>
+</div>
+
+<!-- ============ MODALE SPESA ============ -->
+<div class="modal-overlay" id="expense-modal">
+  <div class="modal">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title">➕ Nuova spesa</div>
+      <button class="modal-close" onclick="closeModal('expense-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Motivo *</label>
+      <input type="text" class="form-input" id="exp-reason" placeholder="es. Spedizione assicurata, bustine…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">💸 Importo (€) *</label>
+      <input type="number" class="form-input mono" id="exp-amount" placeholder="0.00" inputmode="decimal">
+    </div>
+    <div class="form-group">
+      <label class="form-label">📅 Data</label>
+      <input type="date" class="form-input" id="exp-date">
+    </div>
+    <button class="btn btn-primary" onclick="saveExpense()">💾 Salva spesa</button>
+    <button class="btn btn-secondary" onclick="closeModal('expense-modal')" style="margin-top:8px">Annulla</button>
   </div>
 </div>
 
@@ -4039,6 +4181,7 @@ function sealedToDb(s, userId) {
     name:          s.name,
     buy_price:     s.buyPrice || null,
     current_price: s.currentPrice || null,
+    qty:           s.qty || 1,
     notes:         s.notes || null,
     photo_url:     s.photo || null,
     thumb_url:     s.thumb || null,
@@ -4052,11 +4195,44 @@ function dbToSealed(r) {
     name:         r.name,
     buyPrice:     r.buy_price || null,
     currentPrice: r.current_price || null,
+    qty:          r.qty || 1,
     notes:        r.notes || '',
     photo:        r.photo_url || null,
     thumb:        r.thumb_url || r.photo_url || null,
     createdAt:    r.created_at,
     updatedAt:    r.updated_at
+  };
+}
+
+function actToDb(a, userId) {
+  return {
+    user_id:    userId || currentUser?.id,
+    type:       a.type,                 // 'sale' | 'expense'
+    kind:       a.kind || null,         // 'card' | 'sealed' | 'set'
+    year:       a.year,
+    date:       a.date,
+    name:       a.name,
+    qty:        a.qty || 1,
+    buy_total:  a.buyTotal ?? null,
+    sale_total: a.saleTotal ?? null,
+    amount:     a.amount ?? null,
+    meta:       a.meta || {}
+  };
+}
+function dbToAct(r) {
+  return {
+    id:        r.id,
+    type:      r.type,
+    kind:      r.kind || null,
+    year:      r.year,
+    date:      r.date,
+    name:      r.name,
+    qty:       r.qty || 1,
+    buyTotal:  r.buy_total != null ? parseFloat(r.buy_total) : null,
+    saleTotal: r.sale_total != null ? parseFloat(r.sale_total) : null,
+    amount:    r.amount != null ? parseFloat(r.amount) : null,
+    meta:      r.meta || {},
+    createdAt: r.created_at
   };
 }
 
@@ -4074,6 +4250,22 @@ const dataStore = {
   },
 
   // === Cards (Supabase) ===
+  async loadActivities() {
+    const { data, error } = await _supabase.from('activities')
+      .select('*').order('date', { ascending: false }).order('id', { ascending: false });
+    if (error) { console.error('loadActivities:', error); return []; }
+    return (data || []).map(dbToAct);
+  },
+  async insertActivity(a) {
+    const payload = actToDb(a);
+    const { data, error } = await _supabase.from('activities').insert(payload).select().single();
+    if (error) { console.error('insertActivity:', error); return { error }; }
+    return { data: dbToAct(data) };
+  },
+  async deleteActivity(id) {
+    const { error } = await _supabase.from('activities').delete().eq('id', id);
+    if (error) console.error('deleteActivity:', error);
+  },
   async loadCards() {
     if (!currentUser) return [];
     let { data, error } = await _supabase.from('cards').select('*').order('created_at', { ascending: true });
@@ -4215,6 +4407,7 @@ const dataStore = {
 
 // ============ STATE ============
 let cards = [];
+let activities = []; // registro vendite e spese
 let wishlist = [];
 let sealed = [];
 let settings = dataStore.loadSettings();
@@ -4548,13 +4741,15 @@ function renderStats() {
       <div class="stat-value" style="color:${toSell > 0 ? 'var(--red)' : 'var(--accent)'}">${toSell}</div>
       <div class="stat-sub">carte sopra +30%</div>
     </div>
-    <div class="stat-card clickable green ${activeFilter === 'sell' ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
-      <div class="stat-label">📈 In Profitto</div>
-      <div class="stat-value green">${inProfit}</div>
+    <div class="stat-card clickable ${(activeFilter === 'sell' || activeFilter === 'loss') ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
+      <div class="stat-label">📊 Posizioni</div>
+      <div class="stat-value"><span class="green">${inProfit}</span> <span style="color:var(--muted);font-size:0.8em">·</span> <span class="red">${inLoss}</span></div>
+      <div class="stat-sub">📈 profitto · 📉 perdita</div>
     </div>
-    <div class="stat-card clickable red ${activeFilter === 'loss' ? 'active' : ''}" data-stat-filter="loss" onclick="toggleStatFilter('loss')">
-      <div class="stat-label">📉 In Perdita</div>
-      <div class="stat-value red">${inLoss}</div>
+    <div class="stat-card clickable" onclick="goToRegistry()">
+      <div class="stat-label">🧾 Registro</div>
+      <div class="stat-value" style="color:var(--accent)">${activities.filter(a => a.year === new Date().getFullYear()).length}</div>
+      <div class="stat-sub">movimenti ${new Date().getFullYear()}</div>
     </div>
     ${toUpdate > 0 ? `
     <div class="stat-card clickable stale-alert full ${activeFilter === 'stale' ? 'active' : ''}" data-stat-filter="stale" onclick="toggleStatFilter('stale')">
@@ -4969,6 +5164,7 @@ function openDetail(id) {
     <div class="history-list">${historyHTML}</div>
 
     <div class="btn-row" style="margin-top:18px">
+      <button class="btn btn-primary" style="background:linear-gradient(135deg,#d4a847,#a87b2f)" onclick="openSellModal('card', ${c.id})">💰 Ho venduto</button>
       <button class="btn btn-secondary" onclick="editCard(${c.id})">✏️ Modifica</button>
       <button class="btn btn-danger" onclick="deleteCard(${c.id})">🗑 Elimina</button>
     </div>
@@ -5036,6 +5232,493 @@ let currentPhoto = null; // base64 string of the photo (final cropped)
 let currentThumb = null; // thumbnail url/dataurl
 let cropState = null; // { img, scale, offsetX, offsetY, ... }
 let imageSearchTarget = 'card'; // 'card' | 'wish' — where the chosen image goes
+
+// ============ REGISTRO ATTIVITÀ ============
+let registryYear = new Date().getFullYear();
+
+function regCapital() {
+  // capitale = somma acquisti di TUTTO ciò che è ancora in portfolio (carte + sealed)
+  const c = cards.reduce((t, x) => t + (parseFloat(x.buyPrice) || 0) * (x.qty || 1), 0);
+  const sl = sealed.reduce((t, x) => t + (parseFloat(x.buyPrice) || 0) * (x.qty || 1), 0);
+  return c + sl;
+}
+
+function renderRegistry() {
+  if (currentView !== 'registry') return;
+  const yearsAvail = [...new Set(activities.map(a => a.year))].sort((a, b) => b - a);
+  const nowY = new Date().getFullYear();
+  if (!yearsAvail.includes(nowY)) yearsAvail.unshift(nowY);
+  if (!yearsAvail.includes(registryYear)) registryYear = yearsAvail[0];
+
+  document.getElementById('reg-years').innerHTML = yearsAvail.map(y =>
+    `<div class="reg-yp ${y === registryYear ? 'on' : ''}" onclick="registryYear=${y};renderRegistry()">${y}</div>`
+  ).join('');
+
+  const acts = activities.filter(a => a.year === registryYear)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+  document.getElementById('registry-count-badge').textContent = acts.length;
+
+  // hero
+  document.getElementById('reg-capital').textContent = '€' + fmt(regCapital());
+  let sales = 0, expenses = 0;
+  acts.forEach(a => {
+    if (a.type === 'sale') sales += (a.saleTotal || 0) - (a.buyTotal || 0);
+    else if (a.type === 'expense') expenses += (a.amount || 0);
+  });
+  const profit = sales - expenses;
+  const pv = document.getElementById('reg-profit');
+  document.getElementById('reg-profit-label').textContent = `🏆 Profitto ${registryYear}`;
+  pv.textContent = (profit >= 0 ? '+' : '−') + '€' + fmt(Math.abs(profit));
+  pv.className = 'reg-hval ' + (profit >= 0 ? 'pos' : 'neg');
+  document.getElementById('reg-profit-sub').textContent =
+    `vendite ${sales >= 0 ? '+' : '−'}€${fmt(Math.abs(sales))} · spese −€${fmt(expenses)}`;
+
+  // lista con separatori per mese
+  const listEl = document.getElementById('registry-list');
+  if (!acts.length) {
+    listEl.innerHTML = `<div class="reg-empty">🧾 Nessun movimento nel ${registryYear}.<br>Vendi una carta o aggiungi una spesa per iniziare.</div>`;
+    return;
+  }
+  const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  let html = '', lastMonth = -1;
+  for (const a of acts) {
+    const d = new Date(a.date + 'T00:00:00');
+    const mo = d.getMonth();
+    if (mo !== lastMonth) { html += `<div class="reg-month">${MONTHS[mo]} ${a.year}</div>`; lastMonth = mo; }
+    const dd = String(d.getDate()).padStart(2, '0') + '/' + String(mo + 1).padStart(2, '0');
+    if (a.type === 'expense') {
+      html += `
+        <div class="reg-row expense" onclick="regRowActions(${a.id})">
+          <div class="reg-row-top"><span class="reg-chip exp">Spesa</span><div class="reg-row-name">${a.name}</div><div class="reg-row-pnl neg">−€${fmt(a.amount || 0)}</div></div>
+          <div class="reg-row-meta"><span>${dd}</span></div>
+        </div>`;
+    } else {
+      const pnl = (a.saleTotal || 0) - (a.buyTotal || 0);
+      const pcls = pnl >= 0 ? 'pos' : 'neg';
+      const ptxt = (pnl >= 0 ? '+' : '−') + '€' + fmt(Math.abs(pnl));
+      const chip = a.kind === 'set' ? '<span class="reg-chip set">📦 Set</span>'
+                 : a.kind === 'sealed' ? '<span class="reg-chip sealed">Sealed</span>' : '';
+      const rowCls = a.kind === 'set' ? ' setrow' : '';
+      let detail = '';
+      const m = a.meta || {};
+      if (a.kind === 'card' && m.card) {
+        const c = m.card;
+        detail = [c.grader && c.grader !== 'RAW' ? `${c.grader} ${c.grade || ''}`.trim() : (c.grader === 'RAW' ? 'RAW' : ''), c.psaCert ? 'cert ' + c.psaCert : ''].filter(Boolean).join(' · ');
+      } else if (a.kind === 'set') {
+        detail = `${a.qty} carte`;
+      } else if (a.kind === 'sealed') {
+        detail = m.remainingQty > 0 ? `${a.qty}× venduti (ne restano ${m.remainingQty})` : `${a.qty}× venduti`;
+      }
+      html += `
+        <div class="reg-row${rowCls}" onclick="regRowActions(${a.id})">
+          <div class="reg-row-top">${chip}<div class="reg-row-name">${a.name}</div><div class="reg-row-pnl ${pcls}">${ptxt}</div></div>
+          <div class="reg-row-meta">${detail ? `<span>${detail}</span>` : ''}<span>🛒 €${fmt(a.buyTotal || 0)} → 💰 €${fmt(a.saleTotal || 0)}</span><span>${dd}</span></div>
+        </div>`;
+    }
+  }
+  listEl.innerHTML = html;
+}
+
+// ---- azioni su riga (annulla vendita / elimina spesa) ----
+function regRowActions(actId) {
+  const a = activities.find(x => x.id === actId);
+  if (!a) return;
+  if (a.type === 'expense') {
+    showPdfChoice(`💸 ${a.name}`, [
+      { label: '🗑 Elimina spesa', onPick: () => deleteExpense(actId) }
+    ]);
+  } else {
+    showPdfChoice(`💰 ${a.name}`, [
+      { label: '↩️ Annulla vendita (torna in portfolio)', onPick: () => cancelSale(actId) }
+    ]);
+  }
+}
+
+async function deleteExpense(actId) {
+  await dataStore.deleteActivity(actId);
+  activities = activities.filter(x => x.id !== actId);
+  showToast('🗑 Spesa eliminata');
+  renderRegistry();
+}
+
+async function cancelSale(actId) {
+  const a = activities.find(x => x.id === actId);
+  if (!a || a.type !== 'sale') return;
+  const m = a.meta || {};
+  try {
+    if (a.kind === 'card' && m.card) {
+      const snap = { ...m.card }; delete snap.id;
+      const r = await dataStore.insertCard(snap);
+      if (r.error) throw r.error;
+      cards.push(r.data);
+    } else if (a.kind === 'set' && Array.isArray(m.cards)) {
+      for (const cs of m.cards) {
+        const snap = { ...cs }; delete snap.id;
+        const r = await dataStore.insertCard(snap);
+        if (r.error) throw r.error;
+        cards.push(r.data);
+      }
+    } else if (a.kind === 'sealed' && m.sealed) {
+      const existing = m.origId ? sealed.find(x => x.id === m.origId) : null;
+      if (existing) {
+        existing.qty = (existing.qty || 1) + (a.qty || 1);
+        await dataStore.updateSealed(existing);
+      } else {
+        const snap = { ...m.sealed }; delete snap.id;
+        snap.qty = a.qty || 1;
+        const r = await dataStore.insertSealed(snap);
+        if (r.error) throw r.error;
+        sealed.push(r.data);
+      }
+    }
+    await dataStore.deleteActivity(actId);
+    activities = activities.filter(x => x.id !== actId);
+    showToast('↩️ Vendita annullata — tornato in portfolio');
+    renderStats(); renderCards(); renderSealed(); renderRegistry();
+  } catch (e) {
+    console.error('cancelSale:', e);
+    showToast('❌ Errore nell\'annullare: ' + (e.message || 'riprova'));
+  }
+}
+
+// ---- spese ----
+function openExpenseModal() {
+  document.getElementById('exp-reason').value = '';
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+  openModal('expense-modal');
+}
+
+async function saveExpense() {
+  const reason = document.getElementById('exp-reason').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const date = document.getElementById('exp-date').value;
+  if (!reason) { showToast('⚠️ Inserisci il motivo'); return; }
+  if (isNaN(amount) || amount <= 0) { showToast('⚠️ Inserisci un importo valido'); return; }
+  if (!date) { showToast('⚠️ Inserisci la data'); return; }
+  const a = { type: 'expense', year: parseInt(date.slice(0, 4)), date, name: reason, amount, meta: {} };
+  const r = await dataStore.insertActivity(a);
+  if (r.error) { showToast('❌ ' + (r.error.message || 'errore')); return; }
+  activities.unshift(r.data);
+  closeModal('expense-modal');
+  showToast('💸 Spesa registrata');
+  registryYear = r.data.year;
+  renderRegistry();
+}
+
+// ---- vendita ----
+let sellCtx = null; // { kind, id, gid, maxQty, qty, buyUnit, name }
+
+function openSellModal(kind, idOrGid) {
+  let info = '', name = '', maxQty = 1, buyUnit = 0;
+  if (kind === 'card') {
+    const c = cards.find(x => x.id === idOrGid);
+    if (!c) return;
+    name = c.name;
+    buyUnit = (parseFloat(c.buyPrice) || 0) * (c.qty || 1);
+    info = `${c.grader || ''} ${c.grade || ''}${c.psaCert ? ' · cert ' + c.psaCert : ''}<br>acquisto: €${fmt(buyUnit)}`;
+    sellCtx = { kind, id: c.id, qty: 1, maxQty: 1, buyTotal: buyUnit, name };
+  } else if (kind === 'sealed') {
+    const sl = sealed.find(x => x.id === idOrGid);
+    if (!sl) return;
+    name = sl.name;
+    maxQty = sl.qty || 1;
+    buyUnit = parseFloat(sl.buyPrice) || 0;
+    info = `SEALED · in portfolio: ×${maxQty} · acquisto €${fmt(buyUnit)}/cad`;
+    sellCtx = { kind, id: sl.id, qty: maxQty > 1 ? 1 : 1, maxQty, buyUnit, name };
+  } else if (kind === 'set') {
+    const members = cards.filter(x => x.groupId === idOrGid);
+    if (!members.length) return;
+    name = members[0].groupName || 'Set';
+    const totBuy = members.reduce((t, m) => t + (parseFloat(m.buyPrice) || 0) * (m.qty || 1), 0);
+    info = `📦 SET · ${members.length} carte · acquisto totale €${fmt(totBuy)}`;
+    sellCtx = { kind, gid: idOrGid, qty: members.length, maxQty: members.length, buyTotal: totBuy, name };
+  }
+  document.getElementById('sell-modal-title').textContent = '💰 Vendita';
+  document.getElementById('sell-info').innerHTML = `<b>${name}</b><br>${info}`;
+  document.getElementById('sell-price').value = '';
+  document.getElementById('sell-date').value = new Date().toISOString().split('T')[0];
+  const qtyBlock = document.getElementById('sell-qty-block');
+  if (kind === 'sealed' && maxQty > 1) {
+    qtyBlock.style.display = '';
+    document.getElementById('sell-qty-num').textContent = sellCtx.qty;
+    updateSellQtyHint();
+  } else {
+    qtyBlock.style.display = 'none';
+  }
+  updateSellPreview();
+  openModal('sell-modal');
+}
+
+function sellQtyDelta(d) {
+  if (!sellCtx || sellCtx.kind !== 'sealed') return;
+  sellCtx.qty = Math.max(1, Math.min(sellCtx.maxQty, sellCtx.qty + d));
+  document.getElementById('sell-qty-num').textContent = sellCtx.qty;
+  updateSellQtyHint();
+  updateSellPreview();
+}
+
+function updateSellQtyHint() {
+  const rem = sellCtx.maxQty - sellCtx.qty;
+  document.getElementById('sell-qty-hint').textContent =
+    rem > 0 ? `ne resteranno ${rem} in portfolio` : 'venduti tutti — esce dal portfolio';
+}
+
+function sellBuyTotal() {
+  if (!sellCtx) return 0;
+  return sellCtx.kind === 'sealed' ? (sellCtx.buyUnit || 0) * sellCtx.qty : (sellCtx.buyTotal || 0);
+}
+
+function updateSellPreview() {
+  const btn = document.getElementById('sell-confirm-btn');
+  const price = parseFloat(document.getElementById('sell-price').value);
+  if (!sellCtx || isNaN(price)) { btn.textContent = '💰 Registra vendita'; return; }
+  const pnl = price - sellBuyTotal();
+  btn.textContent = `💰 Registra vendita · P&L ${pnl >= 0 ? '+' : '−'}€${fmt(Math.abs(pnl))}`;
+}
+
+async function confirmSale() {
+  if (!sellCtx) return;
+  const price = parseFloat(document.getElementById('sell-price').value);
+  const date = document.getElementById('sell-date').value;
+  if (isNaN(price) || price < 0) { showToast('⚠️ Inserisci il prezzo di vendita'); return; }
+  if (!date) { showToast('⚠️ Inserisci la data'); return; }
+  const year = parseInt(date.slice(0, 4));
+  const buyTotal = sellBuyTotal();
+
+  try {
+    let act = null;
+    if (sellCtx.kind === 'card') {
+      const c = cards.find(x => x.id === sellCtx.id);
+      if (!c) return;
+      act = { type: 'sale', kind: 'card', year, date, name: c.name, qty: c.qty || 1,
+              buyTotal, saleTotal: price, meta: { card: { ...c } } };
+      const r = await dataStore.insertActivity(act);
+      if (r.error) throw r.error;
+      activities.unshift(r.data);
+      await dataStore.deleteCard(c.id);
+      cards = cards.filter(x => x.id !== c.id);
+    } else if (sellCtx.kind === 'set') {
+      const members = cards.filter(x => x.groupId === sellCtx.gid);
+      if (!members.length) return;
+      act = { type: 'sale', kind: 'set', year, date, name: sellCtx.name, qty: members.length,
+              buyTotal, saleTotal: price, meta: { cards: members.map(m => ({ ...m })) } };
+      const r = await dataStore.insertActivity(act);
+      if (r.error) throw r.error;
+      activities.unshift(r.data);
+      for (const m of members) await dataStore.deleteCard(m.id);
+      cards = cards.filter(x => x.groupId !== sellCtx.gid);
+      closeSetView();
+    } else if (sellCtx.kind === 'sealed') {
+      const sl = sealed.find(x => x.id === sellCtx.id);
+      if (!sl) return;
+      const soldQty = sellCtx.qty;
+      const remaining = (sl.qty || 1) - soldQty;
+      act = { type: 'sale', kind: 'sealed', year, date, name: sl.name, qty: soldQty,
+              buyTotal, saleTotal: price,
+              meta: { sealed: { ...sl }, origId: remaining > 0 ? sl.id : null, remainingQty: Math.max(0, remaining) } };
+      const r = await dataStore.insertActivity(act);
+      if (r.error) throw r.error;
+      activities.unshift(r.data);
+      if (remaining > 0) {
+        sl.qty = remaining;
+        await dataStore.updateSealed(sl);
+      } else {
+        await dataStore.deleteSealed(sl.id);
+        sealed = sealed.filter(x => x.id !== sl.id);
+      }
+      closeModal('sealed-modal');
+    }
+    closeModal('sell-modal');
+    closeModal('detail-modal');
+    sellCtx = null;
+    showToast('💰 Vendita registrata!');
+    registryYear = year;
+    renderStats(); renderCards(); renderSealed();
+    if (currentView === 'registry') renderRegistry();
+  } catch (e) {
+    console.error('confirmSale:', e);
+    showToast('❌ Errore vendita: ' + (e.message || 'riprova'));
+  }
+}
+
+// ============ EXPORT REGISTRO (PDF + EXCEL) ============
+function registryExportRows() {
+  const acts = activities.filter(a => a.year === registryYear)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+  return acts.map(a => {
+    if (a.type === 'expense') {
+      return { date: a.date, tipo: 'Spesa', nome: a.name, dettagli: '', qty: '', buy: '', sale: '', pnl: -(a.amount || 0) };
+    }
+    const m = a.meta || {};
+    let det = '';
+    if (a.kind === 'card' && m.card) {
+      const c = m.card;
+      det = [c.grader && c.grader !== 'RAW' ? `${c.grader} ${c.grade || ''}`.trim() : (c.grader === 'RAW' ? 'RAW' : ''), c.psaCert ? 'cert ' + c.psaCert : ''].filter(Boolean).join(' · ');
+    } else if (a.kind === 'set') det = `set di ${a.qty} carte`;
+    else if (a.kind === 'sealed') det = 'sealed';
+    return {
+      date: a.date,
+      tipo: a.kind === 'set' ? 'Vendita SET' : a.kind === 'sealed' ? 'Vendita Sealed' : 'Vendita',
+      nome: a.name, dettagli: det, qty: a.qty || 1,
+      buy: a.buyTotal || 0, sale: a.saleTotal || 0,
+      pnl: (a.saleTotal || 0) - (a.buyTotal || 0)
+    };
+  });
+}
+
+function registryTotals() {
+  const acts = activities.filter(a => a.year === registryYear);
+  let sales = 0, expenses = 0;
+  acts.forEach(a => {
+    if (a.type === 'sale') sales += (a.saleTotal || 0) - (a.buyTotal || 0);
+    else expenses += (a.amount || 0);
+  });
+  return { sales, expenses, profit: sales - expenses, capital: regCapital() };
+}
+
+function generateRegistryPDF() {
+  const jsPDFns = window.jspdf;
+  if (!jsPDFns || !jsPDFns.jsPDF) { showToast('⚠️ Libreria PDF non caricata'); return; }
+  const rows = registryExportRows();
+  if (!rows.length) { showToast('⚠️ Nessun movimento nel ' + registryYear); return; }
+  showToast('⏳ Genero PDF…');
+  const t = registryTotals();
+  const doc = new jsPDFns.jsPDF({ unit: 'pt', format: 'a4' });
+  const PW = doc.internal.pageSize.getWidth();
+  const PH = doc.internal.pageSize.getHeight();
+  const M = 36;
+  const PURPLE = [168, 85, 247], DARK = [26, 22, 32], MUTED = [138, 132, 120];
+
+  function head() {
+    doc.setFillColor(...DARK);
+    doc.rect(0, 0, PW, 96, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
+    doc.setTextColor(...PURPLE); doc.text('S', M, 40);
+    doc.setTextColor(245, 242, 235); doc.text('WEETHOME', M + 13, 40);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+    doc.setTextColor(...MUTED); doc.text('BY SWEETCOLLECTIBLES', M, 54);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+    doc.setTextColor(...PURPLE); doc.text(`REGISTRO ATTIVITA ${registryYear}`, PW - M, 40, { align: 'right' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+    doc.text(new Date().toLocaleDateString('it-IT'), PW - M, 54, { align: 'right' });
+    // riquadri totali
+    doc.setFontSize(7);
+    doc.text('CAPITALE INVESTITO', M, 74);
+    doc.text('PROFITTO ' + registryYear + '  (vendite ' + eur(t.sales) + ' - spese ' + eur(t.expenses) + ')', PW / 2, 74);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+    doc.setTextColor(212, 168, 71); doc.text(eur(t.capital), M, 89);
+    doc.setTextColor(...(t.profit >= 0 ? [74, 180, 110] : [220, 90, 90]));
+    doc.text((t.profit >= 0 ? '+' : '') + eur(t.profit), PW / 2, 89);
+  }
+  function eur(v) { return 'EUR ' + Number(v).toLocaleString('it-IT', { maximumFractionDigits: 2 }); }
+  function foot() {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.text('SWEETHOME · sweetcollectibles.tcg', PW / 2, PH - 18, { align: 'center' });
+  }
+
+  head();
+  let y = 116;
+  // intestazioni colonne
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+  doc.text('DATA', M, y); doc.text('MOVIMENTO', M + 56, y);
+  doc.text('ACQUISTO', PW - M - 150, y, { align: 'right' });
+  doc.text('VENDITA', PW - M - 78, y, { align: 'right' });
+  doc.text('P&L', PW - M, y, { align: 'right' });
+  y += 10;
+  rows.forEach((r, i) => {
+    const rowH = r.dettagli ? 30 : 22;
+    if (y + rowH > PH - 34) { foot(); doc.addPage(); head(); y = 116; }
+    if (i % 2 === 1) { doc.setFillColor(243, 239, 230); doc.rect(0, y - 4, PW, rowH, 'F'); }
+    const d = r.date.slice(8, 10) + '/' + r.date.slice(5, 7);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+    doc.text(d, M, y + 6);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(26, 22, 32);
+    const label = (r.tipo === 'Spesa' ? 'SPESA - ' : r.tipo.includes('SET') ? 'SET - ' : '') + r.nome;
+    doc.text(label, M + 56, y + 6, { maxWidth: PW - M - 56 - 170 });
+    if (r.dettagli) {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+      doc.text(r.dettagli + (r.qty > 1 ? ` · x${r.qty}` : ''), M + 56, y + 17);
+    }
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(80, 76, 70);
+    if (r.buy !== '') doc.text(eur(r.buy), PW - M - 150, y + 6, { align: 'right' });
+    if (r.sale !== '') doc.text(eur(r.sale), PW - M - 78, y + 6, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...(r.pnl >= 0 ? [60, 160, 95] : [205, 80, 80]));
+    doc.text((r.pnl >= 0 ? '+' : '') + eur(r.pnl), PW - M, y + 6, { align: 'right' });
+    y += rowH;
+  });
+  foot();
+  const blob = doc.output('blob');
+  sharePdfBlob(blob, `sweethome-registro-${registryYear}.pdf`);
+}
+
+// condivisione blob PDF coerente con il resto dell'app
+function sharePdfBlob(blob, filename) {
+  const file = new File([blob], filename, { type: 'application/pdf' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: filename }).catch(() => {});
+  } else {
+    const a = document.createElement('a');
+    const u = URL.createObjectURL(blob);
+    a.href = u; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(u), 5000);
+  }
+}
+
+// ---- Excel: SheetJS caricato on-demand (non pesa sull'avvio) ----
+let _xlsxLoading = null;
+function loadXlsxLib() {
+  if (window.XLSX) return Promise.resolve();
+  if (_xlsxLoading) return _xlsxLoading;
+  _xlsxLoading = new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = resolve;
+    sc.onerror = () => { _xlsxLoading = null; reject(new Error('download libreria fallito')); };
+    document.head.appendChild(sc);
+  });
+  return _xlsxLoading;
+}
+
+async function exportRegistryExcel() {
+  const rows = registryExportRows();
+  if (!rows.length) { showToast('⚠️ Nessun movimento nel ' + registryYear); return; }
+  showToast('⏳ Genero Excel…');
+  try {
+    await loadXlsxLib();
+    const t = registryTotals();
+    const data = [
+      ['SWEETHOME — Registro Attività ' + registryYear],
+      ['Capitale investito', t.capital],
+      ['Profitto ' + registryYear, t.profit, `(vendite ${t.sales.toFixed(2)} − spese ${t.expenses.toFixed(2)})`],
+      [],
+      ['Data', 'Tipo', 'Nome', 'Dettagli', 'Qtà', 'Acquisto €', 'Vendita €', 'P&L €'],
+      ...rows.map(r => [r.date, r.tipo, r.nome, r.dettagli, r.qty, r.buy, r.sale, r.pnl])
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch:11},{wch:14},{wch:30},{wch:26},{wch:5},{wch:11},{wch:11},{wch:11}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Registro ' + registryYear);
+    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const file = new File([blob], `sweethome-registro-${registryYear}.xlsx`, { type: blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: file.name });
+    } else {
+      const a = document.createElement('a');
+      const u = URL.createObjectURL(blob);
+      a.href = u; a.download = file.name; a.click();
+      setTimeout(() => URL.revokeObjectURL(u), 5000);
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.error('exportRegistryExcel:', e);
+      showToast('❌ Errore Excel: ' + (e.message || 'riprova'));
+    }
+  }
+}
 
 // ============ RIPARAZIONE MINIATURE NERE ============
 // I thumb corrotti (JPEG neri generati da un vecchio bug di decodifica) vengono
@@ -5138,6 +5821,7 @@ function renderSetView(gid) {
         <div class="sh-box"><div class="sh-label">📈 Valore</div><div class="sh-val gold">€${fmt(totCur)}</div></div>
         <div class="sh-box"><div class="sh-label">📊 P&L</div><div class="sh-val ${pnlClass}">${pnlTxt}</div></div>
       </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:14px;background:linear-gradient(135deg,#d4a847,#a87b2f)" onclick="openSellModal('set', '${gid}')">💰 Ho venduto il set</button>
     </div>
     ${renderListCards(members)}
   `;
@@ -6433,7 +7117,7 @@ let currentView = 'home'; // 'home' | 'list' | 'wishlist' | 'sealed'
 // ============ TRANSIZIONI VISTA — iOS PUSH/POP ============
 // La vista nuova scivola da destra sopra la vecchia, che arretra (parallasse)
 // e si scurisce. Tornando, il contrario. Solo transform/opacity/filter → GPU 60fps.
-const VIEW_IDS = { home: 'home-view', list: 'list-view', wishlist: 'wishlist-view', sealed: 'sealed-view' };
+const VIEW_IDS = { home: 'home-view', list: 'list-view', wishlist: 'wishlist-view', sealed: 'sealed-view', registry: 'registry-view' };
 let navAnimating = false;
 let searchExpandArmed = false; // la barra si espande solo dopo uno scroll attivo dell'utente
 const NAV_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -6846,6 +7530,16 @@ function goToSealed() {
   transitionViews(fromEl, document.getElementById('sealed-view'), 'forward');
 }
 
+function goToRegistry() {
+  if (navAnimating || currentView === 'registry') return;
+  const fromEl = document.getElementById(VIEW_IDS[currentView]);
+  currentView = 'registry';
+  renderRegistry();
+  updateFabVisibility();
+  hideViewsExcept(['registry-view', fromEl ? fromEl.id : '']);
+  transitionViews(fromEl, document.getElementById('registry-view'), 'forward');
+}
+
 function renderSealed() {
   const list = document.getElementById('sealed-list');
   const badge = document.getElementById('sealed-count-badge');
@@ -6864,8 +7558,8 @@ function renderSealed() {
     if (sealed.length === 0) {
       statsBox.innerHTML = '';
     } else {
-      const totalBuy = sealed.reduce((s, x) => s + (parseFloat(x.buyPrice) || 0), 0);
-      const totalCur = sealed.reduce((s, x) => s + (parseFloat(x.currentPrice) || parseFloat(x.buyPrice) || 0), 0);
+      const totalBuy = sealed.reduce((s, x) => s + (parseFloat(x.buyPrice) || 0) * (x.qty || 1), 0);
+      const totalCur = sealed.reduce((s, x) => s + (parseFloat(x.currentPrice) || parseFloat(x.buyPrice) || 0) * (x.qty || 1), 0);
       const pnl = totalBuy > 0 ? ((totalCur - totalBuy) / totalBuy) * 100 : 0;
       const pnlClass = pnl >= 0 ? 'green' : 'red';
       const pnlText = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(1)}%`;
@@ -6941,7 +7635,9 @@ function openSealedAddModal() {
   currentSealedPhoto = null; currentSealedThumb = null;
   document.getElementById('sealed-modal-title').textContent = '📦 Aggiungi Sealed';
   ['sf-name','sf-buy','sf-current','sf-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('sf-qty').value = '1';
   document.getElementById('sealed-delete-btn').style.display = 'none';
+  document.getElementById('sealed-sell-btn').style.display = 'none';
   renderSealedPhotoPreview();
   openModal('sealed-modal');
 }
@@ -6957,7 +7653,9 @@ function openSealedEdit(id) {
   document.getElementById('sf-buy').value = s.buyPrice ?? '';
   document.getElementById('sf-current').value = s.currentPrice ?? '';
   document.getElementById('sf-notes').value = s.notes || '';
+  document.getElementById('sf-qty').value = s.qty || 1;
   document.getElementById('sealed-delete-btn').style.display = '';
+  document.getElementById('sealed-sell-btn').style.display = '';
   renderSealedPhotoPreview();
   openModal('sealed-modal');
 }
@@ -6970,18 +7668,19 @@ async function saveSealed() {
   const buyPrice = buyV === '' ? null : parseFloat(buyV);
   const currentPrice = curV === '' ? null : parseFloat(curV);
   const notes = document.getElementById('sf-notes').value.trim();
+  const qty = Math.max(1, parseInt(document.getElementById('sf-qty').value) || 1);
   const now = new Date().toISOString();
 
   if (editingSealedId) {
     const s = sealed.find(x => x.id === editingSealedId);
     if (s) {
-      s.name = name; s.buyPrice = buyPrice; s.currentPrice = currentPrice;
+      s.name = name; s.buyPrice = buyPrice; s.currentPrice = currentPrice; s.qty = qty;
       s.notes = notes; s.photo = currentSealedPhoto || null; s.thumb = currentSealedThumb || currentSealedPhoto || null; s.updatedAt = now;
       await dataStore.updateSealed(s);
     }
     showToast('✓ Prodotto aggiornato');
   } else {
-    const item = { userId: currentUser?.id, name, buyPrice, currentPrice, notes, photo: currentSealedPhoto || null, thumb: currentSealedThumb || currentSealedPhoto || null, createdAt: now, updatedAt: now };
+    const item = { userId: currentUser?.id, name, buyPrice, currentPrice, qty, notes, photo: currentSealedPhoto || null, thumb: currentSealedThumb || currentSealedPhoto || null, createdAt: now, updatedAt: now };
     const result = await dataStore.insertSealed(item);
     if (result.error) { showToast('❌ Errore: ' + (result.error.message || 'riprova')); return; }
     sealed.push(result.data);
@@ -8341,12 +9040,13 @@ async function initApp() {
   // (niente render preliminari: sono invisibili dietro la splash, solo lavoro sprecato)
 
   // Load all data from Supabase in parallel
-  let loadedCards = [], loadedWishlist = [], loadedSealed = [], nickname = null, psaToken = null;
+  let loadedCards = [], loadedWishlist = [], loadedSealed = [], loadedActs = [], nickname = null, psaToken = null;
   try {
-    [loadedCards, loadedWishlist, loadedSealed, nickname, psaToken] = await Promise.all([
+    [loadedCards, loadedWishlist, loadedSealed, loadedActs, nickname, psaToken] = await Promise.all([
       dataStore.loadCards(),
       dataStore.loadWishlist(),
       dataStore.loadSealed(),
+      dataStore.loadActivities(),
       dataStore.loadNickname(),
       dataStore.loadPsaToken()
     ]);
@@ -8357,6 +9057,7 @@ async function initApp() {
   }
 
   cards = loadedCards;
+  activities = loadedActs || [];
   applyLocalOrder(cards);
   wishlist = loadedWishlist;
   sealed = loadedSealed;
