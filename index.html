@@ -1130,7 +1130,7 @@
   .set-stack .ph:nth-child(1) { left: 10px; top: 0; transform: rotate(5deg); opacity: 0.55; }
   .set-stack .ph:nth-child(2) { left: 5px; top: 2px; transform: rotate(2deg); opacity: 0.8; }
   .set-stack .ph:nth-child(3) { left: 0; top: 4px; transform: rotate(-2deg); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-  .set-badge {
+  .set-pile-badge {
     position: absolute; top: -6px; right: -8px;
     background: var(--accent); color: #fff;
     font-size: 0.58rem; font-weight: 800; font-family: 'JetBrains Mono', monospace;
@@ -3590,7 +3590,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v75</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v76</div>
   </div>
 </div>
 
@@ -4754,7 +4754,7 @@ function renderSetTile(gid, gname, members) {
   }).join('');
   return `
     <div class="set-card" onclick="openSetView('${gid}')">
-      <div class="set-stack">${phs}<div class="set-badge">×${n}</div></div>
+      <div class="set-stack">${phs}<div class="set-pile-badge">×${n}</div></div>
       <div style="flex:1;min-width:0">
         <div class="set-tag">📦 Set</div>
         <div class="list-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gname}</div>
