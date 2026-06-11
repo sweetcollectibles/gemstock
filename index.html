@@ -1094,6 +1094,85 @@
   }
   .psa-ic { font-size: 0.85em; }
 
+  /* ============ SET DI CARTE ============ */
+  .set-flag-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 999px;
+    padding: 6px 14px; font-size: 0.74rem; font-weight: 700;
+    font-family: 'Inter', sans-serif; margin-left: auto; margin-right: 10px;
+    flex-shrink: 0;
+  }
+  .set-flag-btn.on {
+    background: rgba(168,85,247,0.14); border-color: var(--accent); color: var(--accent);
+  }
+  .set-progress {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 10px; padding: 9px 12px; margin-bottom: 14px;
+    font-size: 0.72rem; color: #cbb6e8; font-family: 'JetBrains Mono', monospace;
+  }
+  .set-next-btn { background: var(--surface); border: 1px solid var(--accent); color: var(--accent); }
+
+  /* tile del set nella lista */
+  .set-card {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.07), var(--surface) 60%);
+    border: 1px solid rgba(168,85,247,0.35);
+    border-radius: 13px; padding: 10px 12px; margin-bottom: 9px;
+    cursor: pointer; position: relative;
+  }
+  .set-stack { position: relative; width: 54px; height: 66px; flex-shrink: 0; }
+  .set-stack .ph {
+    position: absolute; width: 44px; height: 62px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.08); object-fit: cover;
+    background: var(--surface2);
+  }
+  .set-stack .ph:nth-child(1) { left: 10px; top: 0; transform: rotate(5deg); opacity: 0.55; }
+  .set-stack .ph:nth-child(2) { left: 5px; top: 2px; transform: rotate(2deg); opacity: 0.8; }
+  .set-stack .ph:nth-child(3) { left: 0; top: 4px; transform: rotate(-2deg); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+  .set-badge {
+    position: absolute; top: -6px; right: -8px;
+    background: var(--accent); color: #fff;
+    font-size: 0.58rem; font-weight: 800; font-family: 'JetBrains Mono', monospace;
+    border-radius: 999px; padding: 3px 7px;
+    box-shadow: 0 2px 8px rgba(168,85,247,0.5); z-index: 2;
+  }
+  .set-tag {
+    display: inline-block; font-size: 0.56rem; letter-spacing: 1px;
+    color: var(--accent); font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase; margin-bottom: 3px;
+  }
+
+  /* vista set (overlay sotto i modali z100, sopra la barra) */
+  .set-view {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 90; background: var(--bg);
+    display: flex; flex-direction: column;
+  }
+  .set-view-head {
+    flex-shrink: 0; display: flex; align-items: center; gap: 12px;
+    padding: max(env(safe-area-inset-top), 52px) 16px 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13,13,13,0.96);
+  }
+  .set-view-title { font-weight: 800; font-size: 0.98rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .set-view-scroll {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 16px 14px calc(env(safe-area-inset-bottom) + 40px);
+    touch-action: pan-y;
+  }
+  .set-hero {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px; margin-bottom: 14px;
+  }
+  .set-hero-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .sh-box { text-align: center; }
+  .sh-label { font-size: 0.55rem; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+  .sh-val { font-size: 0.98rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 5px; }
+  .sh-val.gold { color: var(--gold); }
+  .sh-val.green { color: var(--green); }
+  .sh-val.red { color: var(--red); }
+
   /* TOUCH-ACTION: il browser gestisce nativamente quali gesti sono permessi,
      senza JavaScript sul percorso dello scroll → fluidità massima */
   .scroll-wrapper { touch-action: pan-y; }   /* solo scroll verticale */
@@ -3227,6 +3306,15 @@
   <div class="psa-view-scroll" id="psa-view-body"></div>
 </div>
 
+<!-- ============ VISTA SET DI CARTE ============ -->
+<div class="set-view" id="set-view" style="display:none">
+  <div class="set-view-head">
+    <button class="back-btn" onclick="closeSetView()">←</button>
+    <div class="set-view-title" id="set-view-title">📦 Set</div>
+  </div>
+  <div class="set-view-scroll" id="set-view-body"></div>
+</div>
+
 <!-- AUTH PAGE — BEFORE the script so DOM exists when JS runs -->
 <div id="auth-page-login" class="auth-page">
   <div class="auth-box">
@@ -3286,7 +3374,16 @@
     <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
       <div class="modal-title" id="add-modal-title">➕ Nuova Carta</div>
+      <button type="button" class="set-flag-btn" id="set-flag-btn" onclick="toggleSetMode()">📦 Set</button>
       <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
+    </div>
+
+    <div id="set-section" style="display:none">
+      <div class="form-group">
+        <label class="form-label">📦 Nome del set *</label>
+        <input type="text" class="form-input" id="f-set-name" placeholder="es. Trio sequenziale Eevee">
+      </div>
+      <div class="set-progress" id="set-progress" style="display:none"></div>
     </div>
 
     <div class="form-group">
@@ -3414,6 +3511,7 @@
     </div>
 
     <button class="btn btn-primary" onclick="saveCard()">💾 Salva Carta</button>
+    <button class="btn btn-primary set-next-btn" id="set-next-btn" style="display:none;margin-top:8px" onclick="saveCard(true)">📦 Salva e aggiungi la prossima al set</button>
     <button class="btn btn-secondary" onclick="closeModal('add-modal')" style="margin-top:8px">Annulla</button>
   </div>
 </div>
@@ -3483,6 +3581,7 @@
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
 
     <div class="form-label" style="margin-bottom:10px">📦 Gestione Dati</div>
+    <button class="btn btn-secondary" style="margin-bottom:10px" onclick="repairThumbnails()">🩺 Ripara miniature rotte</button>
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="exportData()">⬇ Esporta JSON</button>
       <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆ Importa JSON</button>
@@ -3491,7 +3590,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v74</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v75</div>
   </div>
 </div>
 
@@ -3862,6 +3961,8 @@ function cardToDb(c, userId) {
     thumb_url:     c.thumb || null,
     history:       c.history || [],
     sort_index:    typeof c.sortIndex === 'number' ? c.sortIndex : null,
+    group_id:      c.groupId || null,
+    group_name:    c.groupName || null,
     updated_at:    new Date().toISOString()
   };
 }
@@ -3887,6 +3988,8 @@ function dbToCard(r) {
     thumb:        r.thumb_url || r.photo_url || null,
     history:      Array.isArray(r.history) ? r.history : [],
     sortIndex:    typeof r.sort_index === 'number' ? r.sort_index : undefined,
+    groupId:      r.group_id || null,
+    groupName:    r.group_name || null,
     createdAt:    r.created_at,
     updatedAt:    r.updated_at
   };
@@ -4607,9 +4710,61 @@ function renderCards() {
     return;
   }
 
-  list.innerHTML = renderListCards(filtered);
+  // In modalità riordino le carte restano individuali (la logica drag non cambia);
+  // altrimenti i set collassano in una tile unica.
+  list.innerHTML = reorderMode ? renderListCards(filtered) : renderGroupedList(filtered);
   markLoadedImages(list);
   if (reorderMode) enableDragReorder();
+}
+
+// Raggruppa le carte di un set in una tile unica, lasciando le singole come sono
+function renderGroupedList(filtered) {
+  let html = '';
+  const done = new Set();
+  for (const c of filtered) {
+    if (!c.groupId) { html += renderListCards([c]); continue; }
+    if (done.has(c.groupId)) continue;
+    done.add(c.groupId);
+    // membri presi dall'archivio COMPLETO: i totali del set sono sempre interi,
+    // anche se la ricerca/filtro ha matchato solo una carta
+    const members = cards.filter(x => x.groupId === c.groupId);
+    html += renderSetTile(c.groupId, c.groupName || 'Set', members);
+  }
+  return html;
+}
+
+function renderSetTile(gid, gname, members) {
+  const n = members.length;
+  let totBuy = 0, totCur = 0;
+  members.forEach(m => {
+    const q = m.qty || 1;
+    totBuy += (m.buyPrice || 0) * q;
+    const cp = getCurrentPrice(m);
+    if (cp) totCur += cp * q;
+  });
+  const pnl = totCur - totBuy;
+  const pnlPct = totBuy > 0 ? Math.round((pnl / totBuy) * 100) : null;
+  const pnlClass = pnl >= 0 ? 'positive' : 'negative';
+  const pnlTxt = (pnl >= 0 ? '+' : '−') + '€' + fmt(Math.abs(pnl));
+  const phs = members.slice(0, 3).map(m => {
+    const src = m.thumb || m.photo;
+    return src
+      ? `<img class="ph" src="${src}" alt="" loading="lazy" onerror="this.onerror=null;${m.photo ? `this.src='${m.photo}'` : `this.style.visibility='hidden'`}"/>`
+      : `<div class="ph" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.9rem">🃏</div>`;
+  }).join('');
+  return `
+    <div class="set-card" onclick="openSetView('${gid}')">
+      <div class="set-stack">${phs}<div class="set-badge">×${n}</div></div>
+      <div style="flex:1;min-width:0">
+        <div class="set-tag">📦 Set</div>
+        <div class="list-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gname}</div>
+        <div class="list-meta">${n} ${n === 1 ? 'carta' : 'carte'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="list-pnl-value ${pnlClass}" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700">${pnlTxt}</div>
+        ${pnlPct != null ? `<div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.6rem;margin-top:2px">${pnlPct >= 0 ? '+' : ''}${pnlPct}% · tot</div>` : ''}
+      </div>
+    </div>`;
 }
 
 // ============ DETAIL VIEW ============
@@ -4727,6 +4882,7 @@ function openDetail(id) {
     </div>
     ` : ''}
     <div class="detail-hero">
+      ${c.groupId ? `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);border-radius:999px;padding:4px 12px;margin-bottom:10px;font-size:0.66rem;color:var(--accent);font-family:'JetBrains Mono',monospace;cursor:pointer" onclick="closeModal('detail-modal');openSetView('${c.groupId}')">📦 ${c.groupName || 'Set'} ›</div>` : ''}
       <div class="detail-grade-row">
         <span class="grade-badge ${gradeClass(c.grader)}">${gradeDisplay}</span>
         ${c.set ? `<span class="set-badge">${c.set}</span>` : ''}
@@ -4871,6 +5027,161 @@ let currentPhoto = null; // base64 string of the photo (final cropped)
 let currentThumb = null; // thumbnail url/dataurl
 let cropState = null; // { img, scale, offsetX, offsetY, ... }
 let imageSearchTarget = 'card'; // 'card' | 'wish' — where the chosen image goes
+
+// ============ RIPARAZIONE MINIATURE NERE ============
+// I thumb corrotti (JPEG neri generati da un vecchio bug di decodifica) vengono
+// individuati campionando i pixel e rigenerati dalla foto piena.
+async function repairThumbnails() {
+  const candidates = cards.filter(c => c.thumb && c.photo && c.thumb !== c.photo);
+  if (!candidates.length) { showToast('Nessuna miniatura da controllare'); return; }
+  showToast(`🩺 Controllo ${candidates.length} miniature…`);
+  let repaired = 0, checked = 0;
+
+  async function isBlackImage(url) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) return true; // non scaricabile = da rigenerare
+      const blob = await r.blob();
+      const bmp = await createImageBitmap(blob);
+      const cv = document.createElement('canvas');
+      cv.width = 8; cv.height = 8;
+      const cx = cv.getContext('2d');
+      cx.drawImage(bmp, 0, 0, 8, 8);
+      const d = cx.getImageData(0, 0, 8, 8).data;
+      let lum = 0;
+      for (let i = 0; i < d.length; i += 4) lum += (d[i] + d[i+1] + d[i+2]) / 3;
+      return (lum / 64) < 8; // media quasi nera
+    } catch (e) { return false; } // in dubbio, non toccare
+  }
+
+  for (const c of candidates) {
+    checked++;
+    const black = await isBlackImage(c.thumb);
+    if (!black) continue;
+    try {
+      // rigenera dalla foto piena
+      const r = await fetch(c.photo);
+      const blob = await r.blob();
+      const dataUrl = await new Promise(res => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.readAsDataURL(blob);
+      });
+      const thumbData = await makeThumbnail(dataUrl, 150);
+      if (!thumbData) continue;
+      const path = `${currentUser.id}/thumb_fix_${c.id}_${Date.now()}.jpg`;
+      const newUrl = await uploadBlobToStorage(thumbData, path);
+      if (!newUrl) continue;
+      c.thumb = newUrl;
+      await dataStore.updateCard(c);
+      repaired++;
+      showToast(`🩺 Riparata ${repaired}… (${checked}/${candidates.length})`);
+    } catch (e) { console.error('repair thumb:', c.id, e); }
+  }
+  renderCards();
+  showToast(repaired > 0 ? `✓ ${repaired} miniature riparate!` : '✓ Nessuna miniatura nera trovata');
+}
+
+// ============ VISTA SET DI CARTE ============
+let openSetId = null;
+
+function openSetView(gid) {
+  const members = cards.filter(x => x.groupId === gid);
+  if (!members.length) return;
+  openSetId = gid;
+  document.getElementById('set-view').style.display = 'flex';
+  renderSetView(gid);
+}
+
+function closeSetView() {
+  document.getElementById('set-view').style.display = 'none';
+  openSetId = null;
+}
+
+function refreshSetViewIfOpen() {
+  if (!openSetId) return;
+  const members = cards.filter(x => x.groupId === openSetId);
+  if (!members.length) { closeSetView(); return; } // set svuotato
+  renderSetView(openSetId);
+}
+
+function renderSetView(gid) {
+  const members = cards.filter(x => x.groupId === gid);
+  if (!members.length) return;
+  const gname = members[0].groupName || 'Set';
+  document.getElementById('set-view-title').textContent = '📦 ' + gname;
+
+  let totBuy = 0, totCur = 0;
+  members.forEach(m => {
+    const q = m.qty || 1;
+    totBuy += (m.buyPrice || 0) * q;
+    const cp = getCurrentPrice(m);
+    if (cp) totCur += cp * q;
+  });
+  const pnl = totCur - totBuy;
+  const pnlClass = pnl >= 0 ? 'green' : 'red';
+  const pnlTxt = (pnl >= 0 ? '+' : '−') + '€' + fmt(Math.abs(pnl));
+
+  document.getElementById('set-view-body').innerHTML = `
+    <div class="set-hero">
+      <div class="set-hero-grid">
+        <div class="sh-box"><div class="sh-label">💼 Investito</div><div class="sh-val">€${fmt(totBuy)}</div></div>
+        <div class="sh-box"><div class="sh-label">📈 Valore</div><div class="sh-val gold">€${fmt(totCur)}</div></div>
+        <div class="sh-box"><div class="sh-label">📊 P&L</div><div class="sh-val ${pnlClass}">${pnlTxt}</div></div>
+      </div>
+    </div>
+    ${renderListCards(members)}
+  `;
+  markLoadedImages(document.getElementById('set-view-body'));
+}
+
+// Swipe dal bordo sinistro → chiude la vista set (stesso pattern della tab PSA)
+(function setupSetSwipeClose() {
+  const view = document.getElementById('set-view');
+  if (!view) return;
+  let st = null;
+  function onMoveS(e) {
+    if (!st) { detachS(); return; }
+    const dx = e.touches[0].clientX - st.x;
+    const dy = Math.abs(e.touches[0].clientY - st.y);
+    if (!st.active) {
+      if (dy > Math.abs(dx) && dy > 14) { st = null; detachS(); return; }
+      if (dx > 12 && dx > dy) { st.active = true; view.style.transition = 'none'; }
+      else return;
+    }
+    view.style.transform = `translateX(${Math.max(0, dx)}px)`;
+    e.preventDefault();
+  }
+  function detachS() { view.removeEventListener('touchmove', onMoveS); }
+  view.addEventListener('touchstart', e => {
+    if (e.touches[0].clientX > 30) return;
+    st = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: false };
+    view.addEventListener('touchmove', onMoveS, { passive: false });
+  }, { passive: true });
+  view.addEventListener('touchend', e => {
+    detachS();
+    if (!st) return;
+    const wasActive = st.active;
+    const dx = Math.max(0, e.changedTouches[0].clientX - st.x);
+    st = null;
+    if (!wasActive) return;
+    const EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+    if (dx > window.innerWidth * 0.3) {
+      view.style.transition = `transform 0.25s ${EASE}`;
+      view.style.transform = 'translateX(100%)';
+      setTimeout(() => { closeSetView(); view.style.transition = ''; view.style.transform = ''; }, 260);
+    } else {
+      view.style.transition = `transform 0.25s ${EASE}`;
+      view.style.transform = 'translateX(0)';
+      setTimeout(() => { view.style.transition = ''; }, 260);
+    }
+  }, { passive: true });
+  view.addEventListener('touchcancel', () => {
+    detachS();
+    if (st && st.active) { view.style.transition = ''; view.style.transform = ''; }
+    st = null;
+  }, { passive: true });
+})();
 
 // ============ PAGINA CERT PSA (interna) ============
 let psaViewState = null; // { front, back, cert, showing }
@@ -5569,8 +5880,11 @@ function cropZoom(delta) {
 async function makeThumbnail(dataUrl, maxW) {
   return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       try {
+        // iOS può chiamare onload PRIMA che i pixel siano decodificati:
+        // disegnare ora = miniatura nera. decode() garantisce i pixel pronti.
+        if (img.decode) { try { await img.decode(); } catch (_) {} }
         const scale = Math.min(1, maxW / img.naturalWidth);
         const w = Math.round(img.naturalWidth * scale);
         const h = Math.round(img.naturalHeight * scale);
@@ -5734,8 +6048,49 @@ function removePhoto() {
   renderPhotoPreview();
 }
 
+// ============ SET DI PIÙ CARTE ============
+// setDraft tiene il set "in corso" durante l'inserimento multiplo
+let setDraft = null; // { id, name, count }
+
+function toggleSetMode() {
+  const btn = document.getElementById('set-flag-btn');
+  const section = document.getElementById('set-section');
+  const nextBtn = document.getElementById('set-next-btn');
+  const on = !btn.classList.contains('on');
+  btn.classList.toggle('on', on);
+  section.style.display = on ? '' : 'none';
+  // il bottone "salva e aggiungi" ha senso solo per nuove carte, non in modifica
+  nextBtn.style.display = (on && editingId === null) ? '' : 'none';
+  if (!on) { setDraft = null; updateSetProgress(); }
+}
+
+function updateSetProgress() {
+  const el = document.getElementById('set-progress');
+  if (!el) return;
+  if (setDraft && setDraft.count > 0) {
+    el.style.display = '';
+    el.innerHTML = `<span>📦</span><span>${setDraft.name} · stai inserendo la carta <b>#${setDraft.count + 1}</b></span>`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function resetSetUI() {
+  const btn = document.getElementById('set-flag-btn');
+  const section = document.getElementById('set-section');
+  const nextBtn = document.getElementById('set-next-btn');
+  if (btn) btn.classList.remove('on');
+  if (section) section.style.display = 'none';
+  if (nextBtn) nextBtn.style.display = 'none';
+  const nameEl = document.getElementById('f-set-name');
+  if (nameEl) nameEl.value = '';
+  setDraft = null;
+  updateSetProgress();
+}
+
 function openAddModal() {
   editingId = null;
+  resetSetUI();
   document.getElementById('add-modal-title').textContent = '➕ Nuova Carta';
   ['f-name','f-set','f-number','f-currentprice','f-notes','f-custom-grader','f-psa-cert'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-buyprice').value = '';
@@ -5771,6 +6126,13 @@ function editCard(id) {
   document.getElementById('f-currentprice').value = getCurrentPrice(c) || '';
   document.getElementById('f-buydate').value = c.buyDate || '';
   document.getElementById('f-notes').value = c.notes || '';
+  // stato set: il flag riflette l'appartenenza; spegnerlo = rimuovi dal set
+  resetSetUI();
+  if (c.groupId) {
+    document.getElementById('set-flag-btn').classList.add('on');
+    document.getElementById('set-section').style.display = '';
+    document.getElementById('f-set-name').value = c.groupName || '';
+  }
   currentPhoto = c.photo || null;
   currentThumb = c.thumb || c.photo || null;
   renderPhotoPreview();
@@ -5780,7 +6142,7 @@ function editCard(id) {
   setTimeout(() => openModal('add-modal'), 200);
 }
 
-async function saveCard() {
+async function saveCard(keepForSet = false) {
  try {
   // Guard: Supabase disponibile?
   if (!_supabase) { showToast('❌ Connessione cloud assente — ricarica la pagina'); return; }
@@ -5802,6 +6164,11 @@ async function saveCard() {
 
   if (isOther && !customGrader) { showToast('⚠️ Inserisci il nome della casa di grading'); return; }
 
+  // ---- SET di più carte ----
+  const setOn = document.getElementById('set-flag-btn').classList.contains('on');
+  const setName = setOn ? document.getElementById('f-set-name').value.trim() : '';
+  if (setOn && !setName) { showToast('⚠️ Inserisci il nome del set'); return; }
+
   if (editingId !== null) {
     const c = cards.find(x => x.id === editingId);
     if (c) {
@@ -5818,6 +6185,19 @@ async function saveCard() {
       c.notes = document.getElementById('f-notes').value.trim();
       c.photo = currentPhoto || null;
       c.thumb = currentThumb || currentPhoto || null;
+      // gruppo: flag spento = rimuovi dal set; nome cambiato = rinomina per tutto il set
+      if (setOn) {
+        const oldGid = c.groupId;
+        if (!c.groupId) c.groupId = 'g' + Date.now();
+        if (oldGid && c.groupName !== setName) {
+          // rinomina il set per tutte le carte che ne fanno parte
+          const members = cards.filter(x => x.groupId === oldGid && x.id !== c.id);
+          for (const m of members) { m.groupName = setName; await dataStore.updateCard(m); }
+        }
+        c.groupName = setName;
+      } else if (c.groupId) {
+        c.groupId = null; c.groupName = null;
+      }
       c.updatedAt = new Date().toISOString();
       if (!isNaN(currentPrice) && currentPrice > 0) {
         if (!c.history) c.history = [];
@@ -5830,8 +6210,14 @@ async function saveCard() {
     }
   } else {
     const now = new Date().toISOString();
+    if (setOn) {
+      if (!setDraft) setDraft = { id: 'g' + Date.now(), name: setName, count: 0 };
+      setDraft.name = setName; // l'utente può correggere il nome strada facendo
+    }
     const card = {
       userId: currentUser?.id,
+      groupId: setOn && setDraft ? setDraft.id : null,
+      groupName: setOn && setDraft ? setDraft.name : null,
       name,
       set: document.getElementById('f-set').value.trim(),
       number: document.getElementById('f-number').value.trim(),
@@ -5865,13 +6251,34 @@ async function saveCard() {
       const maxIdx = cards.reduce((m, c) => typeof c.sortIndex === 'number' && c.sortIndex > m ? c.sortIndex : m, -1);
       result.data.sortIndex = maxIdx + 1;
     }
-    showToast('✓ Carta aggiunta al portfolio!');
+    if (keepForSet && setOn) {
+      // SALVA E PROSEGUI: il modal resta aperto, set mantenuto, campi carta puliti
+      setDraft.count++;
+      updateSetProgress();
+      ['f-name','f-number','f-currentprice','f-notes','f-psa-cert'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('f-buyprice').value = '';
+      document.getElementById('f-qty').value = '1';
+      currentPhoto = null; currentThumb = null;
+      renderPhotoPreview();
+      updatePsaScanBtn();
+      showToast(`✓ Carta #${setDraft.count} salvata nel set!`);
+      renderStats();
+      renderCards();
+      const nameEl = document.getElementById('f-name');
+      if (nameEl) nameEl.focus({ preventScroll: true });
+      return; // niente chiusura
+    }
+    showToast(setOn ? '✓ Carta aggiunta al set!' : '✓ Carta aggiunta al portfolio!');
   }
 
   closeModal('add-modal');
   editingId = null;
+  resetSetUI();
   renderStats();
   renderCards();
+  refreshSetViewIfOpen();
   if (currentView === 'home' && document.getElementById('search-input').value.trim()) onSearchInput();
  } catch (err) {
    console.error('🔴 saveCard EXCEPTION:', err);
@@ -5889,6 +6296,7 @@ async function deleteCard(id) {
   showToast('🗑 Carta eliminata');
   renderStats();
   renderCards();
+  refreshSetViewIfOpen();
   if (currentView === 'home' && document.getElementById('search-input').value.trim()) {
     onSearchInput();
   }
@@ -6721,8 +7129,12 @@ function renderListCards(arr) {
     // Le prime carte (subito visibili) si caricano subito; le altre lazy.
     const lazyAttr = _idx < 12 ? 'eager' : 'lazy';
     const fetchAttr = _idx < 12 ? ' fetchpriority="high"' : '';
+    // onerror: se il thumb è rotto, ripiega sulla foto piena (auto-guarigione visiva)
+    const fallbackAttr = (c.thumb && c.photo && c.thumb !== c.photo)
+      ? ` onerror="this.onerror=null;this.src='${c.photo}'"`
+      : '';
     const photoHtml = listImg
-      ? `<img src="${listImg}" alt="${c.name}" loading="${lazyAttr}"${fetchAttr} decoding="async" width="64" height="90"/>`
+      ? `<img src="${listImg}" alt="${c.name}" loading="${lazyAttr}"${fetchAttr} decoding="async" width="64" height="90"${fallbackAttr}/>`
       : `<div class="list-photo-ph">${initial}</div>`;
 
     return `
@@ -7135,11 +7547,35 @@ async function generatePDF(type, opts) {
   // Normalizza i dati in righe uniformi
   let items, titleRight, countLabel, priceHeader, fileBase;
   if (type === 'cards') {
-    items = cards.map(c => ({
+    // I set vengono raggruppati: riga intestazione 📦 + carte membre subito sotto
+    items = [];
+    const doneGroups = new Set();
+    const cardRow = (c, inSet) => ({
       name: c.name, set: c.set, number: c.number,
       grade: gradeLabel(c), lang: langCode(c.language),
-      price: getCurrentPrice(c), serial: c.psaCert || '', photo: c.photo
-    }));
+      price: getCurrentPrice(c), serial: c.psaCert || '', photo: c.photo,
+      inSet: !!inSet
+    });
+    for (const c of cards) {
+      if (!c.groupId) { items.push(cardRow(c, false)); continue; }
+      if (doneGroups.has(c.groupId)) continue;
+      doneGroups.add(c.groupId);
+      const members = cards.filter(x => x.groupId === c.groupId);
+      let gBuy = 0, gCur = 0;
+      members.forEach(m => {
+        const q = m.qty || 1;
+        gBuy += (m.buyPrice || 0) * q;
+        const cp = getCurrentPrice(m);
+        if (cp) gCur += cp * q;
+      });
+      items.push({
+        isSetHeader: true,
+        name: c.groupName || 'Set',
+        count: members.length,
+        price: gCur || null
+      });
+      members.forEach(m => items.push(cardRow(m, true)));
+    }
     titleRight = 'CARDS AVAILABLE';
     countLabel = `${cards.length} ${cards.length===1?'carta':'carte'}`;
     priceHeader = 'Last sold';
@@ -7234,6 +7670,27 @@ async function generatePDF(type, opts) {
   let y = headH + 6;
 
   items.forEach((it, idx) => {
+    // ---- riga intestazione SET: banda viola tenue con nome e totale ----
+    if (it.isSetHeader) {
+      const setRowH = 26;
+      if (y + setRowH > PH - 30) {
+        drawFooter();
+        doc.addPage();
+        drawHeader();
+        y = headH + 6;
+      }
+      doc.setFillColor(238, 230, 248);
+      doc.rect(0, y, PW, setRowH, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(...PDF_PURPLE);
+      doc.text(`SET · ${it.name}  (${it.count} ${it.count === 1 ? 'carta' : 'carte'})`, M, y + 17);
+      if (opts.prices && it.price) {
+        doc.text('€' + Number(it.price).toLocaleString('it-IT'), PW - M, y + 17, { align: 'right' });
+      }
+      y += setRowH;
+      return;
+    }
     if (y + rowH > PH - 30) {
       drawFooter();
       doc.addPage();
@@ -7246,6 +7703,12 @@ async function generatePDF(type, opts) {
       doc.rect(0, y, PW, rowH, 'F');
     }
     let x = M;
+    // le carte di un set sono leggermente rientrate sotto la loro intestazione
+    if (it.inSet) {
+      doc.setFillColor(168, 85, 247);
+      doc.rect(M, y + 6, 2, rowH - 12, 'F');
+      x += 12;
+    }
     // foto
     if (opts.images) {
       const im = imgMap[idx];
