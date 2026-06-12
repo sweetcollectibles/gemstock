@@ -1109,9 +1109,9 @@
   .reg-hval.pos { color: var(--green); }
   .reg-hval.neg { color: var(--red); }
   .reg-hsub { font-size: 0.56rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
-  .reg-actions { display: flex; gap: 8px; margin-bottom: 14px; }
+  .reg-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
   .reg-abtn {
-    flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    flex: 1 1 calc(50% - 4px); background: var(--surface); border: 1px solid var(--border); color: var(--text);
     border-radius: 11px; padding: 10px; font-size: 0.72rem; font-weight: 700;
     font-family: 'Inter', sans-serif;
   }
@@ -3353,6 +3353,7 @@
       <button class="reg-abtn primary" onclick="openExpenseModal()">➕ Spesa</button>
       <button class="reg-abtn" onclick="generateRegistryPDF()">📄 PDF</button>
       <button class="reg-abtn" onclick="exportRegistryExcel()">📊 Excel</button>
+      <button class="reg-abtn" onclick="openImportModal()">📥 Importa</button>
     </div>
 
     <div id="registry-list"></div>
@@ -3581,16 +3582,10 @@
       <label class="form-label">📸 Foto carta <span style="color:var(--muted);font-weight:400">(opzionale)</span></label>
       <input type="file" id="f-photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
       <div id="photo-preview-area">
-        <div class="photo-btn-row">
-          <button type="button" class="photo-upload-btn half" onclick="searchCardImage()">
-            <span style="font-size:1.2rem">🔍</span>
-            <span>Cerca foto</span>
-          </button>
-          <button type="button" class="photo-upload-btn half" onclick="document.getElementById('f-photo-input').click()">
-            <span style="font-size:1.2rem">📷</span>
-            <span>Carica</span>
-          </button>
-        </div>
+        <button type="button" class="photo-upload-btn" onclick="document.getElementById('f-photo-input').click()">
+          <span style="font-size:1.2rem">📷</span>
+          <span>Carica una foto</span>
+        </button>
         <button type="button" id="psa-scan-btn" style="display:none" onclick="loadPsaScan()"></button>
       </div>
     </div>
@@ -3652,6 +3647,7 @@
     <div class="form-group" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
       <label class="form-label">🏅 Token PSA API <span style="color:var(--muted);font-weight:400">(per scan automatici)</span></label>
       <input type="password" class="form-input mono" id="s-psa-token" placeholder="Incolla qui il tuo token PSA" autocomplete="off" style="font-size:0.75rem">
+      <button type="button" class="btn btn-secondary" style="margin-top:8px;font-size:0.78rem" onclick="generatePsaTokenGuide()">📖 Come ottengo il token? Scarica la guida (PDF)</button>
       <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;line-height:1.5">
         Ottieni il token su <span style="color:var(--accent)">psacard.com/publicapi/documentation</span> → Sign In → Generate Token
       </div>
@@ -3680,7 +3676,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v78</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v79</div>
   </div>
 </div>
 
@@ -3840,17 +3836,6 @@
 </div>
 
 <!-- IMAGE SEARCH RESULTS MODAL -->
-<div class="modal-overlay" id="imgsearch-modal">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-handle-area"><div class="modal-handle"></div></div>
-    <div class="modal-header">
-      <div class="modal-title">🔍 Scegli la foto</div>
-      <button class="modal-close" onclick="closeModal('imgsearch-modal')">✕</button>
-    </div>
-    <div id="imgsearch-status" class="imgsearch-status">Ricerca in corso...</div>
-    <div id="imgsearch-results" class="imgsearch-grid"></div>
-  </div>
-</div>
 
 <!-- ADD / EDIT WISHLIST MODAL -->
 <div class="modal-overlay" id="wish-modal">
@@ -3908,16 +3893,10 @@
       <label class="form-label">📸 Foto carta <span style="color:var(--muted);font-weight:400">(opzionale)</span></label>
       <input type="file" id="wf-photo-input" accept="image/*" style="display:none" onchange="handleWishPhotoUpload(event)">
       <div id="wish-photo-preview-area">
-        <div class="photo-btn-row">
-          <button type="button" class="photo-upload-btn half" onclick="searchWishCardImage()">
-            <span style="font-size:1.2rem">🔍</span>
-            <span>Cerca foto</span>
-          </button>
-          <button type="button" class="photo-upload-btn half" onclick="document.getElementById('wf-photo-input').click()">
-            <span style="font-size:1.2rem">📷</span>
-            <span>Carica</span>
-          </button>
-        </div>
+        <button type="button" class="photo-upload-btn" onclick="document.getElementById('wf-photo-input').click()">
+          <span style="font-size:1.2rem">📷</span>
+          <span>Carica una foto</span>
+        </button>
       </div>
     </div>
 
@@ -4030,6 +4009,26 @@
     </div>
     <button class="btn btn-primary" onclick="saveExpense()">💾 Salva spesa</button>
     <button class="btn btn-secondary" onclick="closeModal('expense-modal')" style="margin-top:8px">Annulla</button>
+  </div>
+</div>
+
+<!-- ============ MODALE IMPORT REGISTRO ============ -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title">📥 Importa registro da Excel</div>
+      <button class="modal-close" onclick="closeModal('import-modal')">✕</button>
+    </div>
+    <div class="reg-sell-info" style="font-family:Inter,sans-serif">
+      Porta qui il tuo storico vendite e spese.<br>
+      1️⃣ Scarica il modello e compila le righe (o adatta il tuo file alle stesse colonne)<br>
+      2️⃣ Carica il file: le righe finiranno nel registro del <b>tuo account</b>, divise per anno
+    </div>
+    <button class="btn btn-secondary" onclick="downloadImportTemplate()">📋 Scarica modello Excel</button>
+    <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(event)">
+    <button class="btn btn-primary" style="margin-top:10px" onclick="document.getElementById('import-file-input').click()">📥 Carica il file compilato</button>
+    <button class="btn btn-secondary" onclick="closeModal('import-modal')" style="margin-top:8px">Annulla</button>
   </div>
 </div>
 
@@ -4251,8 +4250,10 @@ const dataStore = {
 
   // === Cards (Supabase) ===
   async loadActivities() {
+    if (!currentUser) return [];
     const { data, error } = await _supabase.from('activities')
-      .select('*').order('date', { ascending: false }).order('id', { ascending: false });
+      .select('*').eq('user_id', currentUser.id)
+      .order('date', { ascending: false }).order('id', { ascending: false });
     if (error) { console.error('loadActivities:', error); return []; }
     return (data || []).map(dbToAct);
   },
@@ -4263,7 +4264,7 @@ const dataStore = {
     return { data: dbToAct(data) };
   },
   async deleteActivity(id) {
-    const { error } = await _supabase.from('activities').delete().eq('id', id);
+    const { error } = await _supabase.from('activities').delete().eq('id', id).eq('user_id', currentUser.id);
     if (error) console.error('deleteActivity:', error);
   },
   async loadCards() {
@@ -5303,7 +5304,7 @@ function renderRegistry() {
       const m = a.meta || {};
       if (a.kind === 'card' && m.card) {
         const c = m.card;
-        detail = [c.grader && c.grader !== 'RAW' ? `${c.grader} ${c.grade || ''}`.trim() : (c.grader === 'RAW' ? 'RAW' : ''), c.psaCert ? 'cert ' + c.psaCert : ''].filter(Boolean).join(' · ');
+        detail = c._detail || [c.grader && c.grader !== 'RAW' ? `${c.grader} ${c.grade || ''}`.trim() : (c.grader === 'RAW' ? 'RAW' : ''), c.psaCert ? 'cert ' + c.psaCert : ''].filter(Boolean).join(' · ');
       } else if (a.kind === 'set') {
         detail = `${a.qty} carte`;
       } else if (a.kind === 'sealed') {
@@ -5540,6 +5541,185 @@ async function confirmSale() {
     console.error('confirmSale:', e);
     showToast('❌ Errore vendita: ' + (e.message || 'riprova'));
   }
+}
+
+// ============ IMPORT REGISTRO DA EXCEL ============
+function openImportModal() { openModal('import-modal'); }
+
+async function downloadImportTemplate() {
+  try {
+    await loadXlsxLib();
+    const data = [
+      ['Data', 'Tipo', 'Nome', 'Dettagli', 'Qta', 'Acquisto', 'Vendita', 'Importo'],
+      ['2025-03-14', 'Vendita', 'Charizard VMAX', 'PSA 10 · cert 88123401', 1, 205, 390, ''],
+      ['2025-03-20', 'Spesa', 'Spedizione assicurata', '', '', '', '', 12.5],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch:11},{wch:10},{wch:28},{wch:24},{wch:5},{wch:10},{wch:10},{wch:10}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Registro');
+    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const file = new File([blob], 'sweethome-modello-import.xlsx', { type: blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: file.name });
+    } else {
+      const a = document.createElement('a');
+      const u = URL.createObjectURL(blob);
+      a.href = u; a.download = file.name; a.click();
+      setTimeout(() => URL.revokeObjectURL(u), 5000);
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') showToast('❌ Errore: ' + (e.message || 'riprova'));
+  }
+}
+
+function parseImportDate(v) {
+  if (v instanceof Date && !isNaN(v)) {
+    return v.toISOString().split('T')[0];
+  }
+  if (typeof v === 'number') {
+    // data seriale Excel (giorni dal 1900)
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    return isNaN(d) ? null : d.toISOString().split('T')[0];
+  }
+  if (typeof v === 'string') {
+    const t = v.trim();
+    let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+    m = t.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})/);
+    if (m) {
+      let y = m[3]; if (y.length === 2) y = '20' + y;
+      return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    }
+  }
+  return null;
+}
+
+async function handleImportFile(event) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  showToast('⏳ Leggo il file…');
+  try {
+    await loadXlsxLib();
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { cellDates: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if (rows.length < 2) { showToast('⚠️ Il file è vuoto'); return; }
+
+    // mappa colonne dall'intestazione (case-insensitive)
+    const head = rows[0].map(h => String(h).trim().toLowerCase());
+    const col = name => head.findIndex(h => h.startsWith(name));
+    const iData = col('data'), iTipo = col('tipo'), iNome = col('nome'),
+          iDett = col('dett'), iQta = col('qt'), iBuy = col('acquisto'),
+          iSale = col('vendita'), iAmt = col('importo');
+    if (iData < 0 || iNome < 0) { showToast('⚠️ Colonne "Data" e "Nome" obbligatorie nel modello'); return; }
+
+    let ok = 0, skipped = 0, lastYear = null;
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      const name = String(row[iNome] || '').trim();
+      const date = parseImportDate(row[iData]);
+      if (!name || !date) { if (name || row[iData]) skipped++; continue; }
+      const year = parseInt(date.slice(0, 4));
+      const tipo = iTipo >= 0 ? String(row[iTipo] || '').toLowerCase() : '';
+      const isExpense = tipo.includes('spes');
+      let a;
+      if (isExpense) {
+        const amount = parseFloat(row[iAmt >= 0 ? iAmt : iBuy]) || 0;
+        if (amount <= 0) { skipped++; continue; }
+        a = { type: 'expense', year, date, name, amount, meta: { imported: true } };
+      } else {
+        const buy = iBuy >= 0 ? (parseFloat(row[iBuy]) || 0) : 0;
+        const sale = iSale >= 0 ? (parseFloat(row[iSale]) || 0) : 0;
+        const qty = iQta >= 0 ? (parseInt(row[iQta]) || 1) : 1;
+        const det = iDett >= 0 ? String(row[iDett] || '').trim() : '';
+        a = { type: 'sale', kind: 'card', year, date, name, qty,
+              buyTotal: buy, saleTotal: sale,
+              meta: { imported: true, card: det ? { name, grader: '', grade: '', psaCert: '', _detail: det } : { name } } };
+      }
+      const res = await dataStore.insertActivity(a);
+      if (res.error) { skipped++; continue; }
+      activities.unshift(res.data);
+      ok++;
+      lastYear = year;
+      if (ok % 10 === 0) showToast(`⏳ Importate ${ok} righe…`);
+    }
+    closeModal('import-modal');
+    showToast(`✓ Import completato: ${ok} righe${skipped ? ` (${skipped} saltate)` : ''}`);
+    if (lastYear) registryYear = lastYear;
+    renderRegistry();
+    renderStats();
+  } catch (e) {
+    console.error('import:', e);
+    showToast('❌ Errore lettura file: ' + (e.message || 'formato non valido'));
+  }
+}
+
+// ============ TOKEN PSA: AVVISO + GUIDA ============
+function showPsaTokenWarning() {
+  showPdfChoice('🔑 Token PSA mancante', [
+    { label: '📖 Scarica la guida (PDF, 2 minuti)', onPick: generatePsaTokenGuide },
+    { label: '⚙ Apri Impostazioni', onPick: () => openModal('settings-modal') }
+  ]);
+}
+
+function generatePsaTokenGuide() {
+  const jsPDFns = window.jspdf;
+  if (!jsPDFns || !jsPDFns.jsPDF) { showToast('⚠️ Libreria PDF non caricata'); return; }
+  const doc = new jsPDFns.jsPDF({ unit: 'pt', format: 'a4' });
+  const PW = doc.internal.pageSize.getWidth();
+  const M = 44;
+  const PURPLE = [168, 85, 247], DARKBG = [26, 22, 32], MUT = [120, 114, 104], TXT = [30, 26, 36];
+
+  doc.setFillColor(...DARKBG);
+  doc.rect(0, 0, PW, 92, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(22);
+  doc.setTextColor(...PURPLE); doc.text('S', M, 46);
+  doc.setTextColor(245, 242, 235); doc.text('WEETHOME', M + 14, 46);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+  doc.setTextColor(...MUT); doc.text('GUIDA RAPIDA', M, 62);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+  doc.setTextColor(...PURPLE);
+  doc.text('Come ottenere il tuo Token PSA', PW - M, 50, { align: 'right' });
+
+  let y = 132;
+  const steps = [
+    ['1', 'Crea (o accedi a) un account PSA', 'Vai su www.psacard.com e fai Sign In in alto a destra. Se non hai un account, creane uno gratuito: bastano email e password.'],
+    ['2', 'Apri la pagina API', 'Una volta loggato, vai a questo indirizzo: www.psacard.com/publicapi/documentation'],
+    ['3', 'Genera il token', 'Nella pagina trovi il pulsante "Generate API Token". Cliccalo: apparira una lunga stringa di lettere e numeri. Quello e il tuo token personale.'],
+    ['4', 'Copialo tutto', 'Selezionalo per intero (e lungo!) e copialo. Attenzione a non tagliare caratteri all\'inizio o alla fine.'],
+    ['5', 'Incollalo in Sweethome', 'Apri Sweethome, vai in Impostazioni (icona ingranaggio), incolla il token nel campo "Token PSA API" e salva. Fatto!']
+  ];
+  steps.forEach(([n, title, body]) => {
+    doc.setFillColor(...PURPLE);
+    doc.circle(M + 10, y - 4, 11, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255); doc.text(n, M + 10, y, { align: 'center' });
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+    doc.setTextColor(...TXT); doc.text(title, M + 32, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+    doc.setTextColor(...MUT);
+    const lines = doc.splitTextToSize(body, PW - M * 2 - 32);
+    doc.text(lines, M + 32, y + 16);
+    y += 30 + lines.length * 13 + 16;
+  });
+
+  doc.setFillColor(245, 240, 252);
+  doc.roundedRect(M, y, PW - M * 2, 58, 8, 8, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
+  doc.setTextColor(...PURPLE);
+  doc.text('Da sapere', M + 14, y + 20);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+  doc.setTextColor(...MUT);
+  doc.text('Il token e personale e gratuito (100 richieste al giorno). Non condividerlo con nessuno:', M + 14, y + 34);
+  doc.text('e legato al tuo account PSA. Se smette di funzionare, rigeneralo dalla stessa pagina.', M + 14, y + 46);
+
+  doc.setFontSize(7); doc.setTextColor(160, 160, 160);
+  doc.text('SWEETHOME · sweetcollectibles.tcg', PW / 2, doc.internal.pageSize.getHeight() - 20, { align: 'center' });
+  sharePdfBlob(doc.output('blob'), 'sweethome-guida-token-psa.pdf');
 }
 
 // ============ EXPORT REGISTRO (PDF + EXCEL) ============
@@ -5883,7 +6063,7 @@ async function openPsaView(cardId) {
   const c = cards.find(x => x.id === cardId);
   if (!c || !c.psaCert) return;
   const token = settings.psaToken || '';
-  if (!token) { showToast('⚠️ Imposta il Token PSA nelle Impostazioni ⚙'); return; }
+  if (!token) { showPsaTokenWarning(); return; }
 
   const view = document.getElementById('psa-view');
   const body = document.getElementById('psa-view-body');
@@ -6131,7 +6311,7 @@ async function loadPsaScan() {
   const cert = document.getElementById('f-psa-cert').value.trim().replace(/[^0-9]/g, '');
   const token = settings.psaToken || '';
   if (!cert) { showToast('⚠️ Inserisci il numero certificato PSA'); return; }
-  if (!token) { showToast('⚠️ Imposta il Token PSA nelle Impostazioni ⚙'); return; }
+  if (!token) { showPsaTokenWarning(); return; }
 
   psaScanLoading = true;
   renderPhotoPreview(); // mostra subito lo stato "sto caricando lo scan…"
@@ -6174,241 +6354,7 @@ async function loadPsaScan() {
 }
 
 // ============ POKEMON TCG API IMAGE SEARCH ============
-// ============ POKEAPI: ottieni nome giapponese ufficiale ============
-async function getJapanesePokemonName(englishName) {
-  // Rimuovi suffissi comuni delle carte
-  const noSuffix = englishName
-    .replace(/\b(ex|gx|v|vmax|vstar|mega|radiant|alt|break|prime|lv\.?\s*x?)\b/gi, '')
-    .trim();
-
-  const words = noSuffix.split(/\s+/).filter(Boolean);
-
-  // Prova dal nome più lungo al più corto (gestisce Mr. Mime, Tapu Koko, ecc.)
-  for (let len = Math.min(words.length, 3); len >= 1; len--) {
-    const candidate = words.slice(0, len)
-      .join('-').toLowerCase()
-      .replace(/['']/g, '')     // apostrofi (Farfetch'd)
-      .replace(/[^a-z0-9-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-    if (!candidate) continue;
-    try {
-      const r = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${encodeURIComponent(candidate)}`);
-      if (r.ok) {
-        const d = await r.json();
-        // ja-Hrkt = katakana (es. リザードン) — quello usato sulle carte JAP
-        const ja = d.names.find(n => n.language.name === 'ja-Hrkt') ||
-                   d.names.find(n => n.language.name === 'ja');
-        if (ja?.name) {
-          console.log(`🇯🇵 ${englishName} → ${ja.name}`);
-          return ja.name;
-        }
-      }
-    } catch(e) { /* ignora e prova il prossimo */ }
-  }
-  return null;
-}
-
-function searchCardImage() {
-  const name = document.getElementById('f-name').value.trim();
-  const number = document.getElementById('f-number').value.trim();
-  const language = document.getElementById('f-language').value;
-  if (!name) {
-    showToast('⚠️ Inserisci prima il nome della carta');
-    return;
-  }
-  imageSearchTarget = 'card';
-  doImageSearch(name, number, language);
-}
-
-async function doImageSearch(name, number, language) {
-  openModal('imgsearch-modal');
-  const status = document.getElementById('imgsearch-status');
-  const grid = document.getElementById('imgsearch-results');
-  status.style.display = '';
-  grid.innerHTML = '';
-
-  const isAlreadyJapanese = /[\u30a0-\u30ff\u3040-\u309f\u4e00-\u9fff]/.test(name);
-
-  if (language === 'JAP') {
-    let jaName = isAlreadyJapanese ? name : null;
-
-    if (!jaName) {
-      status.textContent = '🔍 Ricerca nome giapponese...';
-      jaName = await getJapanesePokemonName(name);
-    }
-
-    if (jaName) {
-      status.textContent = `🇯🇵 Cercando "${jaName}"...`;
-    } else {
-      status.textContent = '🔍 Ricerca in corso...';
-    }
-
-    await searchTcgdex(jaName || name, name, number);
-  } else {
-    status.textContent = '🔍 Ricerca in corso...';
-    await searchPokemonTcgIo(name, number);
-  }
-}
-
-async function searchPokemonTcgIo(name, number) {
-  const status = document.getElementById('imgsearch-status');
-
-  // Build Lucene query. For multi-word names use quotes; for single word use wildcard.
-  const cleanName = name.trim();
-  const nameQuery = cleanName.includes(' ')
-    ? `name:"${cleanName}"`
-    : `name:${cleanName}*`;
-
-  async function runQuery(q) {
-    const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&pageSize=24&orderBy=-set.releaseDate`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    return data.data || [];
-  }
-
-  try {
-    let q = nameQuery;
-    if (number) q += ` number:${number.replace(/[^0-9a-zA-Z]/g, '')}`;
-    let cards = await runQuery(q);
-
-    // Retry with name only if number too strict
-    if (cards.length === 0 && number) {
-      cards = await runQuery(nameQuery);
-    }
-    // Retry with a looser wildcard if still nothing
-    if (cards.length === 0 && cleanName.includes(' ')) {
-      const firstWord = cleanName.split(' ')[0];
-      cards = await runQuery(`name:${firstWord}*`);
-    }
-
-    const normalized = cards.map(c => ({
-      name: c.name,
-      img: c.images?.small || c.images?.large || '',
-      imgLarge: c.images?.large || c.images?.small || '',
-      setName: c.set?.name || '',
-      number: c.number || ''
-    }));
-    renderImageResults(normalized);
-  } catch (e) {
-    console.error('pokemontcg.io search failed:', e);
-    status.style.display = '';
-    status.innerHTML = `⚠️ Ricerca non riuscita.<br><span style="font-size:0.7rem;color:var(--muted2)">Errore: ${e.message || e}</span><br><span style="font-size:0.75rem">Usa 📷 Carica per inserire la foto dal telefono.</span>`;
-  }
-}
-
-async function searchTcgdex(jaSearchName, enSearchName, number) {
-  const status = document.getElementById('imgsearch-status');
-  const PROXY_URL = `${SUPABASE_URL}/functions/v1/tcgdex-proxy`;
-
-  async function queryProxy(language, cardName) {
-    const url = `${PROXY_URL}?name=${encodeURIComponent(cardName)}&lang=${language}`;
-    const res = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }
-    });
-    if (!res.ok) throw new Error('Proxy error ' + res.status);
-    const json = await res.json();
-    return Array.isArray(json) ? json : [];
-  }
-
-  function normalizeTcgdex(cards, number, flag) {
-    let list = cards.slice();
-    if (number) {
-      const numClean = number.replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
-      const matches = list.filter(c => (c.localId + '').toLowerCase() === numClean);
-      if (matches.length > 0) list = matches;
-    }
-    return list.map(c => {
-      const base = c.image || '';
-      return {
-        name: c.name || '',
-        img: base ? `${base}/low.webp` : '',
-        imgLarge: base ? `${base}/high.webp` : '',
-        setName: flag,
-        number: c.localId || ''
-      };
-    }).filter(c => c.img);
-  }
-
-  try {
-    // Cerca in parallelo: giapponese (con nome JAP) + internazionale (con nome EN)
-    const [jaRaw, enRaw] = await Promise.all([
-      queryProxy('ja', jaSearchName).catch(e => { console.warn('Proxy ja:', e.message); return []; }),
-      queryProxy('en', enSearchName || jaSearchName).catch(e => { console.warn('Proxy en:', e.message); return []; })
-    ]);
-
-    const jaCards = normalizeTcgdex(jaRaw, number, '🇯🇵 JAP');
-    const enCards = normalizeTcgdex(enRaw, number, '🌍 INT');
-
-    // JAP prima, poi internazionali (max 30)
-    const merged = [...jaCards, ...enCards].slice(0, 30);
-
-    if (merged.length > 0) {
-      renderImageResults(merged);
-      return;
-    }
-
-    // Nessun risultato con immagine → fallback pokemontcg.io
-    status.textContent = '🔍 Ricerca database internazionale...';
-    await searchPokemonTcgIo(enSearchName || jaSearchName, number);
-  } catch (e) {
-    console.error('TCGdex search failed:', e);
-    status.textContent = '⚠️ Ricerca non disponibile. Usa 📷 per caricare la foto.';
-  }
-}
-
-function renderImageResults(cards) {
-  const status = document.getElementById('imgsearch-status');
-  const grid = document.getElementById('imgsearch-results');
-
-  if (!cards || cards.length === 0) {
-    status.style.display = '';
-    status.textContent = 'Nessun risultato. Prova a cambiare nome o carica la foto manualmente.';
-    grid.innerHTML = '';
-    return;
-  }
-
-  status.style.display = 'none';
-  grid.innerHTML = cards.map(card => {
-    const img = card.img || '';
-    const setName = card.setName || '';
-    const num = card.number || '';
-    const large = (card.imgLarge || img).replace(/'/g, "");
-    if (!img) return '';
-    const label = [setName, num ? '#' + num : ''].filter(Boolean).join(' · ') || '\u00A0';
-    return `
-      <div class="imgsearch-item" onclick="selectCardImage('${large}')">
-        <img src="${img}" alt="${card.name}" loading="lazy"/>
-        <div class="imgsearch-item-label">${label}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function selectCardImage(imageUrl) {
-  // Load the chosen image and run it through the crop editor
-  closeModal('imgsearch-modal');
-  const target = imageSearchTarget;
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = function() {
-    openCropEditor(img, target);
-  };
-  img.onerror = function() {
-    // If CORS blocks canvas export, store the URL directly as photo
-    if (target === 'wish') {
-      currentWishPhoto = imageUrl; currentWishThumb = imageUrl;
-      renderWishPhotoPreview();
-    } else {
-      currentPhoto = imageUrl; currentThumb = imageUrl;
-      renderPhotoPreview();
-    }
-    showToast('✓ Foto selezionata');
-  };
-  img.src = imageUrl;
-}
-
+// (ricerca immagini TCGdex/PokeAPI rimossa — restano: scan PSA + foto propria)
 function handlePhotoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -6722,16 +6668,10 @@ function renderPhotoPreview() {
       </div>${psaBtn}`;
   } else {
     area.innerHTML = `
-      <div class="photo-btn-row">
-        <button type="button" class="photo-upload-btn half" onclick="searchCardImage()">
-          <span style="font-size:1.2rem">🔍</span>
-          <span>Cerca foto</span>
-        </button>
-        <button type="button" class="photo-upload-btn half" onclick="document.getElementById('f-photo-input').click()">
-          <span style="font-size:1.2rem">📷</span>
-          <span>Carica</span>
-        </button>
-      </div>${psaBtn}`;
+      <button type="button" class="photo-upload-btn" onclick="document.getElementById('f-photo-input').click()">
+        <span style="font-size:1.2rem">📷</span>
+        <span>Carica una foto</span>
+      </button>${psaBtn}`;
   }
 }
 
@@ -7477,14 +7417,6 @@ function handleWishPhotoUpload(event) {
   reader.readAsDataURL(file);
 }
 
-function searchWishCardImage() {
-  const name = document.getElementById('wf-name').value.trim();
-  const number = document.getElementById('wf-number').value.trim();
-  const language = document.getElementById('wf-language').value;
-  if (!name) { showToast('⚠️ Inserisci prima il nome della carta'); return; }
-  imageSearchTarget = 'wish';
-  doImageSearch(name, number, language);
-}
 
 function renderWishPhotoPreview() {
   const area = document.getElementById('wish-photo-preview-area');
@@ -7496,16 +7428,10 @@ function renderWishPhotoPreview() {
       </div>`;
   } else {
     area.innerHTML = `
-      <div class="photo-btn-row">
-        <button type="button" class="photo-upload-btn half" onclick="searchWishCardImage()">
-          <span style="font-size:1.2rem">🔍</span>
-          <span>Cerca foto</span>
-        </button>
-        <button type="button" class="photo-upload-btn half" onclick="document.getElementById('wf-photo-input').click()">
-          <span style="font-size:1.2rem">📷</span>
-          <span>Carica</span>
-        </button>
-      </div>`;
+      <button type="button" class="photo-upload-btn" onclick="document.getElementById('wf-photo-input').click()">
+        <span style="font-size:1.2rem">📷</span>
+        <span>Carica una foto</span>
+      </button>`;
   }
 }
 
