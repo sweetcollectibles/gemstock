@@ -226,7 +226,9 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
-    scroll-behavior: smooth;
+    /* niente scroll-behavior:smooth qui: rende lo scroll manuale gommoso su iOS
+       (finestra morta dopo il momentum) e mandava in tilt l'auto-scroll del
+       riordino. Lo smooth lo applichiamo solo dove serve, via JS scrollTo(). */
   }
 
   /* Block horizontal scroll */
@@ -2222,7 +2224,6 @@
     padding: 22px 18px calc(env(safe-area-inset-bottom) + 30px);
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
-    scroll-behavior: smooth;
     transform: translateZ(0);
     /* Prevent modal from being dismissed on scroll */
     touch-action: pan-y;
@@ -3619,7 +3620,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v81</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v82</div>
   </div>
 </div>
 
@@ -7933,6 +7934,8 @@ function bindLongPressDrag(card, list) {
   let ghostOffsetY = 0;          // distanza fra dito e top della carta
   let autoScrollRAF = null;
   let lastClientY = 0;
+  let flowTopAtStart = 0;        // posizione "nel flusso" della card, ricatturata dopo ogni riordino
+  let scrollTopAtStart = 0;      // scrollTop al momento della cattura di flowTopAtStart
   const LONG_PRESS_MS = 220;
   const MOVE_CANCEL_PX = 10;     // se muovi prima del long-press → è uno scroll, annulla
 
@@ -7967,6 +7970,8 @@ function bindLongPressDrag(card, list) {
 
     const rect = card.getBoundingClientRect();
     ghostOffsetY = e.clientY - rect.top;
+    flowTopAtStart = rect.top;            // posizione attuale nel flusso
+    scrollTopAtStart = scroller.scrollTop;
 
     // "Solleva" la carta: resta nel flusso ma diventa il pezzo che segue il dito
     card.classList.add('dragging');
@@ -7982,38 +7987,47 @@ function bindLongPressDrag(card, list) {
     startAutoScroll();
   }
 
-  function moveGhost(clientY) {
-    // Posiziona la carta in modo che il punto afferrato resti sotto il dito.
-    // Calcoliamo lo scostamento fra dove la carta si troverebbe nel flusso
-    // (il suo rect attuale senza transform) e dove vogliamo che stia.
+  // Ricattura la posizione nel flusso DOPO che la card è stata spostata nel DOM.
+  // Si legge il rect una sola volta qui (non a ogni frame), neutralizzando il
+  // transform un istante per misurare la posizione "a riposo".
+  function recaptureFlow() {
     const prev = card.style.transform;
     card.style.transform = 'none';
-    const flowTop = card.getBoundingClientRect().top;
+    flowTopAtStart = card.getBoundingClientRect().top;
+    scrollTopAtStart = scroller.scrollTop;
     card.style.transform = prev;
+  }
+
+  function moveGhost(clientY) {
+    // Il punto afferrato resta sotto il dito. Usiamo flowTop catturato UNA volta
+    // a inizio drag (in startDrag) invece di leggere getBoundingClientRect ogni
+    // frame: niente più reflow forzato 60 volte al secondo → fluido.
     const desiredTop = clientY - ghostOffsetY;
-    card.style.transform = `translateY(${desiredTop - flowTop}px) scale(1.03)`;
+    card.style.transform = `translateY(${desiredTop - flowTopAtStart - (scroller.scrollTop - scrollTopAtStart)}px) scale(1.03)`;
   }
 
   function reorderAround(clientY) {
     const siblings = [...list.querySelectorAll('.list-card:not(.dragging)')];
-    let placed = false;
+    let placed = false, moved = false;
     for (const sib of siblings) {
       const box = sib.getBoundingClientRect();
       const mid = box.top + box.height / 2;
       if (clientY < mid) {
-        if (sib.previousElementSibling !== card) list.insertBefore(card, sib);
+        if (sib.previousElementSibling !== card) { list.insertBefore(card, sib); moved = true; }
         placed = true;
         break;
       }
     }
-    if (!placed) list.appendChild(card);
+    if (!placed && list.lastElementChild !== card) { list.appendChild(card); moved = true; }
+    // solo se la card ha davvero cambiato posizione nel DOM ricalcoliamo il flusso
+    if (moved) recaptureFlow();
   }
 
   function onMove(e) {
     if (!dragging) return;
     e.preventDefault();
     lastClientY = e.clientY;
-    reorderAround(e.clientY);
+    reorderAround(e.clientY); // può aggiornare flowTopAtStart se la card si sposta
     moveGhost(e.clientY);
   }
 
@@ -8057,10 +8071,10 @@ function bindLongPressDrag(card, list) {
       }
       if (dy !== 0) {
         const before = scroller.scrollTop;
-        scroller.scrollTop = before + dy;
+        scroller.scrollTop = before + dy; // istantaneo (niente più smooth in conflitto)
         // solo se lo scroll si è davvero mosso aggiorniamo posizione e ordine
         if (scroller.scrollTop !== before) {
-          reorderAround(lastClientY);
+          reorderAround(lastClientY); // ricattura il flusso se serve
           moveGhost(lastClientY);
         }
       }
