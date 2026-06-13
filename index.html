@@ -1471,6 +1471,11 @@
     touch-action: none;            /* fondamentale: il dito trascina, non scrolla la carta */
     user-select: none;
     -webkit-user-select: none;
+  }
+  /* La transition morbida sullo spostamento delle carte è attiva SOLO mentre
+     un drag è in corso (per il "fai spazio" fluido), ma viene gestita con
+     transform diretti che la animano. Fuori dal drag attivo: nessuna. */
+  body.dragging-active .list-card:not(.dragging) {
     transition: transform 0.18s cubic-bezier(.2,.8,.2,1);
   }
   body.reordering .list-card .list-prices { opacity: 0.5; }
@@ -3620,7 +3625,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v82</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v83</div>
   </div>
 </div>
 
@@ -4222,18 +4227,15 @@ const dataStore = {
     if (!currentUser) return;
     const updates = cardsArr
       .filter(c => typeof c.sortIndex === 'number')
-      .map(c => ({ id: c.id, sortIndex: c.sortIndex }));
-    for (const u of updates) {
-      const { error } = await _supabase
-        .from('cards')
-        .update({ sort_index: u.sortIndex })
-        .eq('id', u.id)
-        .eq('user_id', currentUser.id);
-      if (error) {
-        // Colonna assente o altro errore → l'ordine resta comunque salvato in locale
-        console.warn('saveOrder (cloud) non riuscito, ordine mantenuto in locale:', error.message);
-        return;
-      }
+      .map(c => ({ id: c.id, sort_index: c.sortIndex, user_id: currentUser.id }));
+    if (!updates.length) return;
+    // UN solo upsert batch invece di N update sequenziali: niente più decine di
+    // round-trip di rete (che bloccavano/laggavano all'uscita dal riordino).
+    const { error } = await _supabase
+      .from('cards')
+      .upsert(updates, { onConflict: 'id' });
+    if (error) {
+      console.warn('saveOrder (cloud) non riuscito, ordine mantenuto in locale:', error.message);
     }
   },
   async insertCard(card) {
@@ -7197,7 +7199,13 @@ function transitionViews(fromEl, toEl, direction) {
       }
     });
 
-    setTimeout(() => {
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      // PRIMA nascondi la vista uscente (così il suo contenuto — es. le mini-chart
+      // della home — non resta visibile dietro la nuova vista nemmeno per un frame)
+      fromEl.style.display = 'none';
       [fromEl, toEl].forEach(v => {
         v.style.position = ''; v.style.top = ''; v.style.left = ''; v.style.right = '';
         v.style.paddingTop = ''; v.style.paddingLeft = ''; v.style.paddingRight = '';
@@ -7205,14 +7213,17 @@ function transitionViews(fromEl, toEl, direction) {
         v.style.transform = ''; v.style.filter = ''; v.style.boxShadow = '';
         v.style.willChange = ''; v.style.background = '';
       });
-      fromEl.style.display = 'none';
       main.style.minHeight = '';
       wrapper.style.overflow = '';
       wrapper.scrollTop = 0;
       document.body.classList.remove('nav-anim');
       setNavAnimating(false);
       resolve();
-    }, NAV_DUR + 80);
+    };
+    // transitionend = pulizia esatta a fine animazione (frame-perfect);
+    // il timeout è solo una rete di sicurezza se l'evento non scatta.
+    toEl.addEventListener('transitionend', cleanup, { once: true });
+    setTimeout(cleanup, NAV_DUR + 60);
   });
 }
 
@@ -7918,6 +7929,16 @@ function enableDragReorder() {
   const list = document.getElementById('cards-list');
   if (!list) return;
 
+  // PROTEZIONE FOTO: durante il riordino il DOM si sposta, e le <img loading="lazy">
+  // possono essere ri-scaricate (sparendo per un istante). Le forziamo a "eager"
+  // così restano sempre visibili mentre trascini.
+  list.querySelectorAll('.list-photo img').forEach(img => {
+    if (img.getAttribute('loading') === 'lazy') {
+      img.setAttribute('loading', 'eager');
+      img.dataset.wasLazy = '1';
+    }
+  });
+
   // Evita doppia inizializzazione sugli stessi nodi
   list.querySelectorAll('.list-card').forEach(card => {
     if (card._dragBound) return;
@@ -7931,13 +7952,14 @@ function bindLongPressDrag(card, list) {
   let dragging = false;
   let startX = 0, startY = 0;
   let pointerId = null;
-  let ghostOffsetY = 0;          // distanza fra dito e top della carta
+  let ghostOffsetY = 0;
   let autoScrollRAF = null;
   let lastClientY = 0;
-  let flowTopAtStart = 0;        // posizione "nel flusso" della card, ricatturata dopo ogni riordino
-  let scrollTopAtStart = 0;      // scrollTop al momento della cattura di flowTopAtStart
+  let slots = [];           // posizioni precalcolate delle carte (niente reflow per-frame)
+  let cardH = 0;            // altezza di una card+gap
+  let dragIndex = 0;        // indice corrente della card trascinata fra gli slot
   const LONG_PRESS_MS = 220;
-  const MOVE_CANCEL_PX = 10;     // se muovi prima del long-press → è uno scroll, annulla
+  const MOVE_CANCEL_PX = 10;
 
   const scroller = document.querySelector('.scroll-wrapper') || document.scrollingElement || document.documentElement;
 
@@ -7946,12 +7968,7 @@ function bindLongPressDrag(card, list) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     pointerId = e.pointerId;
     startX = e.clientX; startY = e.clientY; lastClientY = e.clientY;
-
-    // long-press: dopo un attimo "solleva" la carta
-    pressTimer = setTimeout(() => {
-      startDrag(e);
-    }, LONG_PRESS_MS);
-
+    pressTimer = setTimeout(() => startDrag(e), LONG_PRESS_MS);
     const cancelIfMoved = (ev) => {
       if (dragging) return;
       if (Math.abs(ev.clientY - startY) > MOVE_CANCEL_PX || Math.abs(ev.clientX - startX) > MOVE_CANCEL_PX) {
@@ -7963,23 +7980,34 @@ function bindLongPressDrag(card, list) {
     card.addEventListener('pointerup', () => { clearTimeout(pressTimer); card.removeEventListener('pointermove', cancelIfMoved); }, { once: true });
   });
 
+  // Misura UNA VOLTA tutte le posizioni a inizio drag. Da qui in poi confrontiamo
+  // il dito contro questi numeri in memoria: ZERO getBoundingClientRect per frame.
+  function measureSlots() {
+    const cards = [...list.querySelectorAll('.list-card')];
+    slots = cards.map(el => {
+      const r = el.getBoundingClientRect();
+      return { el, top: r.top + scroller.scrollTop, height: r.height, center: r.top + scroller.scrollTop + r.height / 2 };
+    });
+    cardH = slots.length > 1 ? (slots[1].top - slots[0].top) : (slots[0] ? slots[0].height + 10 : 0);
+  }
+
   function startDrag(e) {
     dragging = true;
-    if (navigator.vibrate) navigator.vibrate(12); // haptic leggero
+    if (navigator.vibrate) navigator.vibrate(12);
     card.setPointerCapture(pointerId);
 
+    measureSlots();
+    dragIndex = slots.findIndex(s => s.el === card);
     const rect = card.getBoundingClientRect();
     ghostOffsetY = e.clientY - rect.top;
-    flowTopAtStart = rect.top;            // posizione attuale nel flusso
-    scrollTopAtStart = scroller.scrollTop;
 
-    // "Solleva" la carta: resta nel flusso ma diventa il pezzo che segue il dito
     card.classList.add('dragging');
     card.style.width = rect.width + 'px';
-    card.style.zIndex = '50';
-    moveGhost(e.clientY);
+    card.style.zIndex = '100';
+    document.body.classList.add('drag-active');
+    document.body.classList.add('dragging-active'); // disattiva la transition sulle altre
 
-    document.body.classList.add('drag-active'); // blocca scroll pagina via CSS
+    moveGhost(e.clientY);
 
     card.addEventListener('pointermove', onMove);
     card.addEventListener('pointerup', onUp);
@@ -7987,47 +8015,39 @@ function bindLongPressDrag(card, list) {
     startAutoScroll();
   }
 
-  // Ricattura la posizione nel flusso DOPO che la card è stata spostata nel DOM.
-  // Si legge il rect una sola volta qui (non a ogni frame), neutralizzando il
-  // transform un istante per misurare la posizione "a riposo".
-  function recaptureFlow() {
-    const prev = card.style.transform;
-    card.style.transform = 'none';
-    flowTopAtStart = card.getBoundingClientRect().top;
-    scrollTopAtStart = scroller.scrollTop;
-    card.style.transform = prev;
-  }
-
+  // Posiziona la card sotto il dito usando SOLO numeri (nessuna lettura di layout)
   function moveGhost(clientY) {
-    // Il punto afferrato resta sotto il dito. Usiamo flowTop catturato UNA volta
-    // a inizio drag (in startDrag) invece di leggere getBoundingClientRect ogni
-    // frame: niente più reflow forzato 60 volte al secondo → fluido.
-    const desiredTop = clientY - ghostOffsetY;
-    card.style.transform = `translateY(${desiredTop - flowTopAtStart - (scroller.scrollTop - scrollTopAtStart)}px) scale(1.03)`;
+    const homeTop = slots[dragIndex] ? slots[dragIndex].top : 0;
+    const desiredTopDoc = clientY + scroller.scrollTop - ghostOffsetY;
+    card.style.transform = `translateY(${desiredTopDoc - homeTop}px) scale(1.03)`;
   }
 
-  function reorderAround(clientY) {
-    const siblings = [...list.querySelectorAll('.list-card:not(.dragging)')];
-    let placed = false, moved = false;
-    for (const sib of siblings) {
-      const box = sib.getBoundingClientRect();
-      const mid = box.top + box.height / 2;
-      if (clientY < mid) {
-        if (sib.previousElementSibling !== card) { list.insertBefore(card, sib); moved = true; }
-        placed = true;
-        break;
-      }
+  // Calcola in quale slot dovrebbe stare la card in base alla Y del dito,
+  // e sposta le ALTRE carte con un translateY (niente insertBefore continuo:
+  // il DOM si riordina UNA volta sola, al rilascio).
+  function updatePositions(clientY) {
+    const yDoc = clientY + scroller.scrollTop;
+    let newIndex = slots.length - 1;
+    for (let i = 0; i < slots.length; i++) {
+      if (yDoc < slots[i].center) { newIndex = i; break; }
     }
-    if (!placed && list.lastElementChild !== card) { list.appendChild(card); moved = true; }
-    // solo se la card ha davvero cambiato posizione nel DOM ricalcoliamo il flusso
-    if (moved) recaptureFlow();
+    if (newIndex === dragIndex) return;
+    // sposta visivamente le carte fra la vecchia e la nuova posizione
+    slots.forEach((s, i) => {
+      if (s.el === card) return;
+      let shift = 0;
+      if (dragIndex < newIndex && i > dragIndex && i <= newIndex) shift = -cardH;
+      else if (dragIndex > newIndex && i >= newIndex && i < dragIndex) shift = cardH;
+      s.el.style.transform = shift ? `translateY(${shift}px)` : '';
+    });
+    dragIndex = newIndex;
   }
 
   function onMove(e) {
     if (!dragging) return;
     e.preventDefault();
     lastClientY = e.clientY;
-    reorderAround(e.clientY); // può aggiornare flowTopAtStart se la card si sposta
+    updatePositions(e.clientY);
     moveGhost(e.clientY);
   }
 
@@ -8035,46 +8055,50 @@ function bindLongPressDrag(card, list) {
     if (!dragging) return;
     dragging = false;
     stopAutoScroll();
-    card.releasePointerCapture(pointerId);
+    try { card.releasePointerCapture(pointerId); } catch (_) {}
     card.removeEventListener('pointermove', onMove);
     card.removeEventListener('pointerup', onUp);
     card.removeEventListener('pointercancel', onUp);
 
-    // "Appoggia" la carta con una piccola animazione
+    // Riordino REALE del DOM, una volta sola, in base all'indice finale
+    const ordered = slots.map(s => s.el).filter(el => el !== card);
+    ordered.splice(dragIndex, 0, card);
+    // azzera i transform di tutte prima di reinserire
+    slots.forEach(s => { s.el.style.transform = ''; });
+    const frag = document.createDocumentFragment();
+    ordered.forEach(el => frag.appendChild(el));
+    list.appendChild(frag);
+
     card.classList.remove('dragging');
     card.style.transform = '';
     card.style.width = '';
     card.style.zIndex = '';
     document.body.classList.remove('drag-active');
+    document.body.classList.remove('dragging-active');
 
     persistOrderFromDOM();
     if (navigator.vibrate) navigator.vibrate(6);
   }
 
-  // ===== Auto-scroll ai bordi: se trascini vicino al top/bottom, la pagina scorre =====
   function startAutoScroll() {
-    const EDGE = 120;       // zona sensibile in px dai bordi (più ampia → più facile da innescare)
-    const MAX_SPEED = 16;   // px per frame
+    const EDGE = 110;
+    const MAX_SPEED = 14;
     const step = () => {
       if (!dragging) { autoScrollRAF = null; return; }
       const rect = scroller.getBoundingClientRect();
-      const top = rect.top;
-      const bottom = rect.bottom;
       let dy = 0;
-      if (lastClientY < top + EDGE) {
-        // più vicino al bordo alto → più veloce; clamp per non andare sotto 0
-        const intensity = Math.max(0, (top + EDGE - lastClientY) / EDGE);
+      if (lastClientY < rect.top + EDGE) {
+        const intensity = Math.max(0, (rect.top + EDGE - lastClientY) / EDGE);
         dy = -MAX_SPEED * Math.min(1, intensity);
-      } else if (lastClientY > bottom - EDGE) {
-        const intensity = Math.max(0, (lastClientY - (bottom - EDGE)) / EDGE);
+      } else if (lastClientY > rect.bottom - EDGE) {
+        const intensity = Math.max(0, (lastClientY - (rect.bottom - EDGE)) / EDGE);
         dy = MAX_SPEED * Math.min(1, intensity);
       }
       if (dy !== 0) {
         const before = scroller.scrollTop;
-        scroller.scrollTop = before + dy; // istantaneo (niente più smooth in conflitto)
-        // solo se lo scroll si è davvero mosso aggiorniamo posizione e ordine
+        scroller.scrollTop = before + dy;
         if (scroller.scrollTop !== before) {
-          reorderAround(lastClientY); // ricattura il flusso se serve
+          updatePositions(lastClientY);
           moveGhost(lastClientY);
         }
       }
