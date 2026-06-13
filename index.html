@@ -1468,10 +1468,14 @@
   body.reordering .list-drag-handle { display: flex; }
   body.reordering .list-card {
     cursor: grab;
-    touch-action: none;            /* fondamentale: il dito trascina, non scrolla la carta */
     user-select: none;
     -webkit-user-select: none;
   }
+  /* touch-action:none SOLO sulla carta effettivamente sollevata: così in
+     modalità riordino lo scroll verticale resta libero (prima era bloccato
+     su tutte le carte → impossibile scorrere la lista). */
+  body.reordering .list-card { touch-action: pan-y; }
+  .list-card.dragging { touch-action: none; }
   /* La transition morbida sullo spostamento delle carte è attiva SOLO mentre
      un drag è in corso (per il "fai spazio" fluido), ma viene gestita con
      transform diretti che la animano. Fuori dal drag attivo: nessuna. */
@@ -3625,7 +3629,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v83</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v84</div>
   </div>
 </div>
 
@@ -4873,9 +4877,22 @@ function renderCards() {
 
   // In modalità riordino le carte restano individuali (la logica drag non cambia);
   // altrimenti i set collassano in una tile unica.
-  list.innerHTML = reorderMode ? renderListCards(filtered) : renderGroupedList(filtered);
+  // In modalità riordino la lista è gestita da renderCardsFlat (carte piatte);
+  // qui (vista normale) i set collassano sempre in una tile unica.
+  list.innerHTML = reorderMode ? renderCardsFlatHTML() : renderGroupedList(filtered);
   markLoadedImages(list);
   if (reorderMode) enableDragReorder();
+}
+
+// Versione che ritorna solo l'HTML piatto (per quando renderCards gira mentre
+// siamo già in modalità riordino, es. dopo un'operazione)
+function renderCardsFlatHTML() {
+  const sorted = [...cards].sort((a, b) => {
+    const ai = typeof a.sortIndex === 'number' ? a.sortIndex : 9e9;
+    const bi = typeof b.sortIndex === 'number' ? b.sortIndex : 9e9;
+    return ai - bi;
+  });
+  return renderListCards(sorted);
 }
 
 // Raggruppa le carte di un set in una tile unica, lasciando le singole come sono
@@ -5863,51 +5880,72 @@ async function repairThumbnails() {
   const candidates = cards.filter(c => c.thumb && c.photo && c.thumb !== c.photo);
   if (!candidates.length) { showToast('Nessuna miniatura da controllare'); return; }
   showToast(`🩺 Controllo ${candidates.length} miniature…`);
-  let repaired = 0, checked = 0;
+  let repaired = 0, checked = 0, errors = 0;
 
-  async function isBlackImage(url) {
+  // Carica un'immagine via <img crossOrigin> (le immagini del nostro bucket Supabase
+  // sono servite con CORS aperto). Niente fetch+blob, che falliva silenziosamente.
+  function loadImg(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('load fail'));
+      // cache-buster: forza il ri-download (evita una copia cache eventualmente corrotta)
+      img.src = url + (url.includes('?') ? '&' : '?') + 'r=' + Date.now();
+    });
+  }
+
+  async function isBlackImg(url) {
     try {
-      const r = await fetch(url);
-      if (!r.ok) return true; // non scaricabile = da rigenerare
-      const blob = await r.blob();
-      const bmp = await createImageBitmap(blob);
+      const img = await loadImg(url);
+      if (img.decode) { try { await img.decode(); } catch (_) {} }
       const cv = document.createElement('canvas');
       cv.width = 8; cv.height = 8;
       const cx = cv.getContext('2d');
-      cx.drawImage(bmp, 0, 0, 8, 8);
+      cx.drawImage(img, 0, 0, 8, 8);
       const d = cx.getImageData(0, 0, 8, 8).data;
       let lum = 0;
       for (let i = 0; i < d.length; i += 4) lum += (d[i] + d[i+1] + d[i+2]) / 3;
-      return (lum / 64) < 8; // media quasi nera
-    } catch (e) { return false; } // in dubbio, non toccare
+      return { black: (lum / 64) < 10, ok: true };
+    } catch (e) {
+      return { black: false, ok: false }; // non leggibile: lo segnaliamo, non lo tocchiamo a caso
+    }
   }
 
   for (const c of candidates) {
     checked++;
-    const black = await isBlackImage(c.thumb);
-    if (!black) continue;
+    showToast(`🩺 Controllo ${checked}/${candidates.length}…`);
+    const res = await isBlackImg(c.thumb);
+    if (!res.ok) { errors++; continue; }
+    if (!res.black) continue;
     try {
-      // rigenera dalla foto piena
-      const r = await fetch(c.photo);
-      const blob = await r.blob();
-      const dataUrl = await new Promise(res => {
-        const fr = new FileReader();
-        fr.onload = () => res(fr.result);
-        fr.readAsDataURL(blob);
-      });
-      const thumbData = await makeThumbnail(dataUrl, 150);
-      if (!thumbData) continue;
+      // rigenera il thumb dalla FOTO PIENA (caricata con crossOrigin → canvas pulito)
+      const fullImg = await loadImg(c.photo);
+      if (fullImg.decode) { try { await fullImg.decode(); } catch (_) {} }
+      const scale = Math.min(1, 150 / fullImg.naturalWidth);
+      const w = Math.round(fullImg.naturalWidth * scale);
+      const h = Math.round(fullImg.naturalHeight * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(fullImg, 0, 0, w, h);
+      const thumbData = canvas.toDataURL('image/jpeg', 0.72);
       const path = `${currentUser.id}/thumb_fix_${c.id}_${Date.now()}.jpg`;
       const newUrl = await uploadBlobToStorage(thumbData, path);
-      if (!newUrl) continue;
+      if (!newUrl) { errors++; continue; }
       c.thumb = newUrl;
       await dataStore.updateCard(c);
       repaired++;
-      showToast(`🩺 Riparata ${repaired}… (${checked}/${candidates.length})`);
-    } catch (e) { console.error('repair thumb:', c.id, e); }
+    } catch (e) {
+      console.error('repair thumb:', c.id, e);
+      errors++;
+    }
   }
   renderCards();
-  showToast(repaired > 0 ? `✓ ${repaired} miniature riparate!` : '✓ Nessuna miniatura nera trovata');
+  if (repaired > 0) showToast(`✓ ${repaired} miniature riparate!${errors ? ` (${errors} non leggibili)` : ''}`);
+  else if (errors > 0) showToast(`⚠️ ${errors} immagini non leggibili (CORS?). Nessuna nera trovata tra le altre.`);
+  else showToast('✓ Tutte le miniature sono a posto!');
 }
 
 // ============ VISTA SET DI CARTE ============
@@ -7906,13 +7944,31 @@ function toggleReorder() {
     btn.textContent = reorderMode ? '✓ Fatto' : '↕ Ordina';
   }
   if (reorderMode) {
+    // Ri-renderizza la lista in versione PIATTA: ogni carta (anche quelle dei set)
+    // diventa una .list-card uniforme, così il motore di drag opera su una lista
+    // coerente — niente più set-card che sfasano le posizioni.
+    renderCardsFlat();
     enableDragReorder();
   } else {
     // Uscendo, persistiamo l'ordine corrente del DOM in sortIndex e salviamo
     persistOrderFromDOM();
     saveCards(cards);
-    renderCards();
+    renderCards(); // torna alla vista raggruppata (con i set)
   }
+}
+
+// Render piatto usato SOLO in modalità riordino: tutte le carte come .list-card,
+// nell'ordine attuale (sortIndex), nessun raggruppamento per set.
+function renderCardsFlat() {
+  const list = document.getElementById('cards-list');
+  if (!list) return;
+  const sorted = [...cards].sort((a, b) => {
+    const ai = typeof a.sortIndex === 'number' ? a.sortIndex : 9e9;
+    const bi = typeof b.sortIndex === 'number' ? b.sortIndex : 9e9;
+    return ai - bi;
+  });
+  list.innerHTML = renderListCards(sorted);
+  markLoadedImages(list);
 }
 
 function persistOrderFromDOM() {
