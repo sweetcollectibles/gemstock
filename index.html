@@ -464,8 +464,7 @@
   .splash-exit .splash-logo { filter: none; } /* niente drop-shadow da ri-rasterizzare durante lo scale */
   /* i blur (backdrop-filter) della barra di ricerca sotto la splash sono costosi
      da compositare durante la dissolvenza: attivi solo ad app pronta */
-  body:not(.app-ready) .bottom-search,
-  body:not(.app-ready) .bottom-search-inner {
+  body:not(.app-ready) .mini-dock-btn {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
@@ -844,8 +843,7 @@
   body.nav-anim .stat-card.sell-alert {
     animation-play-state: paused !important;
   }
-  body.nav-anim .bottom-search,
-  body.nav-anim .bottom-search-inner {
+  body.nav-anim .mini-dock-btn {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
@@ -914,112 +912,46 @@
   .search-bar::placeholder { color: var(--muted); }
 
   /* ===== DOCK RICERCA IN FONDO — pillola glass + tasto aggiungi ===== */
-  .bottom-search {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 60;
-    background: transparent;
-    border-top: none;
-    padding: 0 14px;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 2px);
-    /* dock = flex: pillola + tasto + */
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    justify-content: flex-end;
-    pointer-events: none;
-  }
-  /* la pillola di ricerca (tonda iOS, glass viola) */
-  .bottom-search-inner {
-    flex: 1;
-    display: flex; align-items: center; gap: 10px;
-    background: rgba(26, 26, 26, 0.55);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    border: 1.5px solid var(--accent);
-    border-radius: 999px;
-    padding: 13px 18px;
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10), 0 8px 24px rgba(0, 0, 0, 0.35);
-    pointer-events: auto;
-    overflow: hidden;
-    /* max-width realistico (non 1000px): così l'animazione è TUTTA visibile e fluida.
-       will-change + transform accelerano via GPU. */
-    max-width: 420px;
-    transform-origin: right center;
-    will-change: max-width, padding;
-    transition: max-width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-                padding 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-                background 0.35s ease, opacity 0.35s ease;
-  }
   .bottom-search-icon { font-size: 1.05rem; opacity: 0.85; flex-shrink: 0; }
-  .bottom-search-placeholder {
-    flex: 1; color: var(--muted); font-size: 0.95rem;
-    font-family: 'Inter', -apple-system, sans-serif;
-    white-space: nowrap; overflow: hidden;
-    transition: opacity 0.2s ease;
+
+  /* ============ MINI-DOCK (ricerca + aggiungi, verticale, fisso) ============ */
+  .mini-dock {
+    position: fixed;
+    right: 14px;
+    bottom: calc(env(safe-area-inset-bottom) + 18px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 50;
   }
-  /* tasto aggiungi tondo (solo nelle sezioni) */
-  .dock-add-btn {
-    width: 48px; height: 48px; flex-shrink: 0;
-    border-radius: 999px; border: none;
-    background: var(--accent); color: #fff;
-    font-size: 1.7rem; font-weight: 300; line-height: 1;
+  .mini-dock-btn {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: rgba(26, 26, 26, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    color: var(--text);
+    font-size: 1.2rem;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 16px rgba(168, 85, 247, 0.45);
-    pointer-events: auto; cursor: pointer;
-    transition: transform 0.2s ease, opacity 0.3s ease, background 0.3s ease;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+    touch-action: manipulation;
   }
-.dock-add-btn.pressing { transform: scale(0.9); }
-
-  /* COMPACT (stile Safari): la pillola diventa un CERCHIO perfetto, ancorato a DESTRA.
-     Più trasparente/glass e discreto quando non serve. */
-  body.search-compact .bottom-search-inner {
-    flex-grow: 0;
-    width: 48px;
-    min-width: 48px;
-    max-width: 48px;
-    height: 48px;
-    padding: 0;
-    justify-content: center;
-    align-items: center;
-    gap: 0;
-    background: rgba(26, 26, 26, 0.32);
-    border-color: rgba(168, 85, 247, 0.55);
-    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.06), 0 4px 14px rgba(0, 0, 0, 0.28);
-    opacity: 0.78;
-    transition: max-width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-                width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-                padding 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-                opacity 0.35s ease, background 0.35s ease;
+  .mini-dock-btn.add {
+    background: linear-gradient(135deg, #a855f7, #7e22ce);
+    border: none;
+    font-size: 1.5rem;
+    box-shadow: 0 6px 22px rgba(168, 85, 247, 0.4);
   }
-  body.search-compact .bottom-search-inner:active {
-    opacity: 1;
-  }
-  body.search-compact .bottom-search-icon {
-    opacity: 1;
-  }
-  body.search-compact .bottom-search-placeholder {
-    opacity: 0;
-    width: 0;
-    flex: 0;
-  }
-  /* anche il tasto + diventa discreto quando compatto */
-  body.search-compact .dock-add-btn {
-    opacity: 0.78;
-    background: rgba(168, 85, 247, 0.62);
-    box-shadow: 0 4px 14px rgba(168, 85, 247, 0.25);
-  }
-  body.search-compact .dock-add-btn:active { opacity: 1; }
-
-  /* HOME: nessun tasto aggiungi, solo ricerca */
+  .mini-dock-btn.pressing { transform: scale(0.9); }
   body.hide-fab .dock-add-btn { display: none; }
 
-  body.modal-open .bottom-search,
-  body.reordering .bottom-search,
-  body.drag-active .bottom-search { display: none !important; }
-  body.modal-open .bottom-search,
-  body.reordering .bottom-search,
-  body.drag-active .bottom-search { display: none !important; }
+  body.modal-open .mini-dock,
+  body.reordering .mini-dock,
+  body.drag-active .mini-dock { display: none !important; }
+  body.modal-open .mini-dock,
+  body.reordering .mini-dock,
+  body.drag-active .mini-dock { display: none !important; }
 
   /* ===== TAB DI RICERCA FULL-SCREEN ===== */
   .search-tab {
@@ -1064,8 +996,21 @@
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain; /* niente scroll-chaining verso la pagina sotto */
     padding: 12px 14px calc(env(safe-area-inset-bottom) + 24px);
   }
+  .search-scope-row { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+  .search-scope {
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 999px; padding: 6px 14px; font-size: 0.68rem; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace; cursor: pointer;
+  }
+  .search-scope.on { background: rgba(168,85,247,0.14); border-color: var(--accent); color: var(--accent); }
+  .search-scope-lock {
+    font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    margin-top: 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .search-scope-lock b { color: var(--accent); font-weight: 700; }
   .search-overlay-title {
     font-size: 0.62rem; letter-spacing: 1.5px; text-transform: uppercase;
     color: var(--accent); font-weight: 700; margin: 14px 4px 8px;
@@ -3365,12 +3310,9 @@
 </div><!-- end scroll-wrapper / app-page -->
 
 <!-- ============ BARRA RICERCA IN FONDO (trigger) ============ -->
-<div class="bottom-search" id="bottom-search" style="display:none">
-  <div class="bottom-search-inner" id="search-pill" onclick="openSearchTab()">
-    <span class="bottom-search-icon">🔍</span>
-    <span class="bottom-search-placeholder">Cerca nel portfolio</span>
-  </div>
-  <button class="dock-add-btn" id="dock-add-btn" onclick="fabAction()" title="Aggiungi">+</button>
+<div class="mini-dock" id="bottom-search" style="display:none">
+  <button class="mini-dock-btn" onclick="openSearchTab()" title="Cerca">🔍</button>
+  <button class="mini-dock-btn add dock-add-btn" id="dock-add-btn" onclick="fabAction()" title="Aggiungi">＋</button>
 </div>
 
 <!-- ============ TAB DI RICERCA FULL-SCREEN (barra in alto, risultati sotto) ============ -->
@@ -3381,6 +3323,7 @@
       <input type="text" id="search-input" placeholder="Cerca nel portfolio" oninput="onSearchInput()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button class="search-tab-cancel" onclick="closeSearchTab()">Annulla</button>
     </div>
+    <div id="search-scope-area"></div>
   </div>
   <div class="search-tab-results" id="search-results-list"></div>
 </div>
@@ -3676,7 +3619,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v79</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v80</div>
   </div>
 </div>
 
@@ -7023,21 +6966,71 @@ document.querySelectorAll('.filter-pill').forEach(btn => {
 });
 
 // Apre la tab di ricerca full-screen (barra in alto, risultati sotto)
+// La ricerca è CONTESTUALE: il raggio dipende dalla pagina in cui ti trovi.
+let searchScope = 'all'; // all | cards | wish | sealed | sold
+
 function openSearchTab() {
   const tab = document.getElementById('search-tab');
   const input = document.getElementById('search-input');
   const results = document.getElementById('search-results-list');
   if (!tab) return;
+
+  // raggio in base alla pagina corrente
+  const scopeArea = document.getElementById('search-scope-area');
+  if (currentView === 'list') {
+    searchScope = 'cards';
+    scopeArea.innerHTML = `<div class="search-scope-lock">🔒 cerco solo in <b>Le tue carte</b></div>`;
+    input.placeholder = 'Cerca nelle tue carte…';
+  } else if (currentView === 'wishlist') {
+    searchScope = 'wish';
+    scopeArea.innerHTML = `<div class="search-scope-lock">🔒 cerco solo nella <b>Wishlist</b></div>`;
+    input.placeholder = 'Cerca nella wishlist…';
+  } else if (currentView === 'sealed') {
+    searchScope = 'sealed';
+    scopeArea.innerHTML = `<div class="search-scope-lock">🔒 cerco solo nel <b>Sealed</b></div>`;
+    input.placeholder = 'Cerca nel sealed…';
+  } else if (currentView === 'registry') {
+    searchScope = 'sold';
+    scopeArea.innerHTML = `<div class="search-scope-lock">🔒 cerco nelle <b>vendite del registro</b></div>`;
+    input.placeholder = 'Cerca una carta venduta…';
+  } else {
+    searchScope = 'all';
+    scopeArea.innerHTML = `
+      <div class="search-scope-row">
+        <div class="search-scope on" data-s="all" onclick="setSearchScope('all', this)">Tutto</div>
+        <div class="search-scope" data-s="cards" onclick="setSearchScope('cards', this)">🃏 Carte</div>
+        <div class="search-scope" data-s="wish" onclick="setSearchScope('wish', this)">💜 Wishlist</div>
+        <div class="search-scope" data-s="sealed" onclick="setSearchScope('sealed', this)">📦 Sealed</div>
+      </div>`;
+    input.placeholder = 'Cerca in tutto il portfolio…';
+  }
+
   tab.style.display = 'flex';
   if (results) results.innerHTML = '';
   if (input) {
     input.value = '';
     // IMPORTANTE: focus SINCRONO, nello stesso gesto del tocco.
-    // iOS apre la tastiera solo se .focus() avviene immediatamente
-    // come reazione diretta al tap (niente setTimeout di mezzo).
     input.focus({ preventScroll: true });
   }
 }
+
+function setSearchScope(sc, el) {
+  searchScope = sc;
+  document.querySelectorAll('.search-scope').forEach(x => x.classList.remove('on'));
+  if (el) el.classList.add('on');
+  onSearchInput();
+}
+
+// FIX iOS: con la tastiera aperta, scrollare trascina via anche gli elementi fixed.
+// Come le app native: appena scrolli i risultati, la tastiera si chiude.
+(function setupSearchScrollDismiss() {
+  const results = document.getElementById('search-results-list');
+  if (!results) return;
+  results.addEventListener('touchmove', () => {
+    const input = document.getElementById('search-input');
+    if (input && document.activeElement === input) input.blur();
+  }, { passive: true });
+})();
 
 // Chiude la tab di ricerca
 function closeSearchTab() {
@@ -7059,7 +7052,6 @@ let currentView = 'home'; // 'home' | 'list' | 'wishlist' | 'sealed'
 // e si scurisce. Tornando, il contrario. Solo transform/opacity/filter → GPU 60fps.
 const VIEW_IDS = { home: 'home-view', list: 'list-view', wishlist: 'wishlist-view', sealed: 'sealed-view', registry: 'registry-view' };
 let navAnimating = false;
-let searchExpandArmed = false; // la barra si espande solo dopo uno scroll attivo dell'utente
 const NAV_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
 const NAV_DUR = 420;
 
@@ -7200,10 +7192,6 @@ function goToHome() {
 
 // Safety helper — call this anytime view changes or modals open/close
 function updateFabVisibility() {
-  // a ogni cambio pagina la barra di ricerca riparte SEMPRE piccola;
-  // si espande solo se l'utente scrolla giù e poi risale in cima (gesto attivo)
-  document.body.classList.add('search-compact');
-  searchExpandArmed = false;
   if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
     document.body.classList.remove('hide-fab');
   } else {
@@ -7681,32 +7669,58 @@ function onSearchInput() {
 
   const match = (s) => (s || '').toString().toLowerCase().includes(q);
 
-  // Cerca in TUTTO il portfolio
-  const cardHits = cards.filter(c =>
+  // ---- raggio contestuale ----
+  const wantCards  = searchScope === 'all' || searchScope === 'cards';
+  const wantSealed = searchScope === 'all' || searchScope === 'sealed';
+  const wantWish   = searchScope === 'all' || searchScope === 'wish';
+  const wantSold   = searchScope === 'sold';
+
+  const cardHits = wantCards ? cards.filter(c =>
     match(c.name) || match(c.number) || match(c.set) ||
-    match(c.grader) || match(c.customGrader) || match(c.language) || match(c.psaCert)
-  );
-  const sealedHits = (typeof sealed !== 'undefined' && sealed ? sealed : []).filter(s =>
+    match(c.grader) || match(c.customGrader) || match(c.language) || match(c.psaCert) ||
+    match(c.groupName)
+  ) : [];
+  const sealedHits = wantSealed ? (typeof sealed !== 'undefined' && sealed ? sealed : []).filter(s =>
     match(s.name) || match(s.notes)
-  );
-  const wishHits = (typeof wishlist !== 'undefined' && wishlist ? wishlist : []).filter(w =>
+  ) : [];
+  const wishHits = wantWish ? (typeof wishlist !== 'undefined' && wishlist ? wishlist : []).filter(w =>
     match(w.name) || match(w.number) || match(w.set) || match(w.language)
-  );
+  ) : [];
+  const soldHits = wantSold ? activities.filter(a =>
+    a.type === 'sale' && (match(a.name) || match(a.meta && a.meta.card && a.meta.card.psaCert))
+  ) : [];
 
   let html = '';
   if (cardHits.length) {
-    html += `<div class="search-overlay-title">🃏 Carte · ${cardHits.length}</div>`;
+    if (searchScope === 'all') html += `<div class="search-overlay-title">🃏 Carte · ${cardHits.length}</div>`;
     html += renderListCards(cardHits);
   }
   if (sealedHits.length) {
-    html += `<div class="search-overlay-title">📦 Sealed · ${sealedHits.length}</div>`;
+    if (searchScope === 'all') html += `<div class="search-overlay-title">📦 Sealed · ${sealedHits.length}</div>`;
     html += sealedHits.map(s => searchRowSimple(s.name, s.notes || 'Sealed', s.thumb || s.photo, `closeSearchTab();openSealedEdit(${s.id})`)).join('');
   }
   if (wishHits.length) {
-    html += `<div class="search-overlay-title">💜 Wishlist · ${wishHits.length}</div>`;
+    if (searchScope === 'all') html += `<div class="search-overlay-title">💜 Wishlist · ${wishHits.length}</div>`;
     html += wishHits.map(w => {
       const meta = [w.number ? '#'+w.number : '', w.set || ''].filter(Boolean).join(' · ');
-      return searchRowSimple(w.name, meta, w.thumb || w.photo, '');
+      return searchRowSimple(w.name, meta, w.thumb || w.photo, `closeSearchTab();openWishEdit(${w.id})`);
+    }).join('');
+  }
+  if (soldHits.length) {
+    html += `<div class="search-overlay-title">💰 Vendite · ${soldHits.length}</div>`;
+    html += soldHits.map(a => {
+      const pnl = (a.saleTotal || 0) - (a.buyTotal || 0);
+      const sign = pnl >= 0 ? '+' : '−';
+      const cls = pnl >= 0 ? 'positive' : 'negative';
+      const d = a.date ? a.date.slice(8,10) + '/' + a.date.slice(5,7) + '/' + a.date.slice(0,4) : '';
+      return `
+        <div class="list-card" onclick="closeSearchTab(); registryYear=${a.year}; renderRegistry();">
+          <div class="list-info" style="padding-left:4px">
+            <div class="list-name">${a.name}</div>
+            <div class="list-prices"><div class="price-item"><span class="price-item-label">🛒 €${fmt(a.buyTotal || 0)} → 💰 €${fmt(a.saleTotal || 0)} · ${d}</span></div></div>
+          </div>
+          <div class="list-pnl-value ${cls}" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.82rem;flex-shrink:0">${sign}€${fmt(Math.abs(pnl))}</div>
+        </div>`;
     }).join('');
   }
   if (!html) {
@@ -8998,7 +9012,6 @@ async function initApp() {
 
   // Start in home view → hide FAB
   document.body.classList.add('hide-fab');
-  document.body.classList.add('search-compact'); // barra ricerca parte piccola
   goToHome();
 
   // SEQUENZA ANTI-SFARFALLIO: tutto il lavoro pesante (animazioni infinite,
@@ -9114,7 +9127,7 @@ let touchStartY = 0;
 // ============ FEEDBACK PRESSIONE (classe .pressing) ============
 // Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
 // :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
-const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.dock-add-btn,.filter-pill,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.imgsearch-item,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile';
+const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.dock-add-btn,.mini-dock-btn,.filter-pill,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt';
 let pressedEl = null;
 function clearPressed() {
   if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
@@ -9151,23 +9164,7 @@ window.addEventListener('scroll', clearPressed, { passive: true, capture: true }
 document.addEventListener('scroll', clearPressed, { passive: true, capture: true });
 
 // ============ BARRA RICERCA: COMPATTA ALLO SCROLL (stile Safari) ============
-(function setupSearchCompact() {
-  const wrapper = document.querySelector('.scroll-wrapper');
-  if (!wrapper) return;
-  // La barra parte SEMPRE piccola. Si "arma" quando l'utente scrolla giù;
-  // solo allora, risalendo in cima, si espande. I reset programmatici
-  // dello scroll (navigazione) non la espandono mai.
-  wrapper.addEventListener('scroll', () => {
-    if (document.body.classList.contains('auth-visible')) return;
-    if (navAnimating) return;
-    if (wrapper.scrollTop > 12) {
-      document.body.classList.add('search-compact');
-      searchExpandArmed = true; // gesto attivo dell'utente: ora può riespandersi in cima
-    } else if (searchExpandArmed) {
-      document.body.classList.remove('search-compact');
-    }
-  }, { passive: true });
-})();
+// (logica compact/expand rimossa: il mini-dock è sempre fisso)
 
 </script>
 
