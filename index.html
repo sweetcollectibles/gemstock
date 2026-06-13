@@ -1476,6 +1476,10 @@
      su tutte le carte → impossibile scorrere la lista). */
   body.reordering .list-card { touch-action: pan-y; }
   .list-card.dragging { touch-action: none; }
+  /* mentre la card è "armata" (dito premuto, in attesa del long-press) blocchiamo
+     il touch così il browser non parte subito con lo scroll e ci lascia trascinare;
+     se l'utente muove il dito viene disarmata e lo scroll riprende. */
+  body.reordering .list-card.arming { touch-action: none; }
   /* La transition morbida sullo spostamento delle carte è attiva SOLO mentre
      un drag è in corso (per il "fai spazio" fluido), ma viene gestita con
      transform diretti che la animano. Fuori dal drag attivo: nessuna. */
@@ -3629,7 +3633,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v84</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v85</div>
   </div>
 </div>
 
@@ -8024,16 +8028,25 @@ function bindLongPressDrag(card, list) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     pointerId = e.pointerId;
     startX = e.clientX; startY = e.clientY; lastClientY = e.clientY;
+    // "arma" la card: touch-action:none così il browser NON inizia subito lo scroll
+    // e ci lascia la finestra del long-press. Se l'utente muove (vuole scrollare),
+    // togliamo arming → lo scroll riprende normale.
+    card.classList.add('arming');
     pressTimer = setTimeout(() => startDrag(e), LONG_PRESS_MS);
+    const disarm = () => {
+      card.classList.remove('arming');
+      clearTimeout(pressTimer);
+      card.removeEventListener('pointermove', cancelIfMoved);
+    };
     const cancelIfMoved = (ev) => {
       if (dragging) return;
       if (Math.abs(ev.clientY - startY) > MOVE_CANCEL_PX || Math.abs(ev.clientX - startX) > MOVE_CANCEL_PX) {
-        clearTimeout(pressTimer);
-        card.removeEventListener('pointermove', cancelIfMoved);
+        disarm();
       }
     };
     card.addEventListener('pointermove', cancelIfMoved);
-    card.addEventListener('pointerup', () => { clearTimeout(pressTimer); card.removeEventListener('pointermove', cancelIfMoved); }, { once: true });
+    card.addEventListener('pointerup', () => { card.classList.remove('arming'); clearTimeout(pressTimer); card.removeEventListener('pointermove', cancelIfMoved); }, { once: true });
+    card.addEventListener('pointercancel', () => { card.classList.remove('arming'); clearTimeout(pressTimer); card.removeEventListener('pointermove', cancelIfMoved); }, { once: true });
   });
 
   // Misura UNA VOLTA tutte le posizioni a inizio drag. Da qui in poi confrontiamo
@@ -8050,6 +8063,7 @@ function bindLongPressDrag(card, list) {
   function startDrag(e) {
     dragging = true;
     if (navigator.vibrate) navigator.vibrate(12);
+    card.classList.remove('arming');
     card.setPointerCapture(pointerId);
 
     measureSlots();
