@@ -3619,7 +3619,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v80</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v81</div>
   </div>
 </div>
 
@@ -4739,13 +4739,23 @@ function clearAllFilters() {
 }
 
 function renderCards() {
-  // Count by grader (always update — visible from any view)
+  // Conteggi per grader in UN SOLO passaggio sull'array (invece di 5 .filter separati)
+  let nPsa = 0, nCgc = 0, nBgs = 0, nOther = 0, nRaw = 0;
+  for (const c of cards) {
+    switch (c.grader) {
+      case 'PSA': nPsa++; break;
+      case 'CGC': nCgc++; break;
+      case 'BGS': nBgs++; break;
+      case 'ALTRO': nOther++; break;
+      case 'RAW': nRaw++; break;
+    }
+  }
   document.getElementById('count-all').textContent = cards.length;
-  document.getElementById('count-psa').textContent = cards.filter(c => c.grader === 'PSA').length;
-  document.getElementById('count-cgc').textContent = cards.filter(c => c.grader === 'CGC').length;
-  document.getElementById('count-bgs').textContent = cards.filter(c => c.grader === 'BGS').length;
-  document.getElementById('count-other').textContent = cards.filter(c => c.grader === 'ALTRO').length;
-  document.getElementById('count-raw').textContent = cards.filter(c => c.grader === 'RAW').length;
+  document.getElementById('count-psa').textContent = nPsa;
+  document.getElementById('count-cgc').textContent = nCgc;
+  document.getElementById('count-bgs').textContent = nBgs;
+  document.getElementById('count-other').textContent = nOther;
+  document.getElementById('count-raw').textContent = nRaw;
 
   // Update home tile counter (with empty state)
   const tileSub = document.getElementById('cards-tile-sub');
@@ -5285,7 +5295,7 @@ async function deleteExpense(actId) {
   renderRegistry();
 }
 
-async function cancelSale(actId) {
+async function _cancelSaleImpl(actId) {
   const a = activities.find(x => x.id === actId);
   if (!a || a.type !== 'sale') return;
   const m = a.meta || {};
@@ -5333,7 +5343,7 @@ function openExpenseModal() {
   openModal('expense-modal');
 }
 
-async function saveExpense() {
+async function _saveExpenseImpl() {
   const reason = document.getElementById('exp-reason').value.trim();
   const amount = parseFloat(document.getElementById('exp-amount').value);
   const date = document.getElementById('exp-date').value;
@@ -5421,7 +5431,7 @@ function updateSellPreview() {
   btn.textContent = `💰 Registra vendita · P&L ${pnl >= 0 ? '+' : '−'}€${fmt(Math.abs(pnl))}`;
 }
 
-async function confirmSale() {
+async function _confirmSaleImpl() {
   if (!sellCtx) return;
   const price = parseFloat(document.getElementById('sell-price').value);
   const date = document.getElementById('sell-date').value;
@@ -6716,7 +6726,7 @@ function editCard(id) {
   setTimeout(() => openModal('add-modal'), 200);
 }
 
-async function saveCard(keepForSet = false) {
+async function _saveCardImpl(keepForSet = false) {
  try {
   // Guard: Supabase disponibile?
   if (!_supabase) { showToast('❌ Connessione cloud assente — ricarica la pagina'); return; }
@@ -6860,7 +6870,7 @@ async function saveCard(keepForSet = false) {
  }
 }
 
-async function deleteCard(id) {
+async function _deleteCardImpl(id) {
   const c = cards.find(x => x.id === id);
   if (!c) return;
   if (!confirm(`Eliminare "${c.name}" dal portfolio?`)) return;
@@ -7047,11 +7057,62 @@ function closeSearchOverlay() { closeSearchTab(); }
 // ============ VIEW ROUTING (Home / List) ============
 let currentView = 'home'; // 'home' | 'list' | 'wishlist' | 'sealed'
 
+// ============ LOCK ANTI-DOPPIO-TAP (operazioni async) ============
+// Impedisce che un doppio tap rapido esegua due volte la stessa operazione
+// di scrittura (doppia carta, doppia vendita...). Mostra "⏳" sul bottone.
+const _busyOps = new Set();
+async function runOnce(key, fn, btnEl) {
+  if (_busyOps.has(key)) return;       // già in corso → ignora il secondo tap
+  _busyOps.add(key);
+  let prevHtml = null;
+  if (btnEl) {
+    prevHtml = btnEl.innerHTML;
+    btnEl.disabled = true;
+    btnEl.dataset.busy = '1';
+    btnEl.innerHTML = '<span class="auth-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle"></span>';
+  }
+  try {
+    return await fn();
+  } finally {
+    _busyOps.delete(key);
+    if (btnEl) {
+      btnEl.disabled = false;
+      delete btnEl.dataset.busy;
+      if (prevHtml !== null) btnEl.innerHTML = prevHtml;
+    }
+  }
+}
+
+// Wrapper pubblici: ogni operazione di scrittura passa dal lock.
+// `event` (se presente) ci dà il bottone premuto, per il feedback ⏳.
+function _btn() { return (typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.tagName === 'BUTTON') ? event.currentTarget : null; }
+function saveCard(keepForSet = false) { return runOnce('saveCard', () => _saveCardImpl(keepForSet), _btn()); }
+function saveSealed() { return runOnce('saveSealed', () => _saveSealedImpl(), _btn()); }
+function confirmSale() { return runOnce('confirmSale', () => _confirmSaleImpl(), _btn()); }
+function saveExpense() { return runOnce('saveExpense', () => _saveExpenseImpl(), _btn()); }
+function deleteCard(id) { return runOnce('delete_' + id, () => _deleteCardImpl(id), _btn()); }
+function deleteSealed() { return runOnce('deleteSealed', () => _deleteSealedImpl(), _btn()); }
+function cancelSale(actId) { return runOnce('cancel_' + actId, () => _cancelSaleImpl(actId), null); }
+
 // ============ TRANSIZIONI VISTA — iOS PUSH/POP ============
 // La vista nuova scivola da destra sopra la vecchia, che arretra (parallasse)
 // e si scurisce. Tornando, il contrario. Solo transform/opacity/filter → GPU 60fps.
 const VIEW_IDS = { home: 'home-view', list: 'list-view', wishlist: 'wishlist-view', sealed: 'sealed-view', registry: 'registry-view' };
 let navAnimating = false;
+let _navWatchdog = null;
+// Setter centralizzato: quando si attiva l'animazione, arma un timer di sicurezza
+// che SBLOCCA comunque dopo 1.2s, anche se il cleanup normale non parte mai
+// (es. app mandata in background a metà transizione). Mai più navigazione morta.
+function setNavAnimating(v) {
+  navAnimating = v;
+  clearTimeout(_navWatchdog);
+  if (v) {
+    _navWatchdog = setTimeout(() => {
+      navAnimating = false;
+      document.body.classList.remove('nav-anim');
+    }, 1200);
+  }
+}
 const NAV_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
 const NAV_DUR = 420;
 
@@ -7075,7 +7136,7 @@ function transitionViews(fromEl, toEl, direction) {
       resolve(); return;
     }
     const main = document.querySelector('.main');
-    navAnimating = true;
+    setNavAnimating(true);
     document.body.classList.add('nav-anim');
     const st = wrapper.scrollTop;
     const vh = window.innerHeight;
@@ -7148,7 +7209,7 @@ function transitionViews(fromEl, toEl, direction) {
       wrapper.style.overflow = '';
       wrapper.scrollTop = 0;
       document.body.classList.remove('nav-anim');
-      navAnimating = false;
+      setNavAnimating(false);
       resolve();
     }, NAV_DUR + 80);
   });
@@ -7574,7 +7635,7 @@ function openSealedEdit(id) {
   openModal('sealed-modal');
 }
 
-async function saveSealed() {
+async function _saveSealedImpl() {
   const name = document.getElementById('sf-name').value.trim();
   if (!name) { showToast('⚠️ Inserisci il nome del prodotto'); return; }
   const buyV = document.getElementById('sf-buy').value;
@@ -7606,7 +7667,7 @@ async function saveSealed() {
   renderSealed();
 }
 
-async function deleteSealed() {
+async function _deleteSealedImpl() {
   if (!editingSealedId) return;
   const s = sealed.find(x => x.id === editingSealedId);
   if (!s) return;
@@ -7655,7 +7716,13 @@ function removeSealedPhoto() {
 }
 
 
+let _searchDebounce = null;
 function onSearchInput() {
+  // debounce: non ridisegnare a ogni tasto, ma ~120ms dopo l'ultima battuta.
+  clearTimeout(_searchDebounce);
+  _searchDebounce = setTimeout(onSearchInputImmediate, 120);
+}
+function onSearchInputImmediate() {
   const input = document.getElementById('search-input');
   if (!input) return;
   const q = input.value.trim().toLowerCase();
@@ -8713,6 +8780,7 @@ async function saveNickname() {
   let g = null; // stato del gesto attivo
 
   function beginGesture(startX, startY) {
+    if (navAnimating) return null; // una transizione è già in corso: non interferire
     const fromEl = document.getElementById(VIEW_IDS[currentView]);
     const toEl = document.getElementById(VIEW_IDS.home);
     const wrapper = document.querySelector('.scroll-wrapper');
@@ -8721,7 +8789,7 @@ async function saveNickname() {
     const cs = getComputedStyle(main);
     const st = wrapper.scrollTop;
     const vh = window.innerHeight;
-    navAnimating = true;
+    setNavAnimating(true);
     document.body.classList.add('nav-anim');
     wrapper.scrollTop = 0;
     wrapper.style.overflow = 'hidden';
@@ -8806,7 +8874,7 @@ async function saveNickname() {
         gg.wrapper.scrollTop = gg.st; // ripristina dov'eri nella lista
       }
       document.body.classList.remove('nav-anim');
-      navAnimating = false;
+      setNavAnimating(false);
     }, dur + 40);
   }
 
@@ -8973,6 +9041,15 @@ async function authSignOut() {
   showLoginForm();
   showToast('👋 Logout effettuato');
 }
+
+// Se l'app torna visibile e per qualche motivo era rimasta "in animazione",
+// sblocca: evita la navigazione congelata dopo un rientro dal background.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && navAnimating) {
+    setNavAnimating(false);
+    document.body.classList.remove('nav-anim');
+  }
+});
 
 // ============ INIT APP (async — runs after login) ============
 async function initApp() {
