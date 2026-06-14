@@ -380,7 +380,9 @@
     height: auto;
     display: block;
     margin: 10px auto -2px;
-    mix-blend-mode: screen;
+    /* niente mix-blend-mode: dentro home-view (che diventa stacking context
+       durante le transizioni) il blend "screen" si rompe e il logo sparisce.
+       Il PNG ha già lo sfondo trasparente, quindi si vede correttamente. */
   }
 
   .hero-wordmark {
@@ -3847,7 +3849,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v92</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v93</div>
   </div>
 </div>
 
