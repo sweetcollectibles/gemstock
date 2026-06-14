@@ -1,5 +1,5 @@
 // Sweethome Service Worker — v5 (con cache foto Supabase)
-const CACHE_NAME = 'sweethome-v93';
+const CACHE_NAME = 'sweethome-v94';
 const PHOTO_CACHE = 'sweethome-photos-v1';
 
 const ASSETS = [
@@ -63,20 +63,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 2) Tutto il resto: solo stesso dominio (file dell'app) → network-first
+  // 2) Tutto il resto: solo stesso dominio (file dell'app)
   if (url.origin !== location.origin) return;
 
+  // CACHE-FIRST per l'app shell: avvio ISTANTANEO (mostra subito dalla cache),
+  // poi aggiorna la cache in background per la prossima apertura. Risolve il
+  // "schermata bianca / eternità / a volte non apre" del network-first quando
+  // la rete è lenta o assente su iOS PWA.
   event.respondWith(
-    fetch(event.request)
-      .then(networkResponse => {
+    caches.match(event.request).then(cached => {
+      const fetchAndUpdate = fetch(event.request).then(networkResponse => {
         if (networkResponse && networkResponse.status === 200) {
           const clone = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return networkResponse;
-      })
-      .catch(() =>
-        caches.match(event.request).then(cached => cached || caches.match('./index.html'))
-      )
+      }).catch(() => cached || caches.match('./index.html'));
+      return cached || fetchAndUpdate;
+    })
   );
 });

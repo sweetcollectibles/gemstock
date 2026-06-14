@@ -3849,7 +3849,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v93</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v94</div>
   </div>
 </div>
 
@@ -9437,19 +9437,33 @@ function hideSplash() {
 (async function boot() {
   showAuthPage();
 
+  // RETE DI SICUREZZA: qualunque cosa accada (rete lenta, getSession che si
+  // impianta, errore), lo splash sparisce comunque entro 6s. Mai più schermata
+  // bianca infinita.
+  const splashSafety = setTimeout(() => { try { hideSplash(); } catch (_) {} }, 6000);
+
   if (!_supabase) {
     console.warn('Supabase not available — running in offline mode');
+    clearTimeout(splashSafety);
     hideSplash();
     return;
   }
 
-  const { data: { session } } = await _supabase.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
-    await initApp();
-    hideSplash(); // app pronta → via la splash
-  } else {
-    hideSplash(); // nessuna sessione → mostra login, via la splash
+  try {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session?.user) {
+      currentUser = session.user;
+      await initApp();
+      clearTimeout(splashSafety);
+      hideSplash(); // app pronta → via la splash
+    } else {
+      clearTimeout(splashSafety);
+      hideSplash(); // nessuna sessione → mostra login, via la splash
+    }
+  } catch (e) {
+    console.error('boot error:', e);
+    clearTimeout(splashSafety);
+    hideSplash(); // in caso di errore, mostra comunque qualcosa invece del bianco
   }
 
   _supabase.auth.onAuthStateChange(async (event, session) => {
