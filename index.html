@@ -1480,6 +1480,80 @@
      il touch così il browser non parte subito con lo scroll e ci lascia trascinare;
      se l'utente muove il dito viene disarmata e lo scroll riprende. */
   body.reordering .list-card.arming { touch-action: none; }
+
+  /* ============ VETRINA (Neon Glow) ============ */
+  .showcase {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+  .showcase:empty { display: none; }
+  .sc-card {
+    position: relative;
+    border-radius: 14px;
+    padding: 2.5px;
+    background: linear-gradient(135deg, var(--accent), #5a3a8e 40%, #8a6a2a 60%, var(--gold));
+    box-shadow: 0 0 18px rgba(168,85,247,0.28);
+  }
+  .sc-in { background: var(--bg); border-radius: 12px; overflow: hidden; }
+  .sc-in img {
+    width: 100%; display: block;
+    border-radius: 11px 11px 0 0;
+    aspect-ratio: 5 / 8; object-fit: cover;
+  }
+  .sc-name {
+    font-size: 0.6rem; font-weight: 700; text-align: center;
+    padding: 7px 3px; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sc-empty {
+    position: relative; border-radius: 14px;
+    border: 1.5px dashed var(--border); background: var(--surface);
+    aspect-ratio: 5 / 8.7;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; color: var(--muted);
+  }
+  .sc-empty .plus { font-size: 1.6rem; line-height: 1; }
+  .sc-empty .lbl { font-size: 0.54rem; font-weight: 600; }
+  .sc-edit-badge {
+    position: absolute; top: 6px; right: 6px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(0,0,0,0.62); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.22); color: #fff;
+    font-size: 0.72rem; display: flex; align-items: center; justify-content: center; z-index: 2;
+  }
+
+  /* ============ MENU ORDINAMENTO ============ */
+  .sort-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0.32,0.72,0,1); }
+  .sort-menu.open { max-height: 360px; margin-bottom: 12px; }
+  .sort-opt {
+    display: flex; align-items: center; gap: 11px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; padding: 12px 14px; margin-bottom: 7px;
+    font-size: 0.85rem; color: var(--text);
+  }
+  .sort-opt.on { background: rgba(168,85,247,0.12); border-color: var(--accent); }
+  .sort-em { font-size: 1.05rem; }
+  .sort-ck { margin-left: auto; color: var(--accent); font-weight: 800; opacity: 0; }
+  .sort-opt.on .sort-ck { opacity: 1; }
+
+  /* selettore vetrina */
+  .sc-pick-list { display: flex; flex-direction: column; gap: 8px; }
+  .sc-pick-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 9px 12px;
+  }
+  .sc-pick-row.in-use { border-color: rgba(168,85,247,0.4); background: rgba(168,85,247,0.07); }
+  .sc-pick-ph {
+    width: 38px; height: 53px; border-radius: 6px; flex-shrink: 0;
+    background: var(--surface2); display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; overflow: hidden;
+  }
+  .sc-pick-ph img { width: 100%; height: 100%; object-fit: cover; }
+  .sc-pick-name { font-weight: 600; font-size: 0.9rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sc-pick-meta { font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
   /* La transition morbida sullo spostamento delle carte è attiva SOLO mentre
      un drag è in corso (per il "fai spazio" fluido), ma viene gestita con
      transform diretti che la animano. Fuori dal drag attivo: nessuna. */
@@ -3231,6 +3305,9 @@
       <div class="list-count-badge" id="list-count-badge">0</div>
     </div>
 
+    <!-- VETRINA: le 3 carte preferite (Neon Glow) -->
+    <div class="showcase" id="showcase"></div>
+
     <!-- FILTERS -->
     <div class="filter-row" id="filter-row">
       <button class="filter-pill active" data-filter="all">Tutte <span class="filter-count" id="count-all">0</span></button>
@@ -3246,12 +3323,20 @@
       <div class="section-title-text" id="section-text">📁 Portfolio</div>
       <div style="display:flex;align-items:center;gap:12px;margin-left:auto;">
         <div class="section-action" id="section-clear" style="display:none" onclick="clearAllFilters()">✕ Rimuovi filtro</div>
-        <div class="section-action" id="reorder-toggle" onclick="toggleReorder()">↕ Ordina</div>
+        <div class="section-action" id="sort-toggle" onclick="toggleSortMenu()">↕ Ordina</div>
       </div>
     </div>
 
+    <!-- MENU ORDINAMENTO -->
+    <div class="sort-menu" id="sort-menu">
+      <div class="sort-opt" data-sort="profit_desc" onclick="pickSort('profit_desc')"><span class="sort-em">📈</span> Profitto: dal più alto <span class="sort-ck">✓</span></div>
+      <div class="sort-opt" data-sort="profit_asc" onclick="pickSort('profit_asc')"><span class="sort-em">📉</span> Profitto: dal più basso <span class="sort-ck">✓</span></div>
+      <div class="sort-opt" data-sort="buy_desc" onclick="pickSort('buy_desc')"><span class="sort-em">💰</span> Acquisto: dal più caro <span class="sort-ck">✓</span></div>
+      <div class="sort-opt" data-sort="buy_asc" onclick="pickSort('buy_asc')"><span class="sort-em">🪙</span> Acquisto: dal più economico <span class="sort-ck">✓</span></div>
+      <div class="sort-opt" data-sort="recent" onclick="pickSort('recent')"><span class="sort-em">🕐</span> Aggiunte di recente <span class="sort-ck">✓</span></div>
+    </div>
+
     <!-- CARDS -->
-    <div class="reorder-hint">↕ Tieni premuto su una carta e trascinala · tocca "Fatto" per salvare</div>
     <div id="cards-list"></div>
 
   </div>
@@ -3633,7 +3718,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v85</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v86</div>
   </div>
 </div>
 
@@ -3910,6 +3995,19 @@
     <button class="btn btn-primary" onclick="saveSealed()">💾 Salva</button>
     <button class="btn btn-primary" id="sealed-sell-btn" style="margin-top:8px;display:none;background:linear-gradient(135deg,#d4a847,#a87b2f)" onclick="openSellModal('sealed', editingSealedId)">💰 Ho venduto</button>
     <button class="btn btn-secondary" id="sealed-delete-btn" onclick="deleteSealed()" style="margin-top:8px;display:none">🗑 Rimuovi prodotto</button>
+  </div>
+</div>
+
+<!-- ============ MODALE SELEZIONE VETRINA ============ -->
+<div class="modal-overlay" id="showcase-modal">
+  <div class="modal">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title">✨ Scegli la carta in vetrina</div>
+      <button class="modal-close" onclick="closeModal('showcase-modal')">✕</button>
+    </div>
+    <button class="btn btn-secondary" style="margin-bottom:12px" onclick="clearShowcaseSlot()">🗑 Svuota questo slot</button>
+    <div id="showcase-picker-list" class="sc-pick-list"></div>
   </div>
 </div>
 
@@ -4806,21 +4904,8 @@ function renderCards() {
   if (sectionText) sectionText.textContent = sectionLabels[activeFilter] || '📁 Portfolio';
   if (sectionClear) sectionClear.style.display = activeFilter === 'all' ? 'none' : '';
 
-  // Il riordino manuale ha senso solo sulla lista completa, senza filtri né ricerca attiva
-  const reorderBtn = document.getElementById('reorder-toggle');
-  if (reorderBtn) {
-    const canReorder = activeFilter === 'all' && !q;
-    reorderBtn.style.display = canReorder ? '' : 'none';
-    // Se un filtro/ricerca viene attivato mentre si è in riordino, esci dalla modalità
-    if (!canReorder && reorderMode) {
-      reorderMode = false;
-      document.body.classList.remove('reordering');
-      reorderBtn.classList.remove('active');
-      reorderBtn.textContent = '↕ Ordina';
-      persistOrderFromDOM();
-      saveCards(cards);
-    }
-  }
+  // Il menu ordinamento è sempre disponibile (anche con filtri attivi)
+  // — non serve più nascondere nulla.
 
   // Filter — ricerca solo su nome e numero per essere stretta e precisa
   let filtered = cards.filter(c => {
@@ -4842,20 +4927,8 @@ function renderCards() {
   });
 
   // Sort: ordine manuale (sortIndex) se l'utente ha riordinato, altrimenti per profitto
-  const hasManualOrder = cards.some(c => typeof c.sortIndex === 'number');
-  if (hasManualOrder) {
-    filtered.sort((a, b) => {
-      const ia = typeof a.sortIndex === 'number' ? a.sortIndex : 9999;
-      const ib = typeof b.sortIndex === 'number' ? b.sortIndex : 9999;
-      return ia - ib;
-    });
-  } else {
-    filtered.sort((a, b) => {
-      const pa = getPnLPct(a) ?? -999;
-      const pb = getPnLPct(b) ?? -999;
-      return pb - pa;
-    });
-  }
+  // Ordinamento secondo il criterio scelto dall'utente (preset)
+  applySortTo(filtered);
 
   const list = document.getElementById('cards-list');
 
@@ -4881,22 +4954,9 @@ function renderCards() {
 
   // In modalità riordino le carte restano individuali (la logica drag non cambia);
   // altrimenti i set collassano in una tile unica.
-  // In modalità riordino la lista è gestita da renderCardsFlat (carte piatte);
-  // qui (vista normale) i set collassano sempre in una tile unica.
-  list.innerHTML = reorderMode ? renderCardsFlatHTML() : renderGroupedList(filtered);
+  // I set collassano in una tile unica; le carte ordinate secondo il criterio scelto.
+  list.innerHTML = renderGroupedList(filtered);
   markLoadedImages(list);
-  if (reorderMode) enableDragReorder();
-}
-
-// Versione che ritorna solo l'HTML piatto (per quando renderCards gira mentre
-// siamo già in modalità riordino, es. dopo un'operazione)
-function renderCardsFlatHTML() {
-  const sorted = [...cards].sort((a, b) => {
-    const ai = typeof a.sortIndex === 'number' ? a.sortIndex : 9e9;
-    const bi = typeof b.sortIndex === 'number' ? b.sortIndex : 9e9;
-    return ai - bi;
-  });
-  return renderListCards(sorted);
 }
 
 // Raggruppa le carte di un set in una tile unica, lasciando le singole come sono
@@ -7276,6 +7336,7 @@ function goToList() {
   // prepara il contenuto PRIMA dell'animazione, così entra già pronto
   const filterRow = document.getElementById('filter-row');
   if (filterRow) filterRow.scrollLeft = 0;
+  renderShowcase();
   renderCards();
   updateFabVisibility();
   hideViewsExcept(['list-view', fromEl ? fromEl.id : '']);
@@ -7930,256 +7991,148 @@ function renderListCards(arr) {
   }).join('');
 }
 
-// ============ REORDER MODE (drag & drop) ============
-let reorderMode = false;
+// ============ ORDINAMENTO (preset) ============
+let currentSort = 'profit_desc'; // default: profitto dal più alto
 
 function onListCardClick(e, id) {
-  // In modalità riordino il tap sulla tile non apre il dettaglio
-  if (reorderMode) return;
   openDetail(id);
 }
 
-function toggleReorder() {
-  reorderMode = !reorderMode;
-  const btn = document.getElementById('reorder-toggle');
-  document.body.classList.toggle('reordering', reorderMode);
-  if (btn) {
-    btn.classList.toggle('active', reorderMode);
-    btn.textContent = reorderMode ? '✓ Fatto' : '↕ Ordina';
+function toggleSortMenu() {
+  const menu = document.getElementById('sort-menu');
+  const btn = document.getElementById('sort-toggle');
+  if (!menu) return;
+  const open = menu.classList.toggle('open');
+  if (btn) btn.classList.toggle('active', open);
+  // evidenzia l'opzione attiva all'apertura
+  document.querySelectorAll('.sort-opt').forEach(o => o.classList.toggle('on', o.dataset.sort === currentSort));
+}
+
+function pickSort(key) {
+  currentSort = key;
+  try { localStorage.setItem('sweethome_sort', key); } catch (_) {}
+  document.querySelectorAll('.sort-opt').forEach(o => o.classList.toggle('on', o.dataset.sort === key));
+  const menu = document.getElementById('sort-menu');
+  const btn = document.getElementById('sort-toggle');
+  if (menu) menu.classList.remove('open');
+  if (btn) btn.classList.remove('active');
+  renderCards();
+}
+
+// Ordina un array di carte secondo currentSort
+function applySortTo(arr) {
+  const buy = c => (parseFloat(c.buyPrice) || 0) * (c.qty || 1);
+  const pnl = c => {
+    const cur = getCurrentPrice(c);
+    if (cur == null) return null;
+    return (cur - (parseFloat(c.buyPrice) || 0)) * (c.qty || 1);
+  };
+  const added = c => {
+    // data di creazione come proxy di "recente"; fallback su id/sortIndex
+    if (c.createdAt) return new Date(c.createdAt).getTime();
+    return typeof c.sortIndex === 'number' ? c.sortIndex : 0;
+  };
+  switch (currentSort) {
+    case 'profit_asc':
+      arr.sort((a, b) => (pnl(a) ?? 9e12) - (pnl(b) ?? 9e12)); break;
+    case 'buy_desc':
+      arr.sort((a, b) => buy(b) - buy(a)); break;
+    case 'buy_asc':
+      arr.sort((a, b) => buy(a) - buy(b)); break;
+    case 'recent':
+      arr.sort((a, b) => added(b) - added(a)); break;
+    case 'profit_desc':
+    default:
+      arr.sort((a, b) => (pnl(b) ?? -9e12) - (pnl(a) ?? -9e12)); break;
   }
-  if (reorderMode) {
-    // Ri-renderizza la lista in versione PIATTA: ogni carta (anche quelle dei set)
-    // diventa una .list-card uniforme, così il motore di drag opera su una lista
-    // coerente — niente più set-card che sfasano le posizioni.
-    renderCardsFlat();
-    enableDragReorder();
-  } else {
-    // Uscendo, persistiamo l'ordine corrente del DOM in sortIndex e salviamo
-    persistOrderFromDOM();
-    saveCards(cards);
-    renderCards(); // torna alla vista raggruppata (con i set)
-  }
 }
 
-// Render piatto usato SOLO in modalità riordino: tutte le carte come .list-card,
-// nell'ordine attuale (sortIndex), nessun raggruppamento per set.
-function renderCardsFlat() {
-  const list = document.getElementById('cards-list');
-  if (!list) return;
-  const sorted = [...cards].sort((a, b) => {
-    const ai = typeof a.sortIndex === 'number' ? a.sortIndex : 9e9;
-    const bi = typeof b.sortIndex === 'number' ? b.sortIndex : 9e9;
-    return ai - bi;
-  });
-  list.innerHTML = renderListCards(sorted);
-  markLoadedImages(list);
+// ============ VETRINA (3 carte preferite) ============
+let showcaseIds = []; // id delle 3 carte in vetrina
+
+function loadShowcase() {
+  try {
+    const raw = localStorage.getItem('sweethome_showcase');
+    showcaseIds = raw ? JSON.parse(raw) : [];
+  } catch (_) { showcaseIds = []; }
 }
 
-function persistOrderFromDOM() {
-  const list = document.getElementById('cards-list');
-  if (!list) return;
-  const ids = [...list.querySelectorAll('.list-card')].map(el => parseInt(el.dataset.id));
-  ids.forEach((id, idx) => {
-    const card = cards.find(c => c.id === id);
-    if (card) card.sortIndex = idx;
-  });
+function saveShowcase() {
+  try { localStorage.setItem('sweethome_showcase', JSON.stringify(showcaseIds)); } catch (_) {}
 }
 
-function enableDragReorder() {
-  const list = document.getElementById('cards-list');
-  if (!list) return;
+function renderShowcase() {
+  const el = document.getElementById('showcase');
+  if (!el) return;
+  // tieni solo gli id ancora esistenti
+  showcaseIds = showcaseIds.filter(id => cards.some(c => c.id === id)).slice(0, 3);
+  // se l'utente non ha mai scelto nulla, non mostrare la vetrina (evita slot vuoti al primo avvio)
+  if (showcaseIds.length === 0) { el.innerHTML = ''; return; }
 
-  // PROTEZIONE FOTO: durante il riordino il DOM si sposta, e le <img loading="lazy">
-  // possono essere ri-scaricate (sparendo per un istante). Le forziamo a "eager"
-  // così restano sempre visibili mentre trascini.
-  list.querySelectorAll('.list-photo img').forEach(img => {
-    if (img.getAttribute('loading') === 'lazy') {
-      img.setAttribute('loading', 'eager');
-      img.dataset.wasLazy = '1';
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    const id = showcaseIds[i];
+    const c = id ? cards.find(x => x.id === id) : null;
+    if (c) {
+      const img = c.photo || c.thumb; // FOTO PIENA (alta qualità) — sono solo 3
+      html += `
+        <div class="sc-card" onclick="openShowcasePicker(${i})">
+          <span class="sc-edit-badge">✎</span>
+          <div class="sc-in">
+            ${img ? `<img src="${img}" alt="${c.name}"/>` : `<div style="aspect-ratio:5/8;display:flex;align-items:center;justify-content:center;font-size:2rem">🃏</div>`}
+            <div class="sc-name">${c.name}</div>
+          </div>
+        </div>`;
+    } else {
+      html += `
+        <div class="sc-empty" onclick="openShowcasePicker(${i})">
+          <span class="plus">+</span><span class="lbl">Aggiungi</span>
+        </div>`;
     }
-  });
-
-  // Evita doppia inizializzazione sugli stessi nodi
-  list.querySelectorAll('.list-card').forEach(card => {
-    if (card._dragBound) return;
-    card._dragBound = true;
-    bindLongPressDrag(card, list);
-  });
+  }
+  el.innerHTML = html;
 }
 
-function bindLongPressDrag(card, list) {
-  let pressTimer = null;
-  let dragging = false;
-  let startX = 0, startY = 0;
-  let pointerId = null;
-  let ghostOffsetY = 0;
-  let autoScrollRAF = null;
-  let lastClientY = 0;
-  let slots = [];           // posizioni precalcolate delle carte (niente reflow per-frame)
-  let cardH = 0;            // altezza di una card+gap
-  let dragIndex = 0;        // indice corrente della card trascinata fra gli slot
-  const LONG_PRESS_MS = 220;
-  const MOVE_CANCEL_PX = 10;
+// selettore: scegli quale carta mettere nello slot i
+let showcaseSlotEditing = 0;
+function openShowcasePicker(slot) {
+  showcaseSlotEditing = slot;
+  const listEl = document.getElementById('showcase-picker-list');
+  const sorted = [...cards].sort((a, b) => a.name.localeCompare(b.name));
+  listEl.innerHTML = sorted.map(c => {
+    const img = c.thumb || c.photo;
+    const inUse = showcaseIds.includes(c.id);
+    const meta = [c.grader && c.grader !== 'RAW' ? c.grader : (c.grader === 'RAW' ? 'RAW' : ''), c.number ? '#' + c.number : ''].filter(Boolean).join(' · ');
+    return `
+      <div class="sc-pick-row${inUse ? ' in-use' : ''}" onclick="setShowcaseSlot(${c.id})">
+        <div class="sc-pick-ph">${img ? `<img src="${img}" alt=""/>` : '🃏'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="sc-pick-name">${c.name}</div>
+          <div class="sc-pick-meta">${meta}${inUse ? ' · già in vetrina' : ''}</div>
+        </div>
+      </div>`;
+  }).join('');
+  openModal('showcase-modal');
+}
 
-  const scroller = document.querySelector('.scroll-wrapper') || document.scrollingElement || document.documentElement;
+function setShowcaseSlot(cardId) {
+  // se la carta è già in un altro slot, rimuovila da lì (no doppioni)
+  showcaseIds = showcaseIds.filter(id => id !== cardId);
+  while (showcaseIds.length < 3) showcaseIds.push(null);
+  showcaseIds[showcaseSlotEditing] = cardId;
+  showcaseIds = showcaseIds.filter(x => x != null);
+  saveShowcase();
+  closeModal('showcase-modal');
+  renderShowcase();
+}
 
-  card.addEventListener('pointerdown', (e) => {
-    if (!reorderMode) return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    pointerId = e.pointerId;
-    startX = e.clientX; startY = e.clientY; lastClientY = e.clientY;
-    // "arma" la card: touch-action:none così il browser NON inizia subito lo scroll
-    // e ci lascia la finestra del long-press. Se l'utente muove (vuole scrollare),
-    // togliamo arming → lo scroll riprende normale.
-    card.classList.add('arming');
-    pressTimer = setTimeout(() => startDrag(e), LONG_PRESS_MS);
-    const disarm = () => {
-      card.classList.remove('arming');
-      clearTimeout(pressTimer);
-      card.removeEventListener('pointermove', cancelIfMoved);
-    };
-    const cancelIfMoved = (ev) => {
-      if (dragging) return;
-      if (Math.abs(ev.clientY - startY) > MOVE_CANCEL_PX || Math.abs(ev.clientX - startX) > MOVE_CANCEL_PX) {
-        disarm();
-      }
-    };
-    card.addEventListener('pointermove', cancelIfMoved);
-    card.addEventListener('pointerup', () => { card.classList.remove('arming'); clearTimeout(pressTimer); card.removeEventListener('pointermove', cancelIfMoved); }, { once: true });
-    card.addEventListener('pointercancel', () => { card.classList.remove('arming'); clearTimeout(pressTimer); card.removeEventListener('pointermove', cancelIfMoved); }, { once: true });
-  });
-
-  // Misura UNA VOLTA tutte le posizioni a inizio drag. Da qui in poi confrontiamo
-  // il dito contro questi numeri in memoria: ZERO getBoundingClientRect per frame.
-  function measureSlots() {
-    const cards = [...list.querySelectorAll('.list-card')];
-    slots = cards.map(el => {
-      const r = el.getBoundingClientRect();
-      return { el, top: r.top + scroller.scrollTop, height: r.height, center: r.top + scroller.scrollTop + r.height / 2 };
-    });
-    cardH = slots.length > 1 ? (slots[1].top - slots[0].top) : (slots[0] ? slots[0].height + 10 : 0);
+function clearShowcaseSlot() {
+  if (showcaseIds[showcaseSlotEditing] != null) {
+    showcaseIds.splice(showcaseSlotEditing, 1);
+    saveShowcase();
   }
-
-  function startDrag(e) {
-    dragging = true;
-    if (navigator.vibrate) navigator.vibrate(12);
-    card.classList.remove('arming');
-    card.setPointerCapture(pointerId);
-
-    measureSlots();
-    dragIndex = slots.findIndex(s => s.el === card);
-    const rect = card.getBoundingClientRect();
-    ghostOffsetY = e.clientY - rect.top;
-
-    card.classList.add('dragging');
-    card.style.width = rect.width + 'px';
-    card.style.zIndex = '100';
-    document.body.classList.add('drag-active');
-    document.body.classList.add('dragging-active'); // disattiva la transition sulle altre
-
-    moveGhost(e.clientY);
-
-    card.addEventListener('pointermove', onMove);
-    card.addEventListener('pointerup', onUp);
-    card.addEventListener('pointercancel', onUp);
-    startAutoScroll();
-  }
-
-  // Posiziona la card sotto il dito usando SOLO numeri (nessuna lettura di layout)
-  function moveGhost(clientY) {
-    const homeTop = slots[dragIndex] ? slots[dragIndex].top : 0;
-    const desiredTopDoc = clientY + scroller.scrollTop - ghostOffsetY;
-    card.style.transform = `translateY(${desiredTopDoc - homeTop}px) scale(1.03)`;
-  }
-
-  // Calcola in quale slot dovrebbe stare la card in base alla Y del dito,
-  // e sposta le ALTRE carte con un translateY (niente insertBefore continuo:
-  // il DOM si riordina UNA volta sola, al rilascio).
-  function updatePositions(clientY) {
-    const yDoc = clientY + scroller.scrollTop;
-    let newIndex = slots.length - 1;
-    for (let i = 0; i < slots.length; i++) {
-      if (yDoc < slots[i].center) { newIndex = i; break; }
-    }
-    if (newIndex === dragIndex) return;
-    // sposta visivamente le carte fra la vecchia e la nuova posizione
-    slots.forEach((s, i) => {
-      if (s.el === card) return;
-      let shift = 0;
-      if (dragIndex < newIndex && i > dragIndex && i <= newIndex) shift = -cardH;
-      else if (dragIndex > newIndex && i >= newIndex && i < dragIndex) shift = cardH;
-      s.el.style.transform = shift ? `translateY(${shift}px)` : '';
-    });
-    dragIndex = newIndex;
-  }
-
-  function onMove(e) {
-    if (!dragging) return;
-    e.preventDefault();
-    lastClientY = e.clientY;
-    updatePositions(e.clientY);
-    moveGhost(e.clientY);
-  }
-
-  function onUp() {
-    if (!dragging) return;
-    dragging = false;
-    stopAutoScroll();
-    try { card.releasePointerCapture(pointerId); } catch (_) {}
-    card.removeEventListener('pointermove', onMove);
-    card.removeEventListener('pointerup', onUp);
-    card.removeEventListener('pointercancel', onUp);
-
-    // Riordino REALE del DOM, una volta sola, in base all'indice finale
-    const ordered = slots.map(s => s.el).filter(el => el !== card);
-    ordered.splice(dragIndex, 0, card);
-    // azzera i transform di tutte prima di reinserire
-    slots.forEach(s => { s.el.style.transform = ''; });
-    const frag = document.createDocumentFragment();
-    ordered.forEach(el => frag.appendChild(el));
-    list.appendChild(frag);
-
-    card.classList.remove('dragging');
-    card.style.transform = '';
-    card.style.width = '';
-    card.style.zIndex = '';
-    document.body.classList.remove('drag-active');
-    document.body.classList.remove('dragging-active');
-
-    persistOrderFromDOM();
-    if (navigator.vibrate) navigator.vibrate(6);
-  }
-
-  function startAutoScroll() {
-    const EDGE = 110;
-    const MAX_SPEED = 14;
-    const step = () => {
-      if (!dragging) { autoScrollRAF = null; return; }
-      const rect = scroller.getBoundingClientRect();
-      let dy = 0;
-      if (lastClientY < rect.top + EDGE) {
-        const intensity = Math.max(0, (rect.top + EDGE - lastClientY) / EDGE);
-        dy = -MAX_SPEED * Math.min(1, intensity);
-      } else if (lastClientY > rect.bottom - EDGE) {
-        const intensity = Math.max(0, (lastClientY - (rect.bottom - EDGE)) / EDGE);
-        dy = MAX_SPEED * Math.min(1, intensity);
-      }
-      if (dy !== 0) {
-        const before = scroller.scrollTop;
-        scroller.scrollTop = before + dy;
-        if (scroller.scrollTop !== before) {
-          updatePositions(lastClientY);
-          moveGhost(lastClientY);
-        }
-      }
-      autoScrollRAF = requestAnimationFrame(step);
-    };
-    autoScrollRAF = requestAnimationFrame(step);
-  }
-  function stopAutoScroll() {
-    if (autoScrollRAF) cancelAnimationFrame(autoScrollRAF);
-    autoScrollRAF = null;
-  }
+  closeModal('showcase-modal');
+  renderShowcase();
 }
 
 // ============ SETTINGS ============
@@ -9183,6 +9136,11 @@ async function initApp() {
 
   cards = loadedCards;
   activities = loadedActs || [];
+  loadShowcase();
+  try {
+    const savedSort = localStorage.getItem('sweethome_sort');
+    if (savedSort) currentSort = savedSort;
+  } catch (_) {}
   applyLocalOrder(cards);
   wishlist = loadedWishlist;
   sealed = loadedSealed;
@@ -9312,7 +9270,7 @@ let touchStartY = 0;
 // ============ FEEDBACK PRESSIONE (classe .pressing) ============
 // Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
 // :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
-const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.dock-add-btn,.mini-dock-btn,.filter-pill,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt';
+const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.dock-add-btn,.mini-dock-btn,.filter-pill,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
 let pressedEl = null;
 function clearPressed() {
   if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
