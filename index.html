@@ -406,36 +406,34 @@
     text-transform: uppercase;
   }
 
-  /* ===== STATO COMPATTO (dentro le sezioni) ===== */
-  /* il brand si rimpicciolisce, la tagline sfuma e collassa, l'header riduce il padding.
-     Tutto via transform/opacity/max-height su pochi elementi → fluido, niente scatti. */
+  /* ===== STATO COMPATTO (dentro le sezioni) — TRANSFORM PURO ===== */
+  /* Si anima SOLO transform/opacity → GPU, 60fps, niente reflow. */
+  .hero-brand {
+    transform-origin: top center;
+    transition: transform 0.46s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: transform;
+  }
   .hero-tagline {
-    transition: opacity 0.34s ease, max-height 0.46s cubic-bezier(0.32, 0.72, 0, 1), margin-top 0.46s cubic-bezier(0.32, 0.72, 0, 1);
-    max-height: 24px;
-    overflow: hidden;
+    transition: opacity 0.3s ease;
   }
   body.sec-compact .hero-brand {
-    transform: scale(0.46);
+    transform: translateY(-34px) scale(0.46);
   }
   body.sec-compact .hero-tagline {
     opacity: 0;
-    max-height: 0;
-    margin-top: 0;
   }
-  /* l'header riduce lo spazio che occupa quando il brand è piccolo, con la stessa curva */
+  /* L'altezza dell'hero-header viene interpolata: i due valori (pieno/compatto)
+     sono impostati via JS in --hero-h, e la transition su height li anima.
+     height è una proprietà sola su un contenitore isolato (l'hero), il suo unico
+     "figlio pesante" è il brand che però è in transform → nessun reflow a cascata. */
+  /* L'altezza dell'hero cambia ISTANTANEAMENTE (no animazione su height: causa
+     reflow e scatti). Il cambio è impercettibile perché avviene durante la
+     transizione di pagina. Solo il brand si anima, con transform puro (GPU). */
   .hero-header {
-    transition: padding-bottom 0.46s cubic-bezier(0.32, 0.72, 0, 1);
+    height: var(--hero-h, auto);
+    overflow: hidden;
   }
-  body.sec-compact .hero-header {
-    padding-bottom: 0;
-  }
-  /* compensa lo spazio: il brand scalato "libera" altezza, la recuperiamo con un margine negativo animato */
-  body.sec-compact .hero-brand {
-    margin-bottom: -86px;
-  }
-  .hero-brand {
-    transition: transform 0.46s cubic-bezier(0.32, 0.72, 0, 1), margin-bottom 0.46s cubic-bezier(0.32, 0.72, 0, 1);
-  }
+  body.nav-anim .hero-brand { transition: none; }
   /* ===== END HERO HEADER ===== */
 
   /* ============ SPLASH SCREEN ============ */
@@ -730,6 +728,65 @@
   .stat-card.full {
     grid-column: span 2;
     padding: 18px 20px;
+  }
+
+  /* ===== TILE POSIZIONI (P&L + barra, compatta come le altre) ===== */
+  .pos-pnl {
+    font-size: 1.35rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 5px;
+    line-height: 1;
+  }
+  .pos-pct {
+    font-size: 0.56rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 3px;
+    margin-bottom: 8px;
+  }
+  .pos-bar {
+    height: 7px;
+    border-radius: 99px;
+    overflow: hidden;
+    display: flex;
+    background: var(--surface2);
+  }
+  .pos-bar-g { background: var(--green); transition: width 0.4s ease; }
+  .pos-bar-r { background: var(--red); transition: width 0.4s ease; }
+  .pos-leg {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 6px;
+  }
+
+  /* ===== TILE CHALLENGES (teaser coming soon) ===== */
+  .challenge-tile {
+    position: relative;
+    background: linear-gradient(135deg, rgba(168,85,247,0.10), rgba(212,168,71,0.06));
+    border: 1px solid rgba(168,85,247,0.3);
+    cursor: pointer;
+  }
+  .challenge-soon {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    font-size: 0.46rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--gold);
+    background: rgba(212,168,71,0.14);
+    border: 1px solid rgba(212,168,71,0.3);
+    border-radius: 999px;
+    padding: 2px 7px;
+  }
+  .challenge-val {
+    font-size: 1.5rem;
+    margin-top: 6px;
+    filter: drop-shadow(0 0 8px rgba(168,85,247,0.5));
   }
 
   /* Mini chart inside card */
@@ -3814,7 +3871,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v89</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v91</div>
   </div>
 </div>
 
@@ -4879,10 +4936,12 @@ function renderStats() {
       <div class="stat-sub">${totalCards} carte · valore attuale €${fmt(totalCur)}</div>
       ${chartData.chart}
     </div>
-    <div class="stat-card ${isPos ? 'green' : 'red'}">
-      <div class="stat-label">📊 P&L Totale</div>
-      <div class="stat-value ${isPos ? 'green' : 'red'}">${isPos ? '+' : ''}€${fmt(pnl)}</div>
-      <div class="stat-sub">${isPos ? '+' : ''}${pct.toFixed(1)}%</div>
+    <div class="stat-card clickable ${(activeFilter === 'sell' || activeFilter === 'loss') ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
+      <div class="stat-label">📊 Posizioni</div>
+      <div class="pos-pnl ${isPos ? 'green' : 'red'}">${isPos ? '+' : ''}€${fmt(pnl)}</div>
+      <div class="pos-pct ${isPos ? 'green' : 'red'}">${isPos ? '+' : ''}${pct.toFixed(1)}%</div>
+      <div class="pos-bar"><div class="pos-bar-g" style="width:${inProfit + inLoss > 0 ? Math.round(inProfit / (inProfit + inLoss) * 100) : 50}%"></div><div class="pos-bar-r" style="width:${inProfit + inLoss > 0 ? Math.round(inLoss / (inProfit + inLoss) * 100) : 50}%"></div></div>
+      <div class="pos-leg"><span class="green">${inProfit} 📈</span><span class="red">📉 ${inLoss}</span></div>
     </div>
     <div class="stat-card clickable ${toSell > 0 ? 'sell-alert' : 'blue'} ${activeFilter === 'topsell' ? 'active' : ''}" data-stat-filter="topsell" onclick="toggleStatFilter('topsell')">
       ${toSell > 0 ? '<div class="alert-dot"></div>' : ''}
@@ -4890,15 +4949,16 @@ function renderStats() {
       <div class="stat-value" style="color:${toSell > 0 ? 'var(--red)' : 'var(--accent)'}">${toSell}</div>
       <div class="stat-sub">carte sopra +30%</div>
     </div>
-    <div class="stat-card clickable ${(activeFilter === 'sell' || activeFilter === 'loss') ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
-      <div class="stat-label">📊 Posizioni</div>
-      <div class="stat-value"><span class="green">${inProfit}</span> <span style="color:var(--muted);font-size:0.8em">·</span> <span class="red">${inLoss}</span></div>
-      <div class="stat-sub">📈 profitto · 📉 perdita</div>
-    </div>
     <div class="stat-card clickable" onclick="goToRegistry()">
       <div class="stat-label">🧾 Registro</div>
       <div class="stat-value" style="color:var(--accent)">${activities.filter(a => a.year === new Date().getFullYear()).length}</div>
       <div class="stat-sub">movimenti ${new Date().getFullYear()}</div>
+    </div>
+    <div class="stat-card challenge-tile" onclick="showToast('🏆 Challenges — in arrivo!')">
+      <div class="challenge-soon">COMING SOON</div>
+      <div class="stat-label">🏆 Challenges</div>
+      <div class="stat-value challenge-val">✨</div>
+      <div class="stat-sub">presto disponibile</div>
     </div>
     ${toUpdate > 0 ? `
     <div class="stat-card clickable stale-alert full ${activeFilter === 'stale' ? 'active' : ''}" data-stat-filter="stale" onclick="toggleStatFilter('stale')">
@@ -7355,8 +7415,12 @@ function transitionViews(fromEl, toEl, direction) {
       resolve(); return;
     }
     const main = document.querySelector('.main');
-    setNavAnimating(true);
+    // nav-anim PRIMA di leggere lo scroll: blocca l'animazione dell'altezza hero
+    // così salta subito al valore finale (niente movimento verticale che si somma
+    // alla push → niente effetto diagonale). Forziamo un reflow per applicarlo ora.
     document.body.classList.add('nav-anim');
+    void main.offsetHeight;
+    setNavAnimating(true);
     const st = wrapper.scrollTop;
     const vh = window.innerHeight;
     const cs = getComputedStyle(main);
@@ -7480,12 +7544,31 @@ function goToHome() {
   transitionViews(fromEl, document.getElementById('home-view'), 'back');
 }
 
+// Gestisce l'altezza dell'hero per l'animazione logo, in modo fluido.
+// Misura l'altezza piena UNA volta e la fissa; nello stato compatto usa
+// un'altezza ridotta. La transition CSS su height interpola tra i due valori.
+let _heroFullH = 0;
+function setHeroCompact(compact) {
+  const hero = document.querySelector('.hero-header');
+  if (!hero) return;
+  if (!_heroFullH && !document.body.classList.contains('sec-compact')) {
+    _heroFullH = hero.offsetHeight;
+  }
+  if (compact) {
+    const compactH = Math.max(64, Math.round((_heroFullH || 200) * 0.42));
+    hero.style.setProperty('--hero-h', compactH + 'px');
+    document.body.classList.add('sec-compact');
+  } else {
+    if (_heroFullH) hero.style.setProperty('--hero-h', _heroFullH + 'px');
+    document.body.classList.remove('sec-compact');
+  }
+}
+
 // Safety helper — call this anytime view changes or modals open/close
 function updateFabVisibility() {
   // Logo compatto in TUTTE le sezioni, pieno solo in home.
-  // Agganciato qui perché updateFabVisibility è chiamato da ogni navigazione
-  // → un solo punto, sempre sincronizzato con la transizione in corso.
-  document.body.classList.toggle('sec-compact', currentView !== 'home');
+  const compact = currentView !== 'home';
+  setHeroCompact(compact);
   if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
     document.body.classList.remove('hide-fab');
   } else {
@@ -9426,7 +9509,7 @@ let touchStartY = 0;
 // ============ FEEDBACK PRESSIONE (classe .pressing) ============
 // Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
 // :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
-const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
+const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.challenge-tile,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
 let pressedEl = null;
 function clearPressed() {
   if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
