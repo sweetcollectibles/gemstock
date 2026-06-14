@@ -1281,6 +1281,25 @@
 
   .filter-row::-webkit-scrollbar { display: none; }
 
+  /* cassetto dei filtri grado: nascosto finché non tocchi "Tutte" */
+  .filter-extra {
+    display: flex;
+    gap: 6px;
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-width 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease;
+  }
+  .filter-extra.open {
+    max-width: 600px;
+    opacity: 1;
+  }
+  .filter-chevron {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-left: 2px;
+  }
+
   .filter-pill {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -1491,12 +1510,43 @@
   .showcase:empty { display: none; }
   .sc-card {
     position: relative;
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 2.5px;
-    background: linear-gradient(135deg, var(--accent), #5a3a8e 40%, #8a6a2a 60%, var(--gold));
-    box-shadow: 0 0 18px rgba(168,85,247,0.28);
+    background: linear-gradient(135deg, #c77dff, #a855f7 30%, #7e22ce 50%, #d4a847 80%, #f0c869);
+    box-shadow:
+      0 0 22px rgba(168,85,247,0.55),
+      0 0 40px rgba(168,85,247,0.25),
+      0 4px 16px rgba(0,0,0,0.4);
   }
-  .sc-in { background: var(--bg); border-radius: 12px; overflow: hidden; }
+  /* alone glass attorno: pseudo-elemento sfocato dietro la carta */
+  .sc-card::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.5), rgba(212,168,71,0.4));
+    filter: blur(9px);
+    opacity: 0.55;
+    z-index: -1;
+  }
+  .sc-in {
+    position: relative;
+    background: rgba(19,19,19,0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 13px;
+    overflow: hidden;
+  }
+  /* riflesso vetro diagonale sopra la carta */
+  .sc-in::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.18), transparent 42%);
+    pointer-events: none;
+    z-index: 2;
+    border-radius: 13px;
+  }
   .sc-in img {
     width: 100%; display: block;
     border-radius: 11px 11px 0 0;
@@ -1516,13 +1566,6 @@
   }
   .sc-empty .plus { font-size: 1.6rem; line-height: 1; }
   .sc-empty .lbl { font-size: 0.54rem; font-weight: 600; }
-  .sc-edit-badge {
-    position: absolute; top: 6px; right: 6px;
-    width: 24px; height: 24px; border-radius: 50%;
-    background: rgba(0,0,0,0.62); backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,0.22); color: #fff;
-    font-size: 0.72rem; display: flex; align-items: center; justify-content: center; z-index: 2;
-  }
 
   /* ============ MENU ORDINAMENTO ============ */
   .sort-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0.32,0.72,0,1); }
@@ -3308,14 +3351,16 @@
     <!-- VETRINA: le 3 carte preferite (Neon Glow) -->
     <div class="showcase" id="showcase"></div>
 
-    <!-- FILTERS -->
+    <!-- FILTERS — "Tutte" fa da toggle: tocca per rivelare PSA/BGS/CGC/... -->
     <div class="filter-row" id="filter-row">
-      <button class="filter-pill active" data-filter="all">Tutte <span class="filter-count" id="count-all">0</span></button>
-      <button class="filter-pill" data-filter="PSA">PSA <span class="filter-count" id="count-psa">0</span></button>
-      <button class="filter-pill" data-filter="BGS">BGS <span class="filter-count" id="count-bgs">0</span></button>
-      <button class="filter-pill" data-filter="CGC">CGC <span class="filter-count" id="count-cgc">0</span></button>
-      <button class="filter-pill" data-filter="ALTRO">Altro <span class="filter-count" id="count-other">0</span></button>
-      <button class="filter-pill" data-filter="RAW">RAW <span class="filter-count" id="count-raw">0</span></button>
+      <button class="filter-pill active" data-filter="all" id="filter-all-btn" onclick="toggleGradeFilters()">Tutte <span class="filter-count" id="count-all">0</span> <span class="filter-chevron" id="filter-chevron">▾</span></button>
+      <div class="filter-extra" id="filter-extra">
+        <button class="filter-pill" data-filter="PSA">PSA <span class="filter-count" id="count-psa">0</span></button>
+        <button class="filter-pill" data-filter="BGS">BGS <span class="filter-count" id="count-bgs">0</span></button>
+        <button class="filter-pill" data-filter="CGC">CGC <span class="filter-count" id="count-cgc">0</span></button>
+        <button class="filter-pill" data-filter="ALTRO">Altro <span class="filter-count" id="count-other">0</span></button>
+        <button class="filter-pill" data-filter="RAW">RAW <span class="filter-count" id="count-raw">0</span></button>
+      </div>
     </div>
 
     <!-- SECTION TITLE (stat filter) -->
@@ -3718,7 +3763,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v87</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v88</div>
   </div>
 </div>
 
@@ -7070,7 +7115,23 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ============ FILTERS ============
-document.querySelectorAll('.filter-pill').forEach(btn => {
+// "Tutte" fa da toggle per rivelare gli altri filtri (PSA/BGS/...) e insieme
+// attiva il filtro "tutte". Gli altri pill applicano il loro grader.
+function toggleGradeFilters() {
+  const extra = document.getElementById('filter-extra');
+  const chevron = document.getElementById('filter-chevron');
+  const isOpen = extra.classList.toggle('open');
+  if (chevron) chevron.textContent = isOpen ? '▴' : '▾';
+  // tocco su "Tutte" → torna anche al filtro completo
+  if (activeFilter !== 'all') {
+    activeFilter = 'all';
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+    renderStats();
+    renderCards();
+  }
+}
+
+document.querySelectorAll('.filter-pill[data-filter]:not(#filter-all-btn)').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -8078,8 +8139,7 @@ function renderShowcase() {
     if (c) {
       const img = c.photo || c.thumb; // FOTO PIENA (alta qualità) — sono solo 3
       html += `
-        <div class="sc-card" onclick="openShowcasePicker(${i})">
-          <span class="sc-edit-badge">✎</span>
+        <div class="sc-card" onclick="showcaseTap(${i})">
           <div class="sc-in">
             ${img ? `<img src="${img}" alt="${c.name}"/>` : `<div style="aspect-ratio:5/8;display:flex;align-items:center;justify-content:center;font-size:2rem">🃏</div>`}
             <div class="sc-name">${c.name}</div>
@@ -8097,6 +8157,17 @@ function renderShowcase() {
 
 // selettore: scegli quale carta mettere nello slot i
 let showcaseSlotEditing = 0;
+
+// Tap su una carta in vetrina → chiede se modificarla (niente più matita fissa)
+function showcaseTap(slot) {
+  const id = showcaseIds[slot];
+  const c = id ? cards.find(x => x.id === id) : null;
+  const nome = c ? c.name : 'questa posizione';
+  showPdfChoice(`✨ ${nome}`, [
+    { label: '🔄 Cambia carta in vetrina', onPick: () => openShowcasePicker(slot) }
+  ]);
+}
+
 function openShowcasePicker(slot) {
   showcaseSlotEditing = slot;
   const listEl = document.getElementById('showcase-picker-list');
@@ -9272,7 +9343,7 @@ let touchStartY = 0;
 // ============ FEEDBACK PRESSIONE (classe .pressing) ============
 // Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
 // :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
-const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.dock-add-btn,.mini-dock-btn,.filter-pill,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
+const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
 let pressedEl = null;
 function clearPressed() {
   if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
