@@ -367,6 +367,13 @@
     margin-bottom: 4px;
   }
 
+  /* Blocco logo+wordmark che si scala come UN solo elemento (proporzioni intatte).
+     Scaliamo SOLO transform → GPU, zero reflow, fluidità massima. */
+  .hero-brand {
+    transform-origin: top center;
+    transition: transform 0.46s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
   .hero-logo {
     width: 220px;
     max-width: 65%;
@@ -397,6 +404,37 @@
     letter-spacing: 2.2px;
     margin-top: 8px;
     text-transform: uppercase;
+  }
+
+  /* ===== STATO COMPATTO (dentro le sezioni) ===== */
+  /* il brand si rimpicciolisce, la tagline sfuma e collassa, l'header riduce il padding.
+     Tutto via transform/opacity/max-height su pochi elementi → fluido, niente scatti. */
+  .hero-tagline {
+    transition: opacity 0.34s ease, max-height 0.46s cubic-bezier(0.32, 0.72, 0, 1), margin-top 0.46s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 24px;
+    overflow: hidden;
+  }
+  body.sec-compact .hero-brand {
+    transform: scale(0.46);
+  }
+  body.sec-compact .hero-tagline {
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+  }
+  /* l'header riduce lo spazio che occupa quando il brand è piccolo, con la stessa curva */
+  .hero-header {
+    transition: padding-bottom 0.46s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  body.sec-compact .hero-header {
+    padding-bottom: 0;
+  }
+  /* compensa lo spazio: il brand scalato "libera" altezza, la recuperiamo con un margine negativo animato */
+  body.sec-compact .hero-brand {
+    margin-bottom: -86px;
+  }
+  .hero-brand {
+    transition: transform 0.46s cubic-bezier(0.32, 0.72, 0, 1), margin-bottom 0.46s cubic-bezier(0.32, 0.72, 0, 1);
   }
   /* ===== END HERO HEADER ===== */
 
@@ -712,6 +750,17 @@
     height: 100%;
     overflow: visible;
   }
+  /* Durante una transizione di pagina la vista uscente scorre via: se la chart SVG
+     ha overflow visibile, parti di essa "sbordano" oltre la vista clippata e
+     restano visibili un istante (effetto grafico fantasma). Durante nav-anim
+     forziamo il contenimento e stabilizziamo il layer su GPU → niente fantasma,
+     niente scatti. */
+  body.nav-anim .page-view {
+    overflow: hidden;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+  body.nav-anim .mini-chart svg { overflow: hidden; }
 
   /* Legend positioned in TOP-RIGHT CORNER of stat-card (absolute to .stat-card) */
   .stat-chart-legend {
@@ -3291,8 +3340,10 @@
     </div>
   </div>
 
-  <img class="hero-logo" src="logo-neon.png" alt="Sweethome"/>
-  <div class="hero-wordmark"><span class="purple-s">S</span>WEETHOME</div>
+  <div class="hero-brand">
+    <img class="hero-logo" src="logo-neon.png" alt="Sweethome"/>
+    <div class="hero-wordmark"><span class="purple-s">S</span>WEETHOME</div>
+  </div>
   <div class="hero-tagline">BY SWEETCOLLECTIBLES</div>
 </div>
 
@@ -3763,7 +3814,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v88</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v89</div>
   </div>
 </div>
 
@@ -5000,6 +5051,8 @@ function renderCards() {
   // In modalità riordino le carte restano individuali (la logica drag non cambia);
   // altrimenti i set collassano in una tile unica.
   // I set collassano in una tile unica; le carte ordinate secondo il criterio scelto.
+  // azzera il contatore immagini prima di ricostruire la lista (eager/lazy corretti)
+  _listImgCounter = 0;
   list.innerHTML = renderGroupedList(filtered);
   markLoadedImages(list);
 }
@@ -6106,7 +6159,7 @@ function renderSetView(gid) {
       </div>
       <button class="btn btn-primary" style="width:100%;margin-top:14px;background:linear-gradient(135deg,#d4a847,#a87b2f)" onclick="openSellModal('set', '${gid}')">💰 Ho venduto il set</button>
     </div>
-    ${renderListCards(members)}
+    ${(_listImgCounter = 0, renderListCards(members))}
   `;
   markLoadedImages(document.getElementById('set-view-body'));
 }
@@ -7429,6 +7482,10 @@ function goToHome() {
 
 // Safety helper — call this anytime view changes or modals open/close
 function updateFabVisibility() {
+  // Logo compatto in TUTTE le sezioni, pieno solo in home.
+  // Agganciato qui perché updateFabVisibility è chiamato da ogni navigazione
+  // → un solo punto, sempre sincronizzato con la transizione in corso.
+  document.body.classList.toggle('sec-compact', currentView !== 'home');
   if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
     document.body.classList.remove('hide-fab');
   } else {
@@ -7936,6 +7993,7 @@ function onSearchInputImmediate() {
   let html = '';
   if (cardHits.length) {
     if (searchScope === 'all') html += `<div class="search-overlay-title">🃏 Carte · ${cardHits.length}</div>`;
+    _listImgCounter = 0;
     html += renderListCards(cardHits);
   }
   if (sealedHits.length) {
@@ -7995,6 +8053,26 @@ function searchRowSimple(name, meta, photo, onclickStr) {
     </div>`;
 }
 
+// Contatore globale dell'indice immagine nella lista (per decidere eager vs lazy
+// in modo corretto anche quando renderGroupedList chiama renderListCards a pezzi).
+let _listImgCounter = 0;
+
+// Retry robusto per le immagini di lista: 1° fallimento → ricarica con cache-buster
+// (gestisce le richieste droppate da iOS sotto carico); 2° → foto piena; poi basta.
+function imgRetry(img, fallbackUrl) {
+  const tries = parseInt(img.dataset.tries || '0');
+  if (tries === 0) {
+    img.dataset.tries = '1';
+    const base = img.src.split('?')[0];
+    img.src = base + '?r=' + Date.now();
+  } else if (tries === 1 && fallbackUrl) {
+    img.dataset.tries = '2';
+    img.src = fallbackUrl;
+  } else {
+    img.onerror = null; // arrenditi: niente loop infiniti
+  }
+}
+
 function renderListCards(arr) {
   return arr.map((c, _idx) => {
     const cur = getCurrentPrice(c);
@@ -8015,15 +8093,20 @@ function renderListCards(arr) {
 
     const initial = (c.name || '?').trim().charAt(0).toUpperCase();
     const listImg = c.thumb || c.photo;
-    // Le prime carte (subito visibili) si caricano subito; le altre lazy.
-    const lazyAttr = _idx < 12 ? 'eager' : 'lazy';
-    const fetchAttr = _idx < 12 ? ' fetchpriority="high"' : '';
-    // onerror: se il thumb è rotto, ripiega sulla foto piena (auto-guarigione visiva)
-    const fallbackAttr = (c.thumb && c.photo && c.thumb !== c.photo)
-      ? ` onerror="this.onerror=null;this.src='${c.photo}'"`
-      : '';
+    // Indice REALE nella lista (non quello locale all'array): renderGroupedList
+    // chiama questa funzione una carta alla volta, quindi _idx sarebbe sempre 0
+    // e tutte sarebbero "eager" → iOS saturerebbe le connessioni e droppa immagini.
+    // Con il contatore globale solo le prime ~10 sono eager, il resto lazy (caricate
+    // mentre scrolli) → niente saturazione, niente immagini mancanti.
+    const realIdx = _listImgCounter++;
+    const lazyAttr = realIdx < 10 ? 'eager' : 'lazy';
+    const fetchAttr = realIdx < 10 ? ' fetchpriority="high"' : '';
+    // onerror robusto: 1° errore → riprova lo stesso URL con cache-buster (richiesta
+    // droppata da iOS); 2° errore → ripiega sulla foto piena; poi si arrende.
+    const fb = (c.thumb && c.photo && c.thumb !== c.photo) ? c.photo : '';
+    const onerr = `onerror="imgRetry(this,'${fb}')"`;
     const photoHtml = listImg
-      ? `<img src="${listImg}" alt="${c.name}" loading="${lazyAttr}"${fetchAttr} decoding="async" width="64" height="90"${fallbackAttr}/>`
+      ? `<img src="${listImg}" alt="${c.name}" loading="${lazyAttr}"${fetchAttr} decoding="async" width="64" height="90" ${onerr}/>`
       : `<div class="list-photo-ph">${initial}</div>`;
 
     return `
