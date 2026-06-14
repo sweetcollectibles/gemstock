@@ -406,34 +406,6 @@
     text-transform: uppercase;
   }
 
-  /* ===== STATO COMPATTO (dentro le sezioni) — TRANSFORM PURO ===== */
-  /* Si anima SOLO transform/opacity → GPU, 60fps, niente reflow. */
-  .hero-brand {
-    transform-origin: top center;
-    transition: transform 0.46s cubic-bezier(0.32, 0.72, 0, 1);
-    will-change: transform;
-  }
-  .hero-tagline {
-    transition: opacity 0.3s ease;
-  }
-  body.sec-compact .hero-brand {
-    transform: translateY(-34px) scale(0.46);
-  }
-  body.sec-compact .hero-tagline {
-    opacity: 0;
-  }
-  /* L'altezza dell'hero-header viene interpolata: i due valori (pieno/compatto)
-     sono impostati via JS in --hero-h, e la transition su height li anima.
-     height è una proprietà sola su un contenitore isolato (l'hero), il suo unico
-     "figlio pesante" è il brand che però è in transform → nessun reflow a cascata. */
-  /* L'altezza dell'hero cambia ISTANTANEAMENTE (no animazione su height: causa
-     reflow e scatti). Il cambio è impercettibile perché avviene durante la
-     transizione di pagina. Solo il brand si anima, con transform puro (GPU). */
-  .hero-header {
-    height: var(--hero-h, auto);
-    overflow: hidden;
-  }
-  body.nav-anim .hero-brand { transition: none; }
   /* ===== END HERO HEADER ===== */
 
   /* ============ SPLASH SCREEN ============ */
@@ -668,7 +640,9 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 0 0 16px;
+    /* padding-top per la status bar/Dynamic Island: ora che l'hero (col suo
+       padding) vive solo nella home, le sezioni se lo gestiscono da sé. */
+    padding: max(env(safe-area-inset-top), 14px) 0 16px;
     margin-bottom: 4px;
   }
   .back-btn {
@@ -3386,28 +3360,30 @@
 
 <div class="scroll-wrapper" id="app-page" style="display:none">
 
-<div class="hero-header">
-  <div class="hero-top-bar">
-    <div class="welcome-text" onclick="openNicknameModal()" id="welcome-text">
-      Benvenuto, <strong id="welcome-name">Collezionista</strong> <span class="welcome-edit-icon">✎</span>
-    </div>
-    <div class="header-actions">
-      <button class="icon-btn" onclick="openLinksModal()" title="Link utili">🔗</button>
-      <button class="icon-btn" onclick="openSettingsModal()" title="Impostazioni">⚙</button>
-    </div>
-  </div>
-
-  <div class="hero-brand">
-    <img class="hero-logo" src="logo-neon.png" alt="Sweethome"/>
-    <div class="hero-wordmark"><span class="purple-s">S</span>WEETHOME</div>
-  </div>
-  <div class="hero-tagline">BY SWEETCOLLECTIBLES</div>
-</div>
-
 <div class="main">
 
   <!-- ============ HOME VIEW ============ -->
   <div id="home-view" class="page-view">
+
+    <!-- HERO HEADER: appartiene SOLO alla home, scorre via con essa.
+         Niente più logo condiviso sopra tutte le pagine. -->
+    <div class="hero-header">
+      <div class="hero-top-bar">
+        <div class="welcome-text" onclick="openNicknameModal()" id="welcome-text">
+          Benvenuto, <strong id="welcome-name">Collezionista</strong> <span class="welcome-edit-icon">✎</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" onclick="openLinksModal()" title="Link utili">🔗</button>
+          <button class="icon-btn" onclick="openSettingsModal()" title="Impostazioni">⚙</button>
+        </div>
+      </div>
+
+      <div class="hero-brand">
+        <img class="hero-logo" src="logo-neon.png" alt="Sweethome"/>
+        <div class="hero-wordmark"><span class="purple-s">S</span>WEETHOME</div>
+      </div>
+      <div class="hero-tagline">BY SWEETCOLLECTIBLES</div>
+    </div>
 
     <!-- STATS -->
     <div class="stats-grid" id="stats-grid"></div>
@@ -3871,7 +3847,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v91</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v92</div>
   </div>
 </div>
 
@@ -7415,12 +7391,8 @@ function transitionViews(fromEl, toEl, direction) {
       resolve(); return;
     }
     const main = document.querySelector('.main');
-    // nav-anim PRIMA di leggere lo scroll: blocca l'animazione dell'altezza hero
-    // così salta subito al valore finale (niente movimento verticale che si somma
-    // alla push → niente effetto diagonale). Forziamo un reflow per applicarlo ora.
-    document.body.classList.add('nav-anim');
-    void main.offsetHeight;
     setNavAnimating(true);
+    document.body.classList.add('nav-anim');
     const st = wrapper.scrollTop;
     const vh = window.innerHeight;
     const cs = getComputedStyle(main);
@@ -7549,19 +7521,7 @@ function goToHome() {
 // un'altezza ridotta. La transition CSS su height interpola tra i due valori.
 let _heroFullH = 0;
 function setHeroCompact(compact) {
-  const hero = document.querySelector('.hero-header');
-  if (!hero) return;
-  if (!_heroFullH && !document.body.classList.contains('sec-compact')) {
-    _heroFullH = hero.offsetHeight;
-  }
-  if (compact) {
-    const compactH = Math.max(64, Math.round((_heroFullH || 200) * 0.42));
-    hero.style.setProperty('--hero-h', compactH + 'px');
-    document.body.classList.add('sec-compact');
-  } else {
-    if (_heroFullH) hero.style.setProperty('--hero-h', _heroFullH + 'px');
-    document.body.classList.remove('sec-compact');
-  }
+  // (disattivata: il logo ora vive dentro la home, non è più condiviso)
 }
 
 // Safety helper — call this anytime view changes or modals open/close
