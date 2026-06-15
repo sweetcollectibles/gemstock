@@ -3919,7 +3919,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v101</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v102</div>
   </div>
 </div>
 
@@ -8564,7 +8564,7 @@ async function fetchCompressedImage(url, maxW) {
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-        resolve({ data: canvas.toDataURL('image/jpeg', 0.72), w, h });
+        resolve({ data: canvas.toDataURL('image/jpeg', 0.88), w, h });
       } catch (e) { resolve(null); }
     };
     img.onerror = () => resolve(null);
@@ -8585,7 +8585,7 @@ async function compressDataUrl(dataUrl, maxW) {
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-        resolve({ data: canvas.toDataURL('image/jpeg', 0.72), w, h });
+        resolve({ data: canvas.toDataURL('image/jpeg', 0.88), w, h });
       } catch (e) {
         resolve({ data: dataUrl, w: img.naturalWidth, h: img.naturalHeight });
       }
@@ -8718,7 +8718,7 @@ async function generatePDF(type, opts) {
   let imgMap = {};
   if (opts.images) {
     const jobs = items.map(async (it, idx) => {
-      if (it.photo) { imgMap[idx] = await fetchCompressedImage(it.photo, 120); }
+      if (it.photo) { imgMap[idx] = await fetchCompressedImage(it.photo, 300); }
     });
     await Promise.all(jobs);
   }
@@ -8823,15 +8823,18 @@ async function generatePDF(type, opts) {
       doc.rect(M, y + 8, 2.5, rowH - 16, 'F');
       x += 12;
     }
-    // FOTO extra-large (82×115)
+    // FOTO extra-large — altezza fissa, larghezza dal rapporto REALE (no deformazione)
     if (opts.images) {
       const im = imgMap[idx];
-      const ph = rowH - 14, pw = Math.round(ph * (63/88));
+      const ph = rowH - 14;
+      // rapporto reale dell'immagine se disponibile, altrimenti la classica carta 63/88
+      const ratio = (im && im.w && im.h) ? (im.w / im.h) : (63 / 88);
+      const pw = Math.round(ph * ratio);
       if (im) {
         try { doc.addImage(im.data, 'JPEG', x, y + 7, pw, ph); } catch(e) {}
       } else {
         doc.setFillColor(40, 34, 50);
-        doc.rect(x, y + 7, pw, ph, 'F');
+        doc.rect(x, y + 7, Math.round(ph * (63/88)), ph, 'F');
       }
       x += pw + 16;
     }
@@ -8841,7 +8844,7 @@ async function generatePDF(type, opts) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(...PDF_TEXT);
-    doc.text(it.name || '—', x, cy - 16, { maxWidth: PW - x - 110 });
+    doc.text(it.name || '—', x, cy - 16, { maxWidth: PW - x - 130 });
     // meta (#numero · set)
     const metaParts = [];
     if (it.number) metaParts.push('#' + it.number);
@@ -8849,7 +8852,7 @@ async function generatePDF(type, opts) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
     doc.setTextColor(...PDF_MUTED);
-    if (metaParts.length) doc.text(metaParts.join(' · '), x, cy, { maxWidth: PW - x - 110 });
+    if (metaParts.length) doc.text(metaParts.join(' · '), x, cy, { maxWidth: PW - x - 130 });
     // grade + lingua
     const gl = [it.grade, it.lang].filter(Boolean).join('  ·  ');
     if (gl) {
@@ -8865,12 +8868,12 @@ async function generatePDF(type, opts) {
       doc.setTextColor(...PDF_GOLD);
       doc.text('PSA cert ' + it.serial, x, cy + 32);
     }
-    // prezzo (destra, centrato verticalmente)
+    // prezzo (destra, centrato verticalmente) — più grande
     if (opts.prices && it.price != null && it.price !== '') {
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
+      doc.setFontSize(18);
       doc.setTextColor(...PDF_GOLD);
-      doc.text('€' + fmt(it.price), PW - M, cy, { align: 'right' });
+      doc.text('€' + fmt(it.price), PW - M, cy + 2, { align: 'right' });
     }
     // separatore scuro
     doc.setDrawColor(...PDF_LINE);
