@@ -1490,6 +1490,8 @@
     cursor: pointer;
     font-weight: 600;
   }
+  .section-action.pop-action { color: #c77dff; }
+  .section-action.pop-action.updating { opacity: 0.6; }
 
   /* ====== NEW LIST CARD (slim iOS-style) ====== */
   .list-card {
@@ -1712,6 +1714,7 @@
   }
   .price-item-value.acq { color: #b8b3a8; }
   .price-item-value.mkt { color: var(--gold); font-weight: 700; }
+  .price-item-value.pop-val { color: #c77dff; font-weight: 700; }
   .price-item-value.muted { color: var(--muted); }
   .price-item-value.pnl-pos { color: var(--green); font-weight: 700; }
   .price-item-value.pnl-neg { color: var(--red); font-weight: 700; }
@@ -3438,6 +3441,7 @@
       <div class="section-title-text" id="section-text">📁 Portfolio</div>
       <div style="display:flex;align-items:center;gap:12px;margin-left:auto;">
         <div class="section-action" id="section-clear" style="display:none" onclick="clearAllFilters()">✕ Rimuovi filtro</div>
+        <div class="section-action pop-action" id="pop-update-btn" onclick="updateAllPops()">🔄 Aggiorna</div>
         <div class="section-action" id="sort-toggle" onclick="toggleSortMenu()">↕ Ordina</div>
       </div>
     </div>
@@ -3839,7 +3843,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v105</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v106</div>
   </div>
 </div>
 
@@ -4250,6 +4254,8 @@ function cardToDb(c, userId) {
     photo_url:     c.photo || null,
     thumb_url:     c.thumb || null,
     history:       c.history || [],
+    psa_pop:          (typeof c.psaPop === 'number') ? c.psaPop : null,
+    psa_pop_history:  Array.isArray(c.psaPopHistory) ? c.psaPopHistory : [],
     sort_index:    typeof c.sortIndex === 'number' ? c.sortIndex : null,
     group_id:      c.groupId || null,
     group_name:    c.groupName || null,
@@ -4277,6 +4283,8 @@ function dbToCard(r) {
     photoUrl:     r.photo_url || null,
     thumb:        r.thumb_url || r.photo_url || null,
     history:      Array.isArray(r.history) ? r.history : [],
+    psaPop:        (typeof r.psa_pop === 'number') ? r.psa_pop : null,
+    psaPopHistory: Array.isArray(r.psa_pop_history) ? r.psa_pop_history : [],
     sortIndex:    typeof r.sort_index === 'number' ? r.sort_index : undefined,
     groupId:      r.group_id || null,
     groupName:    r.group_name || null,
@@ -4888,6 +4896,71 @@ function clearAllFilters() {
   renderCards();
 }
 
+// ============ AGGIORNAMENTO POPOLAZIONI PSA ============
+// Aggiorna in massa la POP di tutte le carte PSA. Manuale e occasionale:
+// chiede conferma (mostra quante richieste costerà), aggiorna con barra di
+// avanzamento, si ferma da solo se PSA risponde con limite raggiunto.
+// Ogni pop viene salvata con la data nello storico (per il grafico nel tempo).
+async function updateAllPops() {
+  if (!currentUser) { showToast('⚠️ Devi essere connesso'); return; }
+  const token = (settings && settings.psaToken) ? settings.psaToken : '';
+  if (!token) {
+    showToast('⚠️ Imposta prima il token PSA nelle Impostazioni');
+    return;
+  }
+  const targets = cards.filter(c => c.grader === 'PSA' && c.psaCert);
+  if (!targets.length) {
+    showToast('Nessuna carta PSA con certificato da aggiornare');
+    return;
+  }
+  const ok = await askConfirm(
+    `Sto per aggiornare la popolazione di ${targets.length} carte PSA. ` +
+    `Userà circa ${targets.length} richieste PSA (limitate giornalmente). Continuare?`,
+    { title: '🔄 Aggiorna popolazioni', okLabel: 'Aggiorna', danger: false }
+  );
+  if (!ok) return;
+
+  const btn = document.getElementById('pop-update-btn');
+  if (btn) btn.classList.add('updating');
+  const today = new Date().toISOString().split('T')[0];
+  let done = 0, updated = 0, limitHit = false;
+
+  for (const c of targets) {
+    showFilegen(`Aggiorno POP… ${done + 1}/${targets.length}`);
+    try {
+      const url = `${SUPABASE_URL}/functions/v1/psa-cert?cert=${encodeURIComponent(c.psaCert)}&token=${encodeURIComponent(token)}`;
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }
+      });
+      if (res.status === 429 || res.status === 403) { limitHit = true; break; }
+      if (res.ok) {
+        const data = await res.json();
+        const d = data.cert || {};
+        if (d.TotalPopulation != null) {
+          const popVal = Number(d.TotalPopulation);
+          c.psaPop = popVal;
+          if (!Array.isArray(c.psaPopHistory)) c.psaPopHistory = [];
+          const last = c.psaPopHistory[c.psaPopHistory.length - 1];
+          if (last && last.date === today) last.pop = popVal;
+          else c.psaPopHistory.push({ date: today, pop: popVal });
+          await dataStore.updateCard(c);
+          updated++;
+        }
+      }
+    } catch (e) { /* salta questa carta, continua */ }
+    done++;
+  }
+
+  hideFilegen();
+  if (btn) btn.classList.remove('updating');
+  renderCards();
+  if (limitHit) {
+    showToast(`Aggiornate ${updated} carte — limite PSA raggiunto. Riprova domani per le restanti.`);
+  } else {
+    showToast(`✓ Popolazioni aggiornate (${updated} carte)`);
+  }
+}
+
 function renderCards() {
   // Conteggi per grader in UN SOLO passaggio sull'array (invece di 5 .filter separati)
   let nPsa = 0, nCgc = 0, nBgs = 0, nOther = 0, nRaw = 0;
@@ -5118,6 +5191,66 @@ function buildPriceHistoryChart(card) {
   `;
 }
 
+// Grafico storico POPOLAZIONE PSA (viola). Stessa struttura del grafico prezzi.
+function buildPopHistoryChart(card) {
+  if (card.grader !== 'PSA') return '';
+  const hist = (card.psaPopHistory || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+  // serve almeno 1 punto per mostrare il valore; il grafico-linea da 2 in su
+  if (typeof card.psaPop !== 'number' && hist.length === 0) return '';
+
+  const W = 300, H = 90, PAD_L = 8, PAD_R = 8, PAD_T = 14, PAD_B = 14;
+  const innerW = W - PAD_L - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+  const popNow = (typeof card.psaPop === 'number') ? card.psaPop : (hist.length ? hist[hist.length-1].pop : 0);
+  const popLabel = `POP${card.grade ? ' ' + card.grade : ''}`;
+
+  // meno di 2 punti: mostriamo solo il valore grande, niente curva
+  if (hist.length < 2) {
+    return `
+      <div class="price-chart-wrap">
+        <div class="price-chart-header">
+          <div class="price-chart-title" style="color:#c77dff">📊 ${popLabel}</div>
+          ${hist.length ? `<div class="price-chart-range">agg. ${hist[hist.length-1].date}</div>` : ''}
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:1.6rem;color:#c77dff;padding:6px 2px">${popNow.toLocaleString('it-IT')}</div>
+        <div style="font-size:0.62rem;color:var(--muted);font-family:'JetBrains Mono',monospace">Aggiorna più volte nel tempo per vedere la curva di crescita</div>
+      </div>`;
+  }
+
+  const pops = hist.map(p => p.pop);
+  const minP = Math.min(...pops), maxP = Math.max(...pops);
+  const range = maxP - minP || 1;
+  const coords = hist.map((p, i) => {
+    const x = PAD_L + (i / (hist.length - 1)) * innerW;
+    const y = PAD_T + (1 - (p.pop - minP) / range) * innerH;
+    return { x, y, pop: p.pop, date: p.date };
+  });
+  const linePath = coords.map((c, i) => (i === 0 ? `M ${c.x} ${c.y}` : `L ${c.x} ${c.y}`)).join(' ');
+  const areaPath = linePath + ` L ${coords[coords.length-1].x} ${H - PAD_B} L ${coords[0].x} ${H - PAD_B} Z`;
+  const delta = pops[pops.length-1] - pops[0];
+
+  return `
+    <div class="price-chart-wrap">
+      <div class="price-chart-header">
+        <div class="price-chart-title" style="color:#c77dff">📊 ${popLabel} · ${popNow.toLocaleString('it-IT')}</div>
+        <div class="price-chart-range">${hist[0].date} → ${hist[hist.length-1].date}</div>
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" class="price-chart-svg" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="popFill_${card.id}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#a855f7" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#popFill_${card.id})"/>
+        <path d="${linePath}" fill="none" stroke="#a855f7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        ${coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3" fill="#c77dff"/>`).join('')}
+      </svg>
+      <div style="font-size:0.64rem;color:#c77dff;font-family:'JetBrains Mono',monospace;margin-top:6px">↑ +${delta.toLocaleString('it-IT')} dall'inizio del tracciamento</div>
+    </div>
+  `;
+}
+
 function openDetail(id) {
   const c = cards.find(x => x.id === id);
   if (!c) return;
@@ -5239,6 +5372,7 @@ function openDetail(id) {
       </div>
     ` : ''}
 
+    ${buildPopHistoryChart(c)}
     ${buildPriceHistoryChart(c)}
 
     <div class="section-title-text" style="margin-bottom:8px">📅 Storico Aggiornamenti</div>
@@ -6214,6 +6348,17 @@ async function openPsaView(cardId) {
     else gradeTxt = gd || cg || '—';
     const pop = (d.TotalPopulation != null) ? Number(d.TotalPopulation).toLocaleString('it-IT') : '—';
     const popHi = (d.PopulationHigher != null) ? Number(d.PopulationHigher).toLocaleString('it-IT') : '—';
+    // salva la pop nella carta (+ storico datato) anche da uno scan singolo
+    if (d.TotalPopulation != null && c && c.id) {
+      const popVal = Number(d.TotalPopulation);
+      const today = new Date().toISOString().split('T')[0];
+      c.psaPop = popVal;
+      if (!Array.isArray(c.psaPopHistory)) c.psaPopHistory = [];
+      const last = c.psaPopHistory[c.psaPopHistory.length - 1];
+      if (last && last.date === today) last.pop = popVal;
+      else c.psaPopHistory.push({ date: today, pop: popVal });
+      dataStore.updateCard(c);
+    }
     const lastSold = getCurrentPrice(c);
     const lastSoldTxt = lastSold ? '€' + fmt(lastSold) : '—';
 
@@ -8073,6 +8218,11 @@ function renderListCards(arr) {
               <span class="price-item-label">Last sold${c.language && langFlag(c.language) ? ` <span class="list-lang-flag">${langFlag(c.language)}</span>` : ''}</span>
               <span class="price-item-value mkt">${cur ? '€'+fmt(cur) : '—'}</span>
             </div>
+            ${(c.grader === 'PSA' && typeof c.psaPop === 'number') ? `
+            <div class="price-item">
+              <span class="price-item-label">POP${c.grade ? ' '+c.grade : ''}</span>
+              <span class="price-item-value pop-val">${c.psaPop.toLocaleString('it-IT')}</span>
+            </div>` : ''}
             <div class="price-item price-pnl-item">
               <span class="price-item-label">P&L</span>
               <span class="price-item-value ${pnlClass}">${pnlText}</span>
