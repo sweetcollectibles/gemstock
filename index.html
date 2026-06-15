@@ -359,6 +359,15 @@
     text-align: center;
     position: relative;
   }
+  /* HOME: header fisso in cima mentre scrolli (logo+scritta+icone restano).
+     Usiamo position:sticky (nativo, GPU, nessun listener JS → zero scatti).
+     Attivo solo in home e solo quando non si naviga, per non interferire con
+     le transizioni di pagina. */
+  body.on-home:not(.nav-anim) .hero-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
 
   .hero-top-bar {
     display: flex;
@@ -657,8 +666,8 @@
   .sec-brand .sec-wm {
     font-family: 'Outfit', sans-serif;
     font-weight: 900;
-    font-size: 0.82rem;
-    letter-spacing: 1px;
+    font-size: 1.15rem;
+    letter-spacing: 1.2px;
     color: var(--muted);
     text-transform: uppercase;
   }
@@ -693,14 +702,8 @@
     letter-spacing: -0.3px;
   }
   .list-count-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-    padding: 5px 11px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    font-weight: 600;
+    /* nascosto: il conteggio è già visibile nel filtro "Tutte" */
+    display: none;
   }
 
   /* STATS */
@@ -3869,7 +3872,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v95</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v97</div>
   </div>
 </div>
 
@@ -7551,6 +7554,8 @@ function updateFabVisibility() {
   // Logo compatto in TUTTE le sezioni, pieno solo in home.
   const compact = currentView !== 'home';
   setHeroCompact(compact);
+  // header fisso (sticky) solo in home
+  document.body.classList.toggle('on-home', currentView === 'home');
   if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
     document.body.classList.remove('hide-fab');
   } else {
