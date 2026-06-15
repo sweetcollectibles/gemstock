@@ -1090,12 +1090,7 @@
   .mini-dock-btn.pressing { transform: scale(0.9); }
   body.hide-fab .dock-add-btn { display: none; }
 
-  body.modal-open .mini-dock,
-  body.reordering .mini-dock,
-  body.drag-active .mini-dock { display: none !important; }
-  body.modal-open .mini-dock,
-  body.reordering .mini-dock,
-  body.drag-active .mini-dock { display: none !important; }
+  body.modal-open .mini-dock { display: none !important; }
 
   /* ===== TAB DI RICERCA FULL-SCREEN ===== */
   .search-tab {
@@ -1614,34 +1609,6 @@
     padding: 3px 10px;
     border-radius: 8px;
   }
-  /* maniglia opzionale come indicatore visivo (non più obbligatoria da afferrare) */
-  .list-drag-handle {
-    display: none;
-    flex-shrink: 0;
-    width: 24px;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted2);
-    font-size: 1.15rem;
-    margin-right: -2px;
-    pointer-events: none;
-  }
-  body.reordering .list-drag-handle { display: flex; }
-  body.reordering .list-card {
-    cursor: grab;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  /* touch-action:none SOLO sulla carta effettivamente sollevata: così in
-     modalità riordino lo scroll verticale resta libero (prima era bloccato
-     su tutte le carte → impossibile scorrere la lista). */
-  body.reordering .list-card { touch-action: pan-y; }
-  .list-card.dragging { touch-action: none; }
-  /* mentre la card è "armata" (dito premuto, in attesa del long-press) blocchiamo
-     il touch così il browser non parte subito con lo scroll e ci lascia trascinare;
-     se l'utente muove il dito viene disarmata e lo scroll riprende. */
-  body.reordering .list-card.arming { touch-action: none; }
-
   /* ============ VETRINA (Neon Glow) ============ */
   .showcase {
     display: grid;
@@ -1737,45 +1704,6 @@
   .sc-pick-ph img { width: 100%; height: 100%; object-fit: cover; }
   .sc-pick-name { font-weight: 600; font-size: 0.9rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sc-pick-meta { font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
-  /* La transition morbida sullo spostamento delle carte è attiva SOLO mentre
-     un drag è in corso (per il "fai spazio" fluido), ma viene gestita con
-     transform diretti che la animano. Fuori dal drag attivo: nessuna. */
-  body.dragging-active .list-card:not(.dragging) {
-    transition: transform 0.18s cubic-bezier(.2,.8,.2,1);
-  }
-  body.reordering .list-card .list-prices { opacity: 0.5; }
-  /* la carta sollevata segue il dito: niente transition sul transform mentre trascina */
-  .list-card.dragging {
-    transition: none !important;
-    position: relative;
-    z-index: 100;
-    border-color: var(--accent);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.55);
-    background: var(--surface2);
-    will-change: transform;
-  }
-  /* durante il riordino disattiva l'effetto :active che confligge col transform del drag */
-  body.reordering .list-card:active { transform: none; }
-  .list-card.dragging:active { transform: inherit; }
-  /* durante il drag il pointer è catturato dalla carta: niente overflow:hidden
-     così l'auto-scroll programmatico via JS resta possibile.
-     Disattiviamo lo smooth-scroll: con scroll-behavior:smooth gli incrementi
-     rapidi via JS si accavallano e l'auto-scroll non avanza. */
-  body.drag-active .scroll-wrapper {
-    overscroll-behavior: contain;
-    scroll-behavior: auto !important;
-  }
-  .reorder-hint {
-    font-size: 0.72rem;
-    color: var(--accent);
-    text-align: center;
-    padding: 8px 12px;
-    margin-bottom: 10px;
-    background: var(--accent-soft);
-    border-radius: 10px;
-    display: none;
-  }
-  body.reordering .reorder-hint { display: block; }
   .price-item-value {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.82rem;
@@ -3339,51 +3267,6 @@
     letter-spacing: 1px;
   }
 
-  /* iOS install instructions */
-  .ios-instructions {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 14px;
-  }
-
-  .ios-instructions h4 {
-    font-size: 0.88rem;
-    margin-bottom: 10px;
-    color: var(--accent);
-  }
-
-  .ios-instructions ol {
-    list-style: none;
-    counter-reset: step;
-    padding: 0;
-  }
-
-  .ios-instructions ol li {
-    counter-increment: step;
-    padding: 6px 0 6px 28px;
-    position: relative;
-    font-size: 0.85rem;
-    line-height: 1.4;
-  }
-
-  .ios-instructions ol li::before {
-    content: counter(step);
-    position: absolute;
-    left: 0;
-    top: 6px;
-    width: 20px; height: 20px;
-    background: var(--accent);
-    color: var(--bg);
-    border-radius: 50%;
-    font-size: 0.7rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-  }
 
   /* Card swipe indicator */
   .pnl-mini {
@@ -3919,7 +3802,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v102</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v104</div>
   </div>
 </div>
 
@@ -3991,43 +3874,7 @@
 </div>
 
 <!-- INSTALL INSTRUCTIONS MODAL -->
-<div class="modal-overlay" id="install-modal">
-  <div class="modal">
-    <div class="modal-handle-area"><div class="modal-handle"></div></div>
-    <div class="modal-header">
-      <div class="modal-title">📱 Installa App</div>
-      <button class="modal-close" onclick="closeModal('install-modal')">✕</button>
-    </div>
 
-    <div class="ios-instructions">
-      <h4>📱 iPhone / iPad (Safari)</h4>
-      <ol>
-        <li>Tocca il pulsante <strong>Condividi</strong> in basso (⎙)</li>
-        <li>Scorri e seleziona <strong>"Aggiungi alla schermata Home"</strong></li>
-        <li>Conferma con <strong>"Aggiungi"</strong></li>
-        <li>L'app comparirà come icona sulla home! 🎉</li>
-      </ol>
-    </div>
-
-    <div class="ios-instructions" style="margin-top:10px">
-      <h4>💻 Windows / Mac (Chrome / Edge)</h4>
-      <ol>
-        <li>Clicca l'icona <strong>⊕ Installa</strong> nella barra degli indirizzi</li>
-        <li>Oppure: menu (⋮) → <strong>"Installa TCG Tracker"</strong></li>
-        <li>L'app si aprirà come finestra dedicata 🎉</li>
-      </ol>
-    </div>
-
-    <div class="ios-instructions" style="margin-top:10px">
-      <h4>🤖 Android (Chrome)</h4>
-      <ol>
-        <li>Tocca il menu (⋮) in alto a destra</li>
-        <li>Seleziona <strong>"Installa app"</strong> o <strong>"Aggiungi a schermata Home"</strong></li>
-        <li>L'app comparirà nella tua lista app! 🎉</li>
-      </ol>
-    </div>
-  </div>
-</div>
 
 <!-- NICKNAME MODAL -->
 <div class="modal-overlay" id="nickname-modal">
@@ -4529,35 +4376,17 @@ const dataStore = {
     if (error) { console.error('loadCards:', error); return []; }
     return (data || []).map(dbToCard);
   },
-  // Salva l'ordine manuale su Supabase (no-op silenzioso se la colonna sort_index non esiste ancora)
-  async saveOrder(cardsArr) {
-    if (!currentUser) return;
-    const updates = cardsArr
-      .filter(c => typeof c.sortIndex === 'number')
-      .map(c => ({ id: c.id, sort_index: c.sortIndex, user_id: currentUser.id }));
-    if (!updates.length) return;
-    // UN solo upsert batch invece di N update sequenziali: niente più decine di
-    // round-trip di rete (che bloccavano/laggavano all'uscita dal riordino).
-    const { error } = await _supabase
-      .from('cards')
-      .upsert(updates, { onConflict: 'id' });
-    if (error) {
-      console.warn('saveOrder (cloud) non riuscito, ordine mantenuto in locale:', error.message);
-    }
-  },
   async insertCard(card) {
     try {
       const payload = cardToDb(card);
-      console.log('🔵 insertCard payload:', payload);
       const { data, error } = await _supabase.from('cards').insert(payload).select().single();
       if (error) {
-        console.error('🔴 insertCard ERROR:', error);
+        console.error('insertCard ERROR:', error);
         return { error };
       }
-      console.log('🟢 insertCard OK:', data);
       return { data: dbToCard(data) };
     } catch (e) {
-      console.error('🔴 insertCard EXCEPTION:', e);
+      console.error('insertCard EXCEPTION:', e);
       return { error: { message: 'Eccezione: ' + (e.message || e) } };
     }
   },
@@ -4681,35 +4510,6 @@ function daysSince(dateStr) {
   if (!dateStr) return null;
   const diff = (Date.now() - new Date(dateStr).getTime()) / (1000*60*60*24);
   return Math.floor(diff);
-}
-
-// Salva l'ordine manuale: backup immediato in localStorage + sync cloud best-effort.
-function saveCards(cardsArr) {
-  try {
-    const order = (cardsArr || cards)
-      .filter(c => typeof c.sortIndex === 'number')
-      .map(c => ({ id: c.id, sortIndex: c.sortIndex }));
-    localStorage.setItem('tcg_card_order', JSON.stringify(order));
-  } catch (e) { /* ignora quota/errori locali */ }
-  // Sync su Supabase in background, senza bloccare la UI
-  if (typeof dataStore !== 'undefined' && dataStore.saveOrder) {
-    dataStore.saveOrder(cardsArr || cards);
-  }
-}
-
-// Applica l'ordine salvato in locale alle carte caricate (usato dopo loadCards
-// come fallback finché sort_index non è disponibile sul cloud).
-function applyLocalOrder(cardsArr) {
-  try {
-    const raw = localStorage.getItem('tcg_card_order');
-    if (!raw) return;
-    const order = JSON.parse(raw);
-    const idx = {};
-    order.forEach(o => { idx[o.id] = o.sortIndex; });
-    cardsArr.forEach(c => {
-      if (c.sortIndex === undefined && idx[c.id] !== undefined) c.sortIndex = idx[c.id];
-    });
-  } catch (e) { /* nessun ordine locale */ }
 }
 
 function langFlag(code) {
@@ -7383,7 +7183,6 @@ function closeSearchTab() {
 }
 
 // alias per compatibilità con chiamate esistenti
-function clearSearch() { closeSearchTab(); }
 function closeSearchOverlay() { closeSearchTab(); }
 
 // ============ VIEW ROUTING (Home / List) ============
@@ -7593,19 +7392,8 @@ function goToHome() {
   transitionViews(fromEl, document.getElementById('home-view'), 'back');
 }
 
-// Gestisce l'altezza dell'hero per l'animazione logo, in modo fluido.
-// Misura l'altezza piena UNA volta e la fissa; nello stato compatto usa
-// un'altezza ridotta. La transition CSS su height interpola tra i due valori.
-let _heroFullH = 0;
-function setHeroCompact(compact) {
-  // (disattivata: il logo ora vive dentro la home, non è più condiviso)
-}
-
 // Safety helper — call this anytime view changes or modals open/close
 function updateFabVisibility() {
-  // Logo compatto in TUTTE le sezioni, pieno solo in home.
-  const compact = currentView !== 'home';
-  setHeroCompact(compact);
   // header fisso (sticky) solo in home
   document.body.classList.toggle('on-home', currentView === 'home');
   if (currentView === 'list' || currentView === 'wishlist' || currentView === 'sealed') {
@@ -8233,7 +8021,6 @@ function renderListCards(arr) {
 
     return `
       <div class="list-card" data-id="${c.id}" onclick="onListCardClick(event, ${c.id})">
-        <div class="list-drag-handle" aria-label="Trascina per riordinare">⠿</div>
         <div class="list-photo">${photoHtml}</div>
         <div class="list-info">
           <div class="list-name">${c.name}<span class="list-name-meta">${metaText}</span></div>
@@ -8660,34 +8447,35 @@ async function generatePDF(type, opts) {
   let items, titleRight, countLabel, priceHeader, fileBase;
   if (type === 'cards') {
     // I set vengono raggruppati: riga intestazione 📦 + carte membre subito sotto
-    items = [];
-    const doneGroups = new Set();
     const cardRow = (c, inSet) => ({
       name: c.name, set: c.set, number: c.number,
       grade: gradeLabel(c), lang: langCode(c.language),
       price: getCurrentPrice(c), serial: c.psaCert || '', photo: c.photo,
       inSet: !!inSet
     });
+    // Costruiamo "blocchi": ogni blocco è una carta singola o un set (con le sue
+    // carte). Poi ordiniamo i BLOCCHI per prezzo decrescente, così i set restano
+    // compatti ma l'ordine generale va dal più caro al più economico.
+    const blocks = [];
+    const doneGroups = new Set();
     for (const c of cards) {
-      if (!c.groupId) { items.push(cardRow(c, false)); continue; }
+      if (!c.groupId) {
+        blocks.push({ price: getCurrentPrice(c) || 0, rows: [cardRow(c, false)] });
+        continue;
+      }
       if (doneGroups.has(c.groupId)) continue;
       doneGroups.add(c.groupId);
       const members = cards.filter(x => x.groupId === c.groupId);
-      let gBuy = 0, gCur = 0;
-      members.forEach(m => {
-        const q = m.qty || 1;
-        gBuy += (m.buyPrice || 0) * q;
-        const cp = getCurrentPrice(m);
-        if (cp) gCur += cp * q;
-      });
-      items.push({
-        isSetHeader: true,
-        name: c.groupName || 'Set',
-        count: members.length,
-        price: gCur || null
-      });
-      members.forEach(m => items.push(cardRow(m, true)));
+      let gCur = 0;
+      members.forEach(m => { const cp = getCurrentPrice(m); if (cp) gCur += cp * (m.qty || 1); });
+      const rows = [{ isSetHeader: true, name: c.groupName || 'Set', count: members.length, price: gCur || null }];
+      members.forEach(m => rows.push(cardRow(m, true)));
+      blocks.push({ price: gCur || 0, rows });
     }
+    // ordina i blocchi: prezzo dal più alto al più basso
+    blocks.sort((a, b) => b.price - a.price);
+    items = [];
+    blocks.forEach(bl => bl.rows.forEach(r => items.push(r)));
     titleRight = 'CARDS AVAILABLE';
     countLabel = `${cards.length} ${cards.length===1?'carta':'carte'}`;
     priceHeader = 'Last sold';
@@ -8697,7 +8485,7 @@ async function generatePDF(type, opts) {
       name: s.name, set: '', number: '',
       grade: 'SEALED', lang: '',
       price: s.currentPrice, serial: '', photo: s.photo
-    }));
+    })).sort((a, b) => (b.price || 0) - (a.price || 0));
     titleRight = 'SEALED AVAILABLE';
     countLabel = `${sealed.length} ${sealed.length===1?'prodotto':'prodotti'}`;
     priceHeader = 'Last sold';
@@ -8707,7 +8495,7 @@ async function generatePDF(type, opts) {
       name: w.name, set: w.set, number: w.number,
       grade: '', lang: langCode(w.language),
       price: w.psa10 || w.raw, serial: '', photo: w.photo
-    }));
+    })).sort((a, b) => (b.price || 0) - (a.price || 0));
     titleRight = opts.prices ? 'HUNTLIST' : 'BUYLIST';
     countLabel = `${wishlist.length} ${wishlist.length===1?'carta cercata':'carte cercate'}`;
     priceHeader = 'Target';
@@ -8803,7 +8591,7 @@ async function generatePDF(type, opts) {
       doc.text(`SET · ${it.name}  (${it.count} ${it.count === 1 ? 'carta' : 'carte'})`, M, y + 17);
       if (opts.prices && it.price) {
         doc.setTextColor(...PDF_GOLD);
-        doc.text('€' + Number(it.price).toLocaleString('it-IT'), PW - M, y + 17, { align: 'right' });
+        doc.text('€  ' + Number(it.price).toLocaleString('it-IT'), PW - M, y + 17, { align: 'right' });
       }
       y += setRowH;
       return;
@@ -8873,7 +8661,7 @@ async function generatePDF(type, opts) {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(18);
       doc.setTextColor(...PDF_GOLD);
-      doc.text('€' + fmt(it.price), PW - M, cy + 2, { align: 'right' });
+      doc.text('€  ' + fmt(it.price), PW - M, cy + 2, { align: 'right' });
     }
     // separatore scuro
     doc.setDrawColor(...PDF_LINE);
@@ -8956,10 +8744,6 @@ function confirmClearAll() {
 }
 
 // ============ INSTALL ============
-function showInstallInstructions() {
-  openModal('install-modal');
-}
-
 // ============ OVERLAY CREAZIONE FILE ============
 function showFilegen(text) {
   const ov = document.getElementById('filegen-overlay');
@@ -9499,7 +9283,6 @@ async function initApp() {
     const savedSort = localStorage.getItem('sweethome_sort');
     if (savedSort) currentSort = savedSort;
   } catch (_) {}
-  applyLocalOrder(cards);
   wishlist = loadedWishlist;
   sealed = loadedSealed;
 
