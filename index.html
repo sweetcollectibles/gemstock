@@ -3441,7 +3441,7 @@
       <div class="section-title-text" id="section-text">📁 Portfolio</div>
       <div style="display:flex;align-items:center;gap:12px;margin-left:auto;">
         <div class="section-action" id="section-clear" style="display:none" onclick="clearAllFilters()">✕ Rimuovi filtro</div>
-        <div class="section-action pop-action" id="pop-update-btn" onclick="updateAllPops()">🔄 Aggiorna</div>
+        <div class="section-action pop-action" id="pop-update-btn" onclick="updateAllPops()">🔄 Aggiorna POP</div>
         <div class="section-action" id="sort-toggle" onclick="toggleSortMenu()">↕ Ordina</div>
       </div>
     </div>
@@ -3843,7 +3843,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v106</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v107</div>
   </div>
 </div>
 
@@ -5119,8 +5119,8 @@ function renderSetTile(gid, gname, members) {
         <div class="list-meta">${n} ${n === 1 ? 'carta' : 'carte'}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div class="list-pnl-value ${pnlClass}" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700">${pnlTxt}</div>
-        ${pnlPct != null ? `<div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.6rem;margin-top:2px">${pnlPct >= 0 ? '+' : ''}${pnlPct}% · tot</div>` : ''}
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:700;color:var(--gold)">${totCur ? '€' + fmt(totCur) : '—'}</div>
+        <div class="list-pnl-value ${pnlClass}" style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:700;margin-top:3px">${pnlTxt}${pnlPct != null ? ` · ${pnlPct >= 0 ? '+' : ''}${pnlPct}%` : ''}</div>
       </div>
     </div>`;
 }
