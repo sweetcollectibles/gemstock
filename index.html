@@ -3919,7 +3919,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v98</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v100</div>
   </div>
 </div>
 
@@ -8518,27 +8518,37 @@ function langCode(code) {
 // Scarica un'immagine da URL e la ridimensiona/comprime a JPEG base64 leggero
 async function fetchCompressedImage(url, maxW) {
   if (!url) return null;
-  // STRATEGIA 1: fetch del blob → dataURL → canvas. Il fetch del blob non
-  // "sporca" il canvas come fa <img crossOrigin> quando la risposta arriva
-  // dalla cache del service worker senza header CORS (causa principale delle
-  // foto mancanti nei PDF su iOS).
-  try {
-    const resp = await fetch(url, { mode: 'cors', cache: 'reload' });
-    if (resp.ok) {
-      const blob = await resp.blob();
-      const dataUrl = await new Promise((res, rej) => {
-        const fr = new FileReader();
-        fr.onload = () => res(fr.result);
-        fr.onerror = rej;
-        fr.readAsDataURL(blob);
-      });
-      const compressed = await compressDataUrl(dataUrl, maxW);
-      if (compressed) return compressed;
-    }
-  } catch (e) { /* passa al fallback */ }
+  // Le immagini PSA (e altre fonti esterne) NON hanno header CORS → il canvas
+  // si "sporca" e l'estrazione fallisce (foto assenti nel PDF). Le foto NOSTRE
+  // (bucket Supabase) hanno CORS ok. Quindi: se l'URL non è del nostro Supabase,
+  // lo facciamo passare dal proxy psa-cert?img= che aggiunge gli header CORS.
+  let finalUrl = url;
+  const isOurStorage = url.includes(SUPABASE_URL) || url.startsWith('data:') || url.startsWith('blob:');
+  if (!isOurStorage) {
+    finalUrl = `${SUPABASE_URL}/functions/v1/psa-cert?img=${encodeURIComponent(url)}`;
+  }
 
-  // STRATEGIA 2 (fallback): vecchio metodo <img>. Se il canvas si sporca,
-  // ritorna comunque l'immagine non compressa invece di null, così appare lo stesso.
+  // Per il proxy servono gli header auth → usiamo fetch+blob (che li accetta);
+  // per le foto nostre/dataURL basta <img> diretto.
+  if (!isOurStorage) {
+    try {
+      const r = await fetch(finalUrl, {
+        headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY }
+      });
+      if (r.ok) {
+        const blob = await r.blob();
+        const dataUrl = await new Promise((res) => {
+          const fr = new FileReader();
+          fr.onload = () => res(fr.result);
+          fr.onerror = () => res(null);
+          fr.readAsDataURL(blob);
+        });
+        if (dataUrl) return await compressDataUrl(dataUrl, maxW);
+      }
+    } catch (e) { /* fallback sotto */ }
+  }
+
+  // foto nostre (Supabase/dataURL) → metodo <img> diretto (CORS già ok)
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -8555,11 +8565,11 @@ async function fetchCompressedImage(url, maxW) {
       } catch (e) { resolve(null); }
     };
     img.onerror = () => resolve(null);
-    img.src = url;
+    img.src = finalUrl;
   });
 }
 
-// Comprime un dataURL (già caricato, niente CORS in gioco) ridimensionandolo.
+// Comprime un dataURL già caricato (niente CORS in gioco: è già nei nostri byte).
 async function compressDataUrl(dataUrl, maxW) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -8574,7 +8584,6 @@ async function compressDataUrl(dataUrl, maxW) {
         ctx.drawImage(img, 0, 0, w, h);
         resolve({ data: canvas.toDataURL('image/jpeg', 0.72), w, h });
       } catch (e) {
-        // canvas sporco anche qui? ritorna il dataURL grezzo (jsPDF lo accetta)
         resolve({ data: dataUrl, w: img.naturalWidth, h: img.naturalHeight });
       }
     };
@@ -8582,6 +8591,7 @@ async function compressDataUrl(dataUrl, maxW) {
     img.src = dataUrl;
   });
 }
+
 
 // Apre la scelta corretta a seconda della lista, poi genera
 function exportListPDF(type) {
