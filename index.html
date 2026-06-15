@@ -647,6 +647,26 @@
     padding: max(env(safe-area-inset-top), 14px) 0 16px;
     margin-bottom: 4px;
   }
+  /* firmetta SWEETHOME in alto a destra nelle sezioni (il logo grande è solo in home) */
+  .sec-brand {
+    display: flex;
+    justify-content: flex-end;
+    padding: max(env(safe-area-inset-top), 14px) 2px 0;
+    margin-bottom: -6px;
+  }
+  .sec-brand .sec-wm {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .sec-brand .sec-wm .purple-s { color: var(--accent); }
+  /* quando c'è la firmetta sopra, la barra sotto non rifà il padding-top */
+  .sec-brand + .list-header-bar {
+    padding-top: 8px;
+  }
   .back-btn {
     width: 38px;
     height: 38px;
@@ -660,7 +680,7 @@
     font-size: 1.2rem;
     font-weight: 300;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
   }
 .back-btn.pressing { transform: scale(0.9); }
   .back-btn:hover { border-color: var(--accent); }
@@ -849,7 +869,7 @@
   /* Clickable stat-card filters */
   .stat-card.clickable {
     cursor: pointer;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
   }
 
 .stat-card.clickable.pressing { transform: scale(0.97); }
@@ -1011,9 +1031,7 @@
   .mini-dock-btn {
     width: 52px; height: 52px;
     border-radius: 50%;
-    background: rgba(26, 26, 26, 0.72);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: rgba(22, 22, 22, 0.94);
     border: 1px solid rgba(168, 85, 247, 0.35);
     color: var(--text);
     font-size: 1.2rem;
@@ -1394,7 +1412,7 @@
     letter-spacing: 0.5px;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
     flex-shrink: 0;
   }
 
@@ -1613,9 +1631,7 @@
   }
   .sc-in {
     position: relative;
-    background: rgba(19,19,19,0.55);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: #131313;
     border-radius: 13px;
     overflow: hidden;
   }
@@ -1921,7 +1937,7 @@
     padding: 14px;
     margin-bottom: 8px;
     position: relative;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
     will-change: transform;
     transform: translateZ(0);
   }
@@ -2102,7 +2118,7 @@
     justify-content: center;
     text-decoration: none;
     color: var(--text);
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
     flex-shrink: 0;
     position: relative;
   }
@@ -2144,7 +2160,7 @@
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    transition: all 0.2s;
+    transition: transform 0.2s, background 0.2s, border-color 0.2s, color 0.2s;
     cursor: pointer;
     min-width: 92px;
     justify-content: center;
@@ -2209,7 +2225,7 @@
     font-weight: 800;
     letter-spacing: 1px;
     text-transform: uppercase;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
     border: none;
   }
 
@@ -2527,7 +2543,7 @@
     justify-content: center;
     gap: 8px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
   }
 .photo-upload-btn.pressing { transform: scale(0.98); }
   .photo-upload-btn:hover { border-color: var(--accent); color: var(--text); }
@@ -2734,7 +2750,7 @@
     letter-spacing: 1.5px;
     text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2968,7 +2984,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
   }
 .crop-zoom-btn.pressing { transform: scale(0.92); }
   .crop-zoom-btn:hover { border-color: var(--accent); }
@@ -3046,7 +3062,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
     flex-shrink: 0;
   }
   .history-entry-del:hover {
@@ -3083,7 +3099,7 @@
     font-weight: 700;
     letter-spacing: 0.5px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
   }
 
 .threshold-pill.pressing { transform: scale(0.95); }
@@ -3111,7 +3127,7 @@
     border-radius: 10px;
     text-decoration: none;
     color: var(--text);
-    transition: all 0.15s;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
     font-family: 'Inter', -apple-system, sans-serif;
   }
 
@@ -3428,6 +3444,7 @@
   <!-- ============ LIST VIEW ============ -->
   <div id="list-view" class="page-view" style="display:none">
 
+    <div class="sec-brand"><div class="sec-wm"><span class="purple-s">S</span>WEETHOME</div></div>
     <div class="list-header-bar">
       <button class="back-btn" onclick="goToHome()">←</button>
       <div class="list-title">Le tue carte</div>
@@ -3475,6 +3492,7 @@
   <!-- ============ WISHLIST VIEW ============ -->
   <div id="wishlist-view" class="page-view" style="display:none">
 
+    <div class="sec-brand"><div class="sec-wm"><span class="purple-s">S</span>WEETHOME</div></div>
     <div class="list-header-bar">
       <button class="back-btn" onclick="goToHome()">←</button>
       <div class="list-title">Wishlist</div>
@@ -3488,6 +3506,7 @@
   <!-- ============ SEALED VIEW ============ -->
   <div id="sealed-view" class="page-view" style="display:none">
 
+    <div class="sec-brand"><div class="sec-wm"><span class="purple-s">S</span>WEETHOME</div></div>
     <div class="list-header-bar">
       <button class="back-btn" onclick="goToHome()">←</button>
       <div class="list-title">Il tuo Sealed</div>
@@ -3503,6 +3522,7 @@
   <!-- ============ REGISTRO ATTIVITÀ ============ -->
   <div id="registry-view" class="page-view" style="display:none">
 
+    <div class="sec-brand"><div class="sec-wm"><span class="purple-s">S</span>WEETHOME</div></div>
     <div class="list-header-bar">
       <button class="back-btn" onclick="goToHome()">←</button>
       <div class="list-title">🧾 Registro Attività</div>
@@ -3849,7 +3869,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v94</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v95</div>
   </div>
 </div>
 
