@@ -174,6 +174,45 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ===== OVERLAY CREAZIONE FILE ===== */
+  .filegen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.78);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .filegen-overlay.show { display: flex; }
+  .filegen-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px 36px;
+  }
+  .filegen-spinner {
+    width: 38px;
+    height: 38px;
+    border: 3px solid rgba(168, 85, 247, 0.25);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  .filegen-text {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+    letter-spacing: 0.3px;
+  }
+
   html, body {
     height: 100%;
     width: 100%;
@@ -3376,6 +3415,14 @@
   <div class="splash-loadbar"><div class="splash-loadbar-fill"></div></div>
 </div>
 
+<!-- ============ OVERLAY CREAZIONE FILE (spinner) ============ -->
+<div class="filegen-overlay" id="filegen-overlay">
+  <div class="filegen-box">
+    <span class="filegen-spinner"></span>
+    <div class="filegen-text" id="filegen-text">Creazione file…</div>
+  </div>
+</div>
+
 <!-- ============ AUTH OVERLAY ============ -->
 
 
@@ -3872,7 +3919,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v97</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v98</div>
   </div>
 </div>
 
@@ -5953,12 +6000,13 @@ function registryTotals() {
   return { sales, expenses, profit: sales - expenses, capital: regCapital() };
 }
 
-function generateRegistryPDF() {
+async function generateRegistryPDF() {
   const jsPDFns = window.jspdf;
   if (!jsPDFns || !jsPDFns.jsPDF) { showToast('⚠️ Libreria PDF non caricata'); return; }
   const rows = registryExportRows();
   if (!rows.length) { showToast('⚠️ Nessun movimento nel ' + registryYear); return; }
-  showToast('⏳ Genero PDF…');
+  showFilegen('Creazione PDF…');
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const t = registryTotals();
   const doc = new jsPDFns.jsPDF({ unit: 'pt', format: 'a4' });
   const PW = doc.internal.pageSize.getWidth();
@@ -6027,6 +6075,7 @@ function generateRegistryPDF() {
   });
   foot();
   const blob = doc.output('blob');
+  hideFilegen();
   sharePdfBlob(blob, `sweethome-registro-${registryYear}.pdf`);
 }
 
@@ -6061,7 +6110,8 @@ function loadXlsxLib() {
 async function exportRegistryExcel() {
   const rows = registryExportRows();
   if (!rows.length) { showToast('⚠️ Nessun movimento nel ' + registryYear); return; }
-  showToast('⏳ Genero Excel…');
+  showFilegen('Creazione Excel…');
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   try {
     await loadXlsxLib();
     const t = registryTotals();
@@ -6080,6 +6130,7 @@ async function exportRegistryExcel() {
     const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const file = new File([blob], `sweethome-registro-${registryYear}.xlsx`, { type: blob.type });
+    hideFilegen();
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: file.name });
     } else {
@@ -6089,6 +6140,7 @@ async function exportRegistryExcel() {
       setTimeout(() => URL.revokeObjectURL(u), 5000);
     }
   } catch (e) {
+    hideFilegen();
     if (e.name !== 'AbortError') {
       console.error('exportRegistryExcel:', e);
       showToast('❌ Errore Excel: ' + (e.message || 'riprova'));
@@ -8465,8 +8517,29 @@ function langCode(code) {
 
 // Scarica un'immagine da URL e la ridimensiona/comprime a JPEG base64 leggero
 async function fetchCompressedImage(url, maxW) {
+  if (!url) return null;
+  // STRATEGIA 1: fetch del blob → dataURL → canvas. Il fetch del blob non
+  // "sporca" il canvas come fa <img crossOrigin> quando la risposta arriva
+  // dalla cache del service worker senza header CORS (causa principale delle
+  // foto mancanti nei PDF su iOS).
+  try {
+    const resp = await fetch(url, { mode: 'cors', cache: 'reload' });
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const dataUrl = await new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.onerror = rej;
+        fr.readAsDataURL(blob);
+      });
+      const compressed = await compressDataUrl(dataUrl, maxW);
+      if (compressed) return compressed;
+    }
+  } catch (e) { /* passa al fallback */ }
+
+  // STRATEGIA 2 (fallback): vecchio metodo <img>. Se il canvas si sporca,
+  // ritorna comunque l'immagine non compressa invece di null, così appare lo stesso.
   return new Promise((resolve) => {
-    if (!url) { resolve(null); return; }
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
@@ -8483,6 +8556,30 @@ async function fetchCompressedImage(url, maxW) {
     };
     img.onerror = () => resolve(null);
     img.src = url;
+  });
+}
+
+// Comprime un dataURL (già caricato, niente CORS in gioco) ridimensionandolo.
+async function compressDataUrl(dataUrl, maxW) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxW / img.naturalWidth);
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve({ data: canvas.toDataURL('image/jpeg', 0.72), w, h });
+      } catch (e) {
+        // canvas sporco anche qui? ritorna il dataURL grezzo (jsPDF lo accetta)
+        resolve({ data: dataUrl, w: img.naturalWidth, h: img.naturalHeight });
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
   });
 }
 
@@ -8542,7 +8639,9 @@ function showPdfChoice(title, options) {
 async function generatePDF(type, opts) {
   const jsPDFns = window.jspdf;
   if (!jsPDFns || !jsPDFns.jsPDF) { showToast('⚠️ Libreria PDF non caricata'); return; }
-  showToast('⏳ Genero PDF...');
+  showFilegen('Creazione PDF…');
+  // lascia un frame al browser per disegnare lo spinner prima del lavoro pesante
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
   // Normalizza i dati in righe uniformi
   let items, titleRight, countLabel, priceHeader, fileBase;
@@ -8768,6 +8867,7 @@ async function generatePDF(type, opts) {
   const fname = `${fileBase}-${new Date().toISOString().split('T')[0]}.pdf`;
   const blob = doc.output('blob');
   const file = new File([blob], fname, { type: 'application/pdf' });
+  hideFilegen(); // file pronto → via lo spinner (lo share sheet è interazione utente)
 
   // 1) Preferito su iOS/mobile: share sheet nativo con il FILE allegato.
   //    Così parte il menu iOS e puoi salvare in File / inviare su WhatsApp ecc.
@@ -8838,6 +8938,18 @@ function confirmClearAll() {
 // ============ INSTALL ============
 function showInstallInstructions() {
   openModal('install-modal');
+}
+
+// ============ OVERLAY CREAZIONE FILE ============
+function showFilegen(text) {
+  const ov = document.getElementById('filegen-overlay');
+  const tx = document.getElementById('filegen-text');
+  if (tx) tx.textContent = text || 'Creazione file…';
+  if (ov) ov.classList.add('show');
+}
+function hideFilegen() {
+  const ov = document.getElementById('filegen-overlay');
+  if (ov) ov.classList.remove('show');
 }
 
 // ============ TOAST ============

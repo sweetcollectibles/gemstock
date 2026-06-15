@@ -1,5 +1,5 @@
 // Sweethome Service Worker — v5 (con cache foto Supabase)
-const CACHE_NAME = 'sweethome-v97';
+const CACHE_NAME = 'sweethome-v98';
 const PHOTO_CACHE = 'sweethome-photos-v1';
 
 const ASSETS = [
