@@ -3919,7 +3919,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v100</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v101</div>
   </div>
 </div>
 
@@ -8496,12 +8496,15 @@ function exportData() {
 }
 
 // ============ PDF EXPORT (liste) ============
-// Brand colors
-const PDF_BG = [26, 18, 40];      // header dark
-const PDF_PURPLE = [168, 85, 247];
-const PDF_GOLD = [184, 134, 11];
-const PDF_TEXT = [26, 26, 26];
-const PDF_MUTED = [106, 100, 88];
+// Brand colors — tema SCURO (nero + viola/oro)
+const PDF_BG = [18, 14, 26];        // sfondo pagina scuro
+const PDF_HEAD = [26, 18, 40];      // banda header (un filo più viola)
+const PDF_PURPLE = [180, 130, 255]; // viola brillante (leggibile su scuro)
+const PDF_GOLD = [212, 168, 71];    // oro
+const PDF_TEXT = [245, 242, 235];   // testo chiaro su scuro
+const PDF_MUTED = [150, 144, 132];  // grigio caldo
+const PDF_ZEBRA = [30, 24, 40];     // riga alternata scura
+const PDF_LINE = [60, 52, 74];      // separatore scuro
 
 function gradeLabel(c) {
   if (c.grader === 'RAW') return c.condition ? ('RAW ' + c.condition) : 'RAW';
@@ -8723,15 +8726,21 @@ async function generatePDF(type, opts) {
   const doc = new jsPDFns.jsPDF({ unit: 'pt', format: 'a4' });
   const PW = doc.internal.pageSize.getWidth();
   const PH = doc.internal.pageSize.getHeight();
-  const M = 32;                       // margine laterale
-  const rowH = opts.images ? 66 : 40; // altezza riga
-  const headH = 96;
+  const M = 32;                        // margine laterale
+  const rowH = opts.images ? 128 : 40; // riga alta per foto extra-large (82×115)
+  const headH = 100;
 
   const today = new Date().toLocaleDateString('it-IT');
 
-  function drawHeader() {
-    // banda scura
+  // sfondo scuro su tutta la pagina (riempito a ogni pagina nuova)
+  function paintPageBg() {
     doc.setFillColor(...PDF_BG);
+    doc.rect(0, 0, PW, PH, 'F');
+  }
+
+  function drawHeader() {
+    // banda header
+    doc.setFillColor(...PDF_HEAD);
     doc.rect(0, 0, PW, headH, 'F');
     // brand
     doc.setFont('helvetica', 'bold');
@@ -8744,13 +8753,19 @@ async function generatePDF(type, opts) {
     // tag
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.setTextColor(138, 132, 120);
+    doc.setTextColor(...PDF_MUTED);
     doc.text('BY SWEETCOLLECTIBLES', M, 56);
-    // count
+    // count + (sotto) la dicitura LAST SOLD/Target — non più sopra ogni prezzo
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(201, 196, 184);
     doc.text(countLabel, M, 74);
+    if (opts.prices) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(...PDF_GOLD);
+      doc.text('PREZZI: ' + priceHeader.toUpperCase(), M, 88);
+    }
     // right: list type + date
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
@@ -8758,115 +8773,107 @@ async function generatePDF(type, opts) {
     doc.text(titleRight, PW - M, 40, { align: 'right' });
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(138, 132, 120);
+    doc.setTextColor(...PDF_MUTED);
     doc.text(today, PW - M, 54, { align: 'right' });
-    // colonna prezzi header (solo se prezzi attivi)
-    if (opts.prices) {
-      doc.setFontSize(7);
-      doc.setTextColor(138, 132, 120);
-      doc.text(priceHeader.toUpperCase(), PW - M, headH - 8, { align: 'right' });
-    }
   }
 
   function drawFooter() {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(...PDF_MUTED);
     doc.text('SWEETHOME · sweetcollectibles.tcg', PW / 2, PH - 18, { align: 'center' });
   }
 
+  paintPageBg();
   drawHeader();
   let y = headH + 6;
 
   items.forEach((it, idx) => {
-    // ---- riga intestazione SET: banda viola tenue con nome e totale ----
+    // ---- riga intestazione SET ----
     if (it.isSetHeader) {
       const setRowH = 26;
       if (y + setRowH > PH - 30) {
-        drawFooter();
-        doc.addPage();
-        drawHeader();
-        y = headH + 6;
+        drawFooter(); doc.addPage(); paintPageBg(); drawHeader(); y = headH + 6;
       }
-      doc.setFillColor(238, 230, 248);
+      doc.setFillColor(40, 30, 56);
       doc.rect(0, y, PW, setRowH, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.setTextColor(...PDF_PURPLE);
       doc.text(`SET · ${it.name}  (${it.count} ${it.count === 1 ? 'carta' : 'carte'})`, M, y + 17);
       if (opts.prices && it.price) {
+        doc.setTextColor(...PDF_GOLD);
         doc.text('€' + Number(it.price).toLocaleString('it-IT'), PW - M, y + 17, { align: 'right' });
       }
       y += setRowH;
       return;
     }
     if (y + rowH > PH - 30) {
-      drawFooter();
-      doc.addPage();
-      drawHeader();
-      y = headH + 6;
+      drawFooter(); doc.addPage(); paintPageBg(); drawHeader(); y = headH + 6;
     }
-    // zebra
+    // zebra scura
     if (idx % 2 === 1) {
-      doc.setFillColor(243, 239, 230);
+      doc.setFillColor(...PDF_ZEBRA);
       doc.rect(0, y, PW, rowH, 'F');
     }
     let x = M;
-    // le carte di un set sono leggermente rientrate sotto la loro intestazione
+    // carte di un set: barretta viola a sinistra
     if (it.inSet) {
-      doc.setFillColor(168, 85, 247);
-      doc.rect(M, y + 6, 2, rowH - 12, 'F');
+      doc.setFillColor(...PDF_PURPLE);
+      doc.rect(M, y + 8, 2.5, rowH - 16, 'F');
       x += 12;
     }
-    // foto
+    // FOTO extra-large (82×115)
     if (opts.images) {
       const im = imgMap[idx];
-      const ph = rowH - 14, pw = ph * (63/88);
+      const ph = rowH - 14, pw = Math.round(ph * (63/88));
       if (im) {
         try { doc.addImage(im.data, 'JPEG', x, y + 7, pw, ph); } catch(e) {}
       } else {
-        doc.setFillColor(227, 221, 208);
+        doc.setFillColor(40, 34, 50);
         doc.rect(x, y + 7, pw, ph, 'F');
       }
-      x += pw + 12;
+      x += pw + 16;
     }
+    // verticalmente centriamo il blocco testo nella riga alta
+    const cy = y + rowH / 2;
     // nome
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(14);
     doc.setTextColor(...PDF_TEXT);
-    doc.text(it.name || '—', x, y + 20, { maxWidth: PW - x - 90 });
-    // meta (set · numero)
+    doc.text(it.name || '—', x, cy - 16, { maxWidth: PW - x - 110 });
+    // meta (#numero · set)
     const metaParts = [];
     if (it.number) metaParts.push('#' + it.number);
     if (it.set) metaParts.push(it.set);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setTextColor(...PDF_MUTED);
-    if (metaParts.length) doc.text(metaParts.join(' · '), x, y + 33, { maxWidth: PW - x - 90 });
-    // grade + lang
+    if (metaParts.length) doc.text(metaParts.join(' · '), x, cy, { maxWidth: PW - x - 110 });
+    // grade + lingua
     const gl = [it.grade, it.lang].filter(Boolean).join('  ·  ');
     if (gl) {
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(...PDF_BG);
-      doc.text(gl, x, y + (opts.images ? 48 : 33) + (opts.images?0:0));
+      doc.setFontSize(9);
+      doc.setTextColor(...PDF_PURPLE);
+      doc.text(gl, x, cy + 16);
     }
-    // prezzo (destra in alto)
-    if (opts.prices && it.price != null && it.price !== '') {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.setTextColor(...PDF_GOLD);
-      doc.text('€' + fmt(it.price), PW - M, y + 22, { align: 'right' });
-    }
-    // seriale (destra in basso, all'estremità)
+    // PSA cert (al posto della pop) — riquadro evidenziato sotto i dettagli
     if (it.serial) {
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.5);
-      doc.setTextColor(176, 169, 154);
-      doc.text(it.serial, PW - M, y + rowH - 8, { align: 'right' });
+      doc.setFontSize(8);
+      doc.setTextColor(...PDF_GOLD);
+      doc.text('PSA cert ' + it.serial, x, cy + 32);
     }
-    // separatore
-    doc.setDrawColor(232, 227, 216);
+    // prezzo (destra, centrato verticalmente)
+    if (opts.prices && it.price != null && it.price !== '') {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(...PDF_GOLD);
+      doc.text('€' + fmt(it.price), PW - M, cy, { align: 'right' });
+    }
+    // separatore scuro
+    doc.setDrawColor(...PDF_LINE);
     doc.setLineWidth(0.5);
     doc.line(M, y + rowH, PW - M, y + rowH);
     y += rowH;
