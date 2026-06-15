@@ -3298,6 +3298,40 @@
   <div class="splash-loadbar"><div class="splash-loadbar-fill"></div></div>
 </div>
 
+<!-- ============ MODALE CONFERMA GENERICA ============ -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title" id="confirm-title">Conferma</div>
+      <button class="modal-close" onclick="closeConfirm(false)">✕</button>
+    </div>
+    <p id="confirm-message" style="font-size:0.92rem;color:var(--text);line-height:1.5;margin-bottom:18px"></p>
+    <button class="btn btn-danger solid" style="width:100%;margin-bottom:8px" id="confirm-ok-btn" onclick="closeConfirm(true)">Conferma</button>
+    <button class="btn btn-secondary" style="width:100%" onclick="closeConfirm(false)">Annulla</button>
+  </div>
+</div>
+
+<!-- ============ MODALE CONFERMA RIPRISTINO BACKUP ============ -->
+<div class="modal-overlay" id="restore-modal">
+  <div class="modal">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title">♻️ Ripristina backup</div>
+      <button class="modal-close" onclick="closeModal('restore-modal')">✕</button>
+    </div>
+    <p style="font-size:0.88rem;color:var(--muted);line-height:1.5;margin-bottom:14px">
+      Sto per <strong>aggiungere</strong> al tuo portfolio i dati di questo backup:
+    </p>
+    <div id="restore-summary" style="font-size:0.92rem;line-height:1.9;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;font-family:'JetBrains Mono',monospace"></div>
+    <p style="font-size:0.78rem;color:var(--muted);line-height:1.45;margin-bottom:16px">
+      ⚠️ Gli elementi verranno aggiunti come nuovi (non sovrascrivono quelli esistenti). Se vuoi un ripristino pulito, svuota prima il portfolio.
+    </p>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="confirmRestore()">♻️ Ripristina ora</button>
+    <button class="btn btn-secondary" style="width:100%" onclick="closeModal('restore-modal')">Annulla</button>
+  </div>
+</div>
+
 <!-- ============ OVERLAY CREAZIONE FILE (spinner) ============ -->
 <div class="filegen-overlay" id="filegen-overlay">
   <div class="filegen-box">
@@ -3792,17 +3826,20 @@
 
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
 
-    <div class="form-label" style="margin-bottom:10px">📦 Gestione Dati</div>
-    <button class="btn btn-secondary" style="margin-bottom:10px" onclick="repairThumbnails()">🩺 Ripara miniature rotte</button>
+    <div class="form-label" style="margin-bottom:10px">📦 Backup &amp; Ripristino</div>
+    <div style="font-size:0.74rem;color:var(--muted);line-height:1.5;margin-bottom:12px">
+      Salva un backup completo (carte, sealed, wishlist, registro) come àncora di sicurezza. Tienilo al sicuro: se un giorno serve, lo ripristini in un colpo.
+    </div>
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="exportData()">⬇ Esporta JSON</button>
-      <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆ Importa JSON</button>
+      <button class="btn btn-secondary" onclick="exportData()">💾 Salva backup</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">♻️ Ripristina</button>
     </div>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="repairThumbnails()">🩺 Ripara miniature rotte</button>
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v104</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v105</div>
   </div>
 </div>
 
@@ -5224,7 +5261,7 @@ function openDetail(id) {
 async function removeHistoryEntry(cardId, index) {
   const card = cards.find(c => c.id === cardId);
   if (!card || !card.history || !card.history[index]) return;
-  if (!confirm(`Rimuovere questa voce dallo storico? (€${fmt(card.history[index].price)} del ${card.history[index].date})`)) return;
+  if (!(await askConfirm('Rimuovere questa voce dallo storico?', {title:'🗑 Rimuovi voce', okLabel:'Rimuovi'}))) return;
   card.history.splice(index, 1);
   card.updatedAt = new Date().toISOString();
   await dataStore.updateCard(card);
@@ -5379,6 +5416,8 @@ function regRowActions(actId) {
 }
 
 async function deleteExpense(actId) {
+  const a = activities.find(x => x.id === actId);
+  if (!(await askConfirm('Eliminare questa spesa dal registro?', {title:'🗑 Elimina spesa', okLabel:'Elimina'}))) return;
   await dataStore.deleteActivity(actId);
   activities = activities.filter(x => x.id !== actId);
   showToast('🗑 Spesa eliminata');
@@ -5388,6 +5427,7 @@ async function deleteExpense(actId) {
 async function _cancelSaleImpl(actId) {
   const a = activities.find(x => x.id === actId);
   if (!a || a.type !== 'sale') return;
+  if (!(await askConfirm('Annullare questa vendita? L\'oggetto tornerà nel portfolio.', {title:'↩️ Annulla vendita', okLabel:'Annulla vendita', danger:false}))) return;
   const m = a.meta || {};
   try {
     if (a.kind === 'card' && m.card) {
@@ -6989,7 +7029,7 @@ async function _saveCardImpl(keepForSet = false) {
 async function _deleteCardImpl(id) {
   const c = cards.find(x => x.id === id);
   if (!c) return;
-  if (!confirm(`Eliminare "${c.name}" dal portfolio?`)) return;
+  if (!(await askConfirm('Vuoi eliminare "' + c.name + '" dal portfolio? Non si potrà annullare.', {title:'🗑 Elimina carta', okLabel:'Elimina'}))) return;
   await dataStore.deleteCard(id);
   cards = cards.filter(x => x.id !== id);
   closeModal('detail-modal');
@@ -7587,7 +7627,7 @@ async function deleteWishCard() {
   if (!editingWishId) return;
   const w = wishlist.find(x => x.id === editingWishId);
   if (!w) return;
-  if (!confirm(`Rimuovere "${w.name}" dalla wishlist?`)) return;
+  if (!(await askConfirm('Rimuovere "' + w.name + '" dalla wishlist?', {title:'🗑 Rimuovi dalla wishlist', okLabel:'Rimuovi'}))) return;
   await dataStore.deleteWish(editingWishId);
   wishlist = wishlist.filter(x => x.id !== editingWishId);
   editingWishId = null;
@@ -7814,7 +7854,7 @@ async function _deleteSealedImpl() {
   if (!editingSealedId) return;
   const s = sealed.find(x => x.id === editingSealedId);
   if (!s) return;
-  if (!confirm(`Rimuovere "${s.name}" dal Sealed?`)) return;
+  if (!(await askConfirm('Rimuovere "' + s.name + '" dal Sealed?', {title:'🗑 Rimuovi prodotto', okLabel:'Rimuovi'}))) return;
   await dataStore.deleteSealed(editingSealedId);
   sealed = sealed.filter(x => x.id !== editingSealedId);
   editingSealedId = null;
@@ -8250,35 +8290,39 @@ function saveSettings() {
 
 // ============ DATA ============
 function exportData() {
+  // BACKUP COMPLETO: tutto il portfolio in un unico file (àncora di salvataggio).
   const data = {
-    version: 1,
+    app: 'sweethome',
+    version: 2,
     exportDate: new Date().toISOString(),
     cards,
+    sealed,
+    wishlist,
+    activities,
     settings
   };
   try {
-    const jsonStr = JSON.stringify(data, null, 2);
+    const jsonStr = JSON.stringify(data);
     const blob = new Blob([jsonStr], { type: 'application/json' });
+    const fname = `sweethome-backup-${new Date().toISOString().split('T')[0]}.json`;
+    const file = new File([blob], fname, { type: 'application/json' });
+    // su iOS preferiamo lo share sheet (salva in File / invia dove vuoi)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: fname }).then(() => {
+        showToast('✓ Backup completo pronto');
+      }).catch(() => {});
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `sweethome-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showToast('✓ Backup esportato');
+    const n = cards.length + sealed.length + wishlist.length + activities.length;
+    showToast(`✓ Backup completo (${n} elementi)`);
   } catch (err) {
-    // Mobile fallback: open as data URL so user can share/save
-    try {
-      const jsonStr = JSON.stringify(data, null, 2);
-      const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
-      const w = window.open(dataUrl, '_blank');
-      if (!w) throw new Error('popup blocked');
-      showToast('✓ Backup aperto');
-    } catch (e2) {
-      showToast('⚠️ Errore export', 'error');
-    }
+    console.error('exportData:', err);
+    showToast('⚠️ Errore nel backup', 'error');
   }
 }
 
@@ -8714,6 +8758,7 @@ async function generatePDF(type, opts) {
   }
 }
 
+let _pendingRestore = null;
 function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -8721,17 +8766,76 @@ function importData(event) {
   reader.onload = (e) => {
     try {
       const data = JSON.parse(e.target.result);
-      if (data.cards && Array.isArray(data.cards)) {
-        showToast('⚠️ Import non disponibile con Supabase — usa il sito web per migrare i dati');
-      } else {
-        showToast('⚠️ File non valido');
+      if (data.app !== 'sweethome' && !Array.isArray(data.cards)) {
+        showToast('⚠️ File di backup non valido');
+        return;
       }
+      _pendingRestore = data;
+      // riepilogo di cosa sta per essere ripristinato
+      const n = {
+        cards: (data.cards || []).length,
+        sealed: (data.sealed || []).length,
+        wishlist: (data.wishlist || []).length,
+        activities: (data.activities || []).length
+      };
+      const sum = document.getElementById('restore-summary');
+      if (sum) sum.innerHTML =
+        `📇 ${n.cards} carte<br>📦 ${n.sealed} sealed<br>🔍 ${n.wishlist} wishlist<br>🧾 ${n.activities} movimenti`;
+      openModal('restore-modal');
     } catch (err) {
-      showToast('⚠️ Errore nel file');
+      showToast('⚠️ Errore nel file di backup');
     }
   };
   reader.readAsText(file);
   event.target.value = '';
+}
+
+async function confirmRestore() {
+  closeModal('restore-modal');
+  const data = _pendingRestore;
+  if (!data) return;
+  if (!currentUser) { showToast('⚠️ Devi essere connesso per ripristinare'); return; }
+  showFilegen('Ripristino in corso…');
+  let restored = 0, failed = 0;
+  try {
+    // CARTE
+    for (const c of (data.cards || [])) {
+      const { id, ...rest } = c; // nuovo id assegnato dal DB
+      const r = await dataStore.insertCard(rest);
+      r && !r.error ? restored++ : failed++;
+    }
+    // SEALED
+    for (const s of (data.sealed || [])) {
+      const { id, ...rest } = s;
+      const r = await dataStore.insertSealed(rest);
+      r && !r.error ? restored++ : failed++;
+    }
+    // WISHLIST
+    for (const w of (data.wishlist || [])) {
+      const { id, ...rest } = w;
+      const r = await dataStore.insertWish(rest);
+      r && !r.error ? restored++ : failed++;
+    }
+    // ATTIVITÀ (registro)
+    for (const a of (data.activities || [])) {
+      const { id, ...rest } = a;
+      const r = await dataStore.insertActivity(rest);
+      r && !r.error ? restored++ : failed++;
+    }
+    // impostazioni
+    if (data.settings && typeof dataStore.saveSettings === 'function') {
+      try { dataStore.saveSettings(data.settings); } catch (_) {}
+    }
+    hideFilegen();
+    _pendingRestore = null;
+    showToast(`✓ Ripristinati ${restored} elementi${failed ? ` (${failed} falliti)` : ''}`);
+    // ricarica i dati dal cloud per riflettere il ripristino
+    setTimeout(() => location.reload(), 1200);
+  } catch (e) {
+    hideFilegen();
+    console.error('restore:', e);
+    showToast('⚠️ Errore durante il ripristino');
+  }
 }
 
 function clearAllData() {
@@ -8754,6 +8858,31 @@ function showFilegen(text) {
 function hideFilegen() {
   const ov = document.getElementById('filegen-overlay');
   if (ov) ov.classList.remove('show');
+}
+
+// ============ CONFERMA GENERICA (sostituisce confirm() nativo) ============
+let _confirmResolve = null;
+function askConfirm(message, opts = {}) {
+  return new Promise((resolve) => {
+    _confirmResolve = resolve;
+    const t = document.getElementById('confirm-title');
+    const m = document.getElementById('confirm-message');
+    const ok = document.getElementById('confirm-ok-btn');
+    if (t) t.textContent = opts.title || 'Conferma';
+    if (m) m.textContent = message;
+    if (ok) {
+      ok.textContent = opts.okLabel || 'Conferma';
+      ok.className = 'btn ' + (opts.danger === false ? 'btn-primary' : 'btn-danger solid');
+      ok.style.width = '100%';
+    }
+    openModal('confirm-modal');
+  });
+}
+function closeConfirm(result) {
+  closeModal('confirm-modal');
+  const r = _confirmResolve;
+  _confirmResolve = null;
+  if (r) r(result);
 }
 
 // ============ TOAST ============
