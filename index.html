@@ -3843,7 +3843,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v107</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v108</div>
   </div>
 </div>
 
@@ -4880,9 +4880,9 @@ function toggleStatFilter(filter) {
     document.querySelector('.filter-pill[data-filter="all"]').classList.add('active');
   }
   renderStats();
-  // Navigate to list view to show filtered cards
+  // Navigate to list view to show filtered cards (preserva il filtro stat)
   if (activeFilter !== 'all') {
-    goToList();
+    goToList(true);
   } else {
     renderCards();
   }
@@ -7540,8 +7540,22 @@ function transitionViews(fromEl, toEl, direction) {
   });
 }
 
-function goToList() {
+function goToList(preserveFilter) {
   if (navAnimating || currentView === 'list') return;
+  // Entrando in "Le tue carte" normalmente, azzera eventuali filtri stat
+  // (es. "Da Vendere") rimasti attivi da una visita precedente. Solo quando
+  // arriviamo da una tile stat (preserveFilter=true) il filtro va mantenuto.
+  if (!preserveFilter && activeFilter !== 'all') {
+    activeFilter = 'all';
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    const allPill = document.querySelector('.filter-pill[data-filter="all"]');
+    if (allPill) allPill.classList.add('active');
+    const extra = document.getElementById('filter-extra');
+    const chevron = document.getElementById('filter-chevron');
+    if (extra) extra.classList.remove('open');
+    if (chevron) chevron.textContent = '▾';
+    renderStats();
+  }
   const fromEl = document.getElementById(VIEW_IDS[currentView]);
   currentView = 'list';
   // prepara il contenuto PRIMA dell'animazione, così entra già pronto
