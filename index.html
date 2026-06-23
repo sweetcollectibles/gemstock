@@ -1890,6 +1890,62 @@
   }
 .sealed-card.pressing { transform: scale(0.985); }
   .sealed-card:hover { border-color: var(--border2); }
+
+  /* ===== HEADER SEZIONE SEALED (stile B) ===== */
+  .sealed-hdr {
+    padding: 4px 4px 16px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sealed-hdr-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .sealed-hdr-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 1.35rem;
+    color: var(--text);
+  }
+  .sealed-hdr-pill {
+    margin-left: auto;
+    background: rgba(168,85,247,0.15);
+    color: #c77dff;
+    font-size: 0.66rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+  .sealed-hdr-vlabel {
+    font-size: 0.58rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .sealed-hdr-value {
+    font-size: 2.1rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--orange);
+    line-height: 1;
+  }
+  .sealed-hdr-sub {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .sealed-hdr-sub b { color: var(--text); font-weight: 700; }
+  .sealed-hdr-sub .pnl-g { color: var(--green); }
+  .sealed-hdr-sub .pnl-r { color: var(--red); }
+
   .sealed-photo {
     width: 70px; height: 70px;
     border-radius: 10px;
@@ -3510,13 +3566,17 @@
   <div id="sealed-view" class="page-view" style="display:none">
 
     <div class="sec-brand"><div class="sec-wm"><span class="purple-s">S</span>WEETHOME</div></div>
-    <div class="list-header-bar">
-      <button class="back-btn" onclick="goToHome()">←</button>
-      <div class="list-title">Sealed</div>
-      <div class="list-count-badge" id="sealed-count-badge">0</div>
-    </div>
 
-    <div class="stats-grid" id="sealed-stats"></div>
+    <div class="sealed-hdr">
+      <div class="sealed-hdr-row">
+        <button class="back-btn" onclick="goToHome()">←</button>
+        <div class="sealed-hdr-title">📦 Sealed</div>
+        <div class="sealed-hdr-pill" id="sealed-hdr-pill">0 prodotti</div>
+      </div>
+      <div class="sealed-hdr-vlabel">📈 Valore attuale</div>
+      <div class="sealed-hdr-value" id="sealed-hdr-value">€0</div>
+      <div class="sealed-hdr-sub" id="sealed-hdr-sub"></div>
+    </div>
 
     <div id="sealed-list"></div>
 
@@ -3875,7 +3935,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v111</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v112</div>
   </div>
 </div>
 
@@ -7925,34 +7985,32 @@ function goToRegistry() {
 
 function renderSealed() {
   const list = document.getElementById('sealed-list');
-  const badge = document.getElementById('sealed-count-badge');
-  const statsBox = document.getElementById('sealed-stats');
   const tileSub = document.getElementById('sealed-tile-sub');
+  const hdrPill = document.getElementById('sealed-hdr-pill');
+  const hdrValue = document.getElementById('sealed-hdr-value');
+  const hdrSub = document.getElementById('sealed-hdr-sub');
 
-  if (badge) badge.textContent = sealed.length;
   if (tileSub) {
     tileSub.textContent = sealed.length === 0
       ? '— nessun articolo'
       : `${sealed.length} ${sealed.length === 1 ? 'articolo' : 'articoli'}`;
   }
 
-  // Stats
-  if (statsBox) {
-    if (sealed.length === 0) {
-      statsBox.innerHTML = '';
-    } else {
-      const totalBuy = sealed.reduce((s, x) => s + (parseFloat(x.buyPrice) || 0) * (x.qty || 1), 0);
-      const totalCur = sealed.reduce((s, x) => s + (parseFloat(x.currentPrice) || parseFloat(x.buyPrice) || 0) * (x.qty || 1), 0);
-      const pnl = totalBuy > 0 ? ((totalCur - totalBuy) / totalBuy) * 100 : 0;
-      const pnlClass = pnl >= 0 ? 'green' : 'red';
-      const pnlText = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(1)}%`;
-      statsBox.innerHTML = `
-        <div class="stat-card full gold" style="grid-column:1/-1">
-          <div class="stat-label">📦 Valore Sealed</div>
-          <div class="stat-value">€${fmt(totalCur)}</div>
-          <div class="stat-sub">${sealed.length} ${sealed.length === 1 ? 'prodotto' : 'prodotti'} · investito €${fmt(totalBuy)} · <span style="color:var(--${pnl>=0?'green':'red'})">${pnlText}</span></div>
-        </div>`;
-    }
+  // Header (stile B): valore grande + pill + investito/P&L
+  const totalBuy = sealed.reduce((s, x) => s + (parseFloat(x.buyPrice) || 0) * (x.qty || 1), 0);
+  const totalCur = sealed.reduce((s, x) => s + (parseFloat(x.currentPrice) || parseFloat(x.buyPrice) || 0) * (x.qty || 1), 0);
+  const sealedQty = sealed.reduce((s, x) => s + (x.qty || 1), 0);
+  const pnlAbs = totalCur - totalBuy;
+  const pnlPct = totalBuy > 0 ? (pnlAbs / totalBuy) * 100 : 0;
+  const pnlCls = pnlAbs >= 0 ? 'pnl-g' : 'pnl-r';
+  const pnlSign = pnlAbs >= 0 ? '+' : '−';
+  if (hdrPill) hdrPill.textContent = `${sealedQty} ${sealedQty === 1 ? 'prodotto' : 'prodotti'}`;
+  if (hdrValue) hdrValue.textContent = `€${fmt(totalCur)}`;
+  if (hdrSub) {
+    hdrSub.innerHTML = sealed.length === 0
+      ? '<span>Nessun prodotto ancora</span>'
+      : `<span>Investito <b>€${fmt(totalBuy)}</b></span>` +
+        `<span>P&L <b class="${pnlCls}">${pnlSign}€${fmt(Math.abs(pnlAbs))} · ${pnlSign}${Math.abs(pnlPct).toFixed(1)}%</b></span>`;
   }
 
   if (!list) return;
