@@ -4136,7 +4136,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v116</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v117</div>
   </div>
 </div>
 
@@ -5001,12 +5001,8 @@ function buildMiniChartLegend(curColor) {
   return `
     <div class="stat-chart-legend">
       <div class="stat-chart-legend-item">
-        <span class="stat-chart-legend-dot" style="background:#d4a847"></span>
-        <span>Investito</span>
-      </div>
-      <div class="stat-chart-legend-item">
-        <span class="stat-chart-legend-dot dashed" style="border-top-color:${curColor}"></span>
-        <span>Attuale</span>
+        <span class="stat-chart-legend-dot" style="background:#a855f7"></span>
+        <span>Valore attuale</span>
       </div>
     </div>
   `;
@@ -5045,31 +5041,37 @@ function buildMiniChartSVG() {
     return [x, y];
   }
 
-  // Generate path for buy (gold) and cur (green/red based on overall)
-  let buyPath = '';
-  let curPath = '';
-  let buyArea = '';
-  points.forEach((p, i) => {
-    const [bx, by] = toXY(i, p.buy);
-    const [cx, cy] = toXY(i, p.cur);
-    if (i === 0) {
-      buyPath = `M ${bx},${by}`;
-      curPath = `M ${cx},${cy}`;
-      buyArea = `M ${bx},${h - padding} L ${bx},${by}`;
-    } else {
-      buyPath += ` L ${bx},${by}`;
-      curPath += ` L ${cx},${cy}`;
-      buyArea += ` L ${bx},${by}`;
+  // Genera i punti del valore attuale (unica linea mostrata, stile C)
+  const curPts = points.map((p, i) => toXY(i, p.cur));
+
+  // Curva morbida (Catmull-Rom → Bézier) per un tratto fluido invece di spezzato
+  function smoothPath(pts) {
+    if (pts.length < 2) return '';
+    let d = `M ${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+      const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+      const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ` C ${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
     }
-    if (i === points.length - 1) {
-      buyArea += ` L ${bx},${h - padding} Z`;
-    }
-  });
+    return d;
+  }
+
+  const curSmooth = smoothPath(curPts);
+  const curArea = curSmooth + ` L ${curPts[curPts.length - 1][0].toFixed(1)},${h - padding} L ${curPts[0][0].toFixed(1)},${h - padding} Z`;
+  const lastPt = curPts[curPts.length - 1];
 
   const lastBuy = points[points.length - 1].buy;
   const lastCur = points[points.length - 1].cur;
   const curIsPos = lastCur >= lastBuy;
   const curColor = curIsPos ? '#4ade80' : '#f87171';
+  // linee guida orizzontali (3 livelli)
+  const gridY = [0.25, 0.5, 0.75].map(f => (padding + f * (h - 2 * padding)).toFixed(1));
 
   return {
     chart: `
@@ -5077,14 +5079,15 @@ function buildMiniChartSVG() {
         <div class="mini-chart${_chartFadeShown ? '' : ' fade-in'}">
           <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="buyGrad" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#d4a847" stop-opacity="0.25"/>
-                <stop offset="100%" stop-color="#d4a847" stop-opacity="0"/>
+              <linearGradient id="curGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#a855f7" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
               </linearGradient>
             </defs>
-            <path d="${buyArea}" fill="url(#buyGrad)"/>
-            <path d="${buyPath}" fill="none" stroke="#d4a847" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-            <path d="${curPath}" fill="none" stroke="${curColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3,3"/>
+            ${gridY.map(y => `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>`).join('')}
+            <path d="${curArea}" fill="url(#curGrad)"/>
+            <path d="${curSmooth}" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="${lastPt[0].toFixed(1)}" cy="${lastPt[1].toFixed(1)}" r="3.5" fill="#c77dff"/>
           </svg>
         </div>
       </div>
