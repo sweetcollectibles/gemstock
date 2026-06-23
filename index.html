@@ -31,6 +31,7 @@
     --accent-soft: rgba(168,85,247,0.12);
     --gold: #d4a847;         /* ORO — solo per valori monetari */
     --gold-dark: #b8902f;
+    --orange: #f5933b;       /* ARANCIO — valore attuale */
     --accent2: #c8432a;
     --green: #4ade80;
     --red: #f87171;
@@ -1025,6 +1026,24 @@
   .stat-value.red { color: var(--red); }
   .stat-value.accent { color: var(--accent); }
   .stat-value.gold { color: var(--gold); }
+  .stat-value.orange { color: var(--orange); }
+
+  /* secondo valore (valore attuale) dentro la stessa tile, leggermente più piccolo */
+  .stat-value2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--orange);
+    line-height: 1.1;
+    margin-top: 12px;
+  }
+  .stat-label2 {
+    font-size: 0.62rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 12px;
+  }
 
   .stat-sub {
     font-family: 'JetBrains Mono', monospace;
@@ -3848,7 +3867,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v109</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v110</div>
   </div>
 </div>
 
@@ -4827,8 +4846,16 @@ function renderStats() {
   const isPos = pnl >= 0;
 
   // Filter counts
-  const inProfit = cards.filter(c => { const p = getPnLPct(c); return p != null && p > 0; }).length;
-  const inLoss = cards.filter(c => { const p = getPnLPct(c); return p != null && p < 0; }).length;
+  // posizioni in profitto/perdita: carte + sealed
+  const sealedPnlPct = (x) => {
+    const cur = (x.currentPrice != null) ? x.currentPrice : null;
+    if (cur == null || !x.buyPrice) return null;
+    return ((cur - x.buyPrice) / x.buyPrice) * 100;
+  };
+  const inProfit = cards.filter(c => { const p = getPnLPct(c); return p != null && p > 0; }).length
+                 + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p > 0; }).length;
+  const inLoss = cards.filter(c => { const p = getPnLPct(c); return p != null && p < 0; }).length
+               + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p < 0; }).length;
   const toSell = cards.filter(c => (getPnLPct(c) || 0) >= 30).length;
   const toUpdate = cards.filter(c => {
     const days = daysSince(getLastUpdateDate(c));
@@ -4842,7 +4869,9 @@ function renderStats() {
       ${chartData.legend}
       <div class="stat-label">💼 Capitale Investito</div>
       <div class="stat-value gold">€${fmt(totalBuy)}</div>
-      <div class="stat-sub">${totalCards} ${totalCards === 1 ? 'carta' : 'carte'}${sealedQty > 0 ? `<br>${sealedQty} ${sealedQty === 1 ? 'articolo sealed' : 'articoli sealed'}` : ''} · valore attuale €${fmt(totalCur)}</div>
+      <div class="stat-label2">📈 Valore Attuale</div>
+      <div class="stat-value2 orange">€${fmt(totalCur)}</div>
+      <div class="stat-sub">${totalCards} ${totalCards === 1 ? 'carta' : 'carte'}${sealedQty > 0 ? `<br>${sealedQty} ${sealedQty === 1 ? 'articolo sealed' : 'articoli sealed'}` : ''}</div>
       ${chartData.chart}
     </div>
     <div class="stat-card clickable ${(activeFilter === 'sell' || activeFilter === 'loss') ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
@@ -4863,11 +4892,11 @@ function renderStats() {
       <div class="stat-value" style="color:var(--accent)">${activities.filter(a => a.year === new Date().getFullYear()).length}</div>
       <div class="stat-sub">movimenti ${new Date().getFullYear()}</div>
     </div>
-    <div class="stat-card challenge-tile" onclick="showToast('🏆 Challenges — in arrivo!')">
+    <div class="stat-card challenge-tile" onclick="showToast('⏳ In Gradazione — in arrivo!')">
       <div class="challenge-soon">COMING SOON</div>
-      <div class="stat-label">🏆 Challenges</div>
-      <div class="stat-value challenge-val">✨</div>
-      <div class="stat-sub">presto disponibile</div>
+      <div class="stat-label">⏳ In Gradazione</div>
+      <div class="stat-value challenge-val">📮</div>
+      <div class="stat-sub">carte attualmente in valutazione</div>
     </div>
     ${toUpdate > 0 ? `
     <div class="stat-card clickable stale-alert full ${activeFilter === 'stale' ? 'active' : ''}" data-stat-filter="stale" onclick="toggleStatFilter('stale')">
