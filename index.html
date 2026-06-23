@@ -907,12 +907,6 @@
   }
   .hero-pct.green { color: var(--green); }
   .hero-pct.red { color: var(--red); }
-  .hero-poscount {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.66rem;
-  }
-  .hero-poscount .green { color: var(--green); }
-  .hero-poscount .red { color: var(--red); }
 
   /* ===== HOT PICKS (barra lunga) ===== */
   .stat-card.hotpicks-bar {
@@ -988,38 +982,6 @@
     font-size: 1.1rem;
   }
 
-  /* ===== TILE POSIZIONI (P&L + barra, compatta come le altre) ===== */
-  .pos-pnl {
-    font-size: 1.35rem;
-    font-weight: 800;
-    font-family: 'JetBrains Mono', monospace;
-    margin-top: 5px;
-    line-height: 1;
-  }
-  .pos-pct {
-    font-size: 0.56rem;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    margin-top: 3px;
-    margin-bottom: 8px;
-  }
-  .pos-bar {
-    height: 7px;
-    border-radius: 99px;
-    overflow: hidden;
-    display: flex;
-    background: var(--surface2);
-  }
-  .pos-bar-g { background: var(--green); transition: width 0.4s ease; }
-  .pos-bar-r { background: var(--red); transition: width 0.4s ease; }
-  .pos-leg {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.55rem;
-    font-family: 'JetBrains Mono', monospace;
-    margin-top: 6px;
-  }
-
   /* ===== TILE CHALLENGES (teaser coming soon) ===== */
   .challenge-tile {
     position: relative;
@@ -1058,6 +1020,10 @@
     width: 100%;
     height: 56px;
     position: relative;
+  }
+  /* il fade-in parte solo quando esplicitamente richiesto (primo ingresso in home),
+     NON a ogni re-render: così tornando alla home il grafico non sfarfalla */
+  .mini-chart.fade-in {
     animation: chartFadeIn 0.7s ease both;
   }
   @keyframes chartFadeIn {
@@ -1212,12 +1178,20 @@
      niente blur sulla barra (compositing costoso su contenuto che scorre) */
   body.nav-anim .alert-dot,
   body.nav-anim .alert-dot.amber,
-  body.nav-anim .stat-card.sell-alert {
+  body.nav-anim .stat-card.sell-alert,
+  body.nav-anim .hotpicks-dot {
     animation-play-state: paused !important;
   }
   body.nav-anim .mini-dock-btn {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+  }
+  /* durante la navigazione disattiva i glow sfocati (filter:blur è costoso da
+     ricompositare sul contenuto in movimento) → transizione più fluida */
+  body.nav-anim .hero-glow,
+  body.nav-anim .nav-tile-glow,
+  body.nav-anim .hotpicks-glow {
+    display: none !important;
   }
 
   /* Stale card subtle warning */
@@ -4162,7 +4136,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v114</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v116</div>
   </div>
 </div>
 
@@ -5038,6 +5012,7 @@ function buildMiniChartLegend(curColor) {
   `;
 }
 
+let _chartFadeShown = false;
 function buildMiniChartSVG() {
   // Get cards with valid buy date, sort chronologically
   const sortedCards = cards
@@ -5099,7 +5074,7 @@ function buildMiniChartSVG() {
   return {
     chart: `
       <div class="mini-chart-wrap">
-        <div class="mini-chart">
+        <div class="mini-chart${_chartFadeShown ? '' : ' fade-in'}">
           <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
             <defs>
               <linearGradient id="buyGrad" x1="0" x2="0" y1="0" y2="1">
@@ -5147,10 +5122,6 @@ function renderStats() {
     if (cur == null || !x.buyPrice) return null;
     return ((cur - x.buyPrice) / x.buyPrice) * 100;
   };
-  const inProfit = cards.filter(c => { const p = getPnLPct(c); return p != null && p > 0; }).length
-                 + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p > 0; }).length;
-  const inLoss = cards.filter(c => { const p = getPnLPct(c); return p != null && p < 0; }).length
-               + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p < 0; }).length;
   const toSell = cards.filter(c => (getPnLPct(c) || 0) >= 30).length
                + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p >= 30; }).length;
   const toUpdate = cards.filter(c => {
@@ -5178,7 +5149,6 @@ function renderStats() {
       </div>
       <div class="hero-pnlrow">
         <span class="hero-pct ${isPos ? 'green' : 'red'}">${isPos ? '▲' : '▼'} ${isPos ? '+' : ''}${pct.toFixed(1)}%</span>
-        <span class="hero-poscount"><span class="green">${inProfit} 📈</span> <span class="red">📉 ${inLoss}</span></span>
       </div>
       ${chartData.chart}
       <div class="stat-sub">${totalCards} ${totalCards === 1 ? 'carta' : 'carte'}${sealedQty > 0 ? ` · ${sealedQty} ${sealedQty === 1 ? 'articolo sealed' : 'articoli sealed'}` : ''}</div>
@@ -5210,6 +5180,10 @@ function renderStats() {
     </div>
     ` : ''}
   `;
+  // dopo il primo render, i successivi non ri-animano il grafico
+  if (!_chartFadeShown) {
+    requestAnimationFrame(() => { _chartFadeShown = true; });
+  }
 }
 
 function toggleStatFilter(filter) {
@@ -5356,8 +5330,6 @@ function renderCards() {
     'BGS': '📁 Portfolio · BGS',
     'ALTRO': '📁 Portfolio · Altro',
     'RAW': '📁 Portfolio · RAW',
-    'sell': '📈 Carte in Profitto',
-    'loss': '📉 Carte in Perdita',
     'stale': '⏳ Da Aggiornare',
     'topsell': '🔥 Hot Picks'
   };
@@ -5378,8 +5350,6 @@ function renderCards() {
 
     if (activeFilter === 'all') return true;
     if (['PSA','CGC','BGS','ALTRO','RAW'].includes(activeFilter)) return c.grader === activeFilter;
-    if (activeFilter === 'sell') { const p = getPnLPct(c); return p != null && p > 0; }
-    if (activeFilter === 'loss') { const p = getPnLPct(c); return p != null && p < 0; }
     if (activeFilter === 'topsell') { const p = getPnLPct(c); return p != null && p >= 30; }
     if (activeFilter === 'stale') {
       const days = daysSince(getLastUpdateDate(c));
@@ -7775,10 +7745,12 @@ function setNavAnimating(v) {
   navAnimating = v;
   clearTimeout(_navWatchdog);
   if (v) {
+    // rete di sicurezza: se transitionend non scatta, sblocca comunque la
+    // navigazione poco dopo la durata prevista (evita tab che "non si aprono")
     _navWatchdog = setTimeout(() => {
       navAnimating = false;
       document.body.classList.remove('nav-anim');
-    }, 1200);
+    }, NAV_DUR + 200);
   }
 }
 const NAV_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
