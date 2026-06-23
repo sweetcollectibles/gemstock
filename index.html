@@ -2601,6 +2601,11 @@
     border-radius: 10px;
     border: 1px solid var(--border);
   }
+  /* I prodotti sealed sono tipicamente quadrati (box, ETB), non rettangolari come le carte */
+  .photo-preview-img.square {
+    width: 120px;
+    height: 120px;
+  }
   .photo-remove-btn {
     position: absolute;
     top: -8px;
@@ -3382,7 +3387,7 @@
       <div class="cards-tile" onclick="goToList()">
         <div class="cards-tile-icon"></div>
         <div class="cards-tile-info">
-          <div class="cards-tile-title">Le tue carte</div>
+          <div class="cards-tile-title">Graded Card</div>
           <div class="cards-tile-sub" id="cards-tile-sub">— carte</div>
         </div>
         <div class="cards-tile-arrow">›</div>
@@ -3392,7 +3397,7 @@
       <div class="cards-tile" onclick="goToSealed()">
         <div class="cards-tile-icon icon-sealed"></div>
         <div class="cards-tile-info">
-          <div class="cards-tile-title">Il tuo Sealed</div>
+          <div class="cards-tile-title">Sealed</div>
           <div class="cards-tile-sub" id="sealed-tile-sub">— articoli</div>
         </div>
         <div class="cards-tile-arrow">›</div>
@@ -3417,7 +3422,7 @@
     <div class="sec-brand"><div class="sec-wm"><span class="purple-s">S</span>WEETHOME</div></div>
     <div class="list-header-bar">
       <button class="back-btn" onclick="goToHome()">←</button>
-      <div class="list-title">Le tue carte</div>
+      <div class="list-title">Graded Card</div>
       <div class="list-count-badge" id="list-count-badge">0</div>
     </div>
 
@@ -3480,7 +3485,7 @@
     <div class="sec-brand"><div class="sec-wm"><span class="purple-s">S</span>WEETHOME</div></div>
     <div class="list-header-bar">
       <button class="back-btn" onclick="goToHome()">←</button>
-      <div class="list-title">Il tuo Sealed</div>
+      <div class="list-title">Sealed</div>
       <div class="list-count-badge" id="sealed-count-badge">0</div>
     </div>
 
@@ -3843,7 +3848,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v108</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v109</div>
   </div>
 </div>
 
@@ -4801,11 +4806,22 @@ function buildMiniChartSVG() {
 
 function renderStats() {
   const totalCards = cards.reduce((s, c) => s + (c.qty || 1), 0);
-  const totalBuy = cards.reduce((s, c) => s + c.buyPrice * (c.qty || 1), 0);
-  const totalCur = cards.reduce((s, c) => {
+  // capitale carte
+  const cardsBuy = cards.reduce((s, c) => s + c.buyPrice * (c.qty || 1), 0);
+  const cardsCur = cards.reduce((s, c) => {
     const cur = getCurrentPrice(c);
     return s + (cur ? cur * (c.qty || 1) : c.buyPrice * (c.qty || 1));
   }, 0);
+  // capitale sealed (incluso nel totale investito)
+  const sealedQty = sealed.reduce((s, x) => s + (x.qty || 1), 0);
+  const sealedBuy = sealed.reduce((s, x) => s + ((x.buyPrice || 0) * (x.qty || 1)), 0);
+  const sealedCur = sealed.reduce((s, x) => {
+    const cur = (x.currentPrice != null) ? x.currentPrice : x.buyPrice;
+    return s + ((cur || 0) * (x.qty || 1));
+  }, 0);
+  // totali complessivi (carte + sealed)
+  const totalBuy = cardsBuy + sealedBuy;
+  const totalCur = cardsCur + sealedCur;
   const pnl = totalCur - totalBuy;
   const pct = totalBuy > 0 ? (pnl / totalBuy * 100) : 0;
   const isPos = pnl >= 0;
@@ -4826,7 +4842,7 @@ function renderStats() {
       ${chartData.legend}
       <div class="stat-label">💼 Capitale Investito</div>
       <div class="stat-value gold">€${fmt(totalBuy)}</div>
-      <div class="stat-sub">${totalCards} carte · valore attuale €${fmt(totalCur)}</div>
+      <div class="stat-sub">${totalCards} ${totalCards === 1 ? 'carta' : 'carte'}${sealedQty > 0 ? `<br>${sealedQty} ${sealedQty === 1 ? 'articolo sealed' : 'articoli sealed'}` : ''} · valore attuale €${fmt(totalCur)}</div>
       ${chartData.chart}
     </div>
     <div class="stat-card clickable ${(activeFilter === 'sell' || activeFilter === 'loss') ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
@@ -6625,15 +6641,16 @@ function handlePhotoUpload(event) {
 }
 
 function openCropEditor(img, target) {
-  // Crop area = 5:7 ratio (carta) — final output 400x560
-  // Editor stage size: fits in modal
-  const STAGE_W = 280, STAGE_H = 392; // 5:7 ratio
+  // Carte/wish = 5:7 (ratio carta). Sealed = 1:1 (i box/ETB sono quadrati).
+  const isSealed = (target === 'sealed');
+  const STAGE_W = isSealed ? 340 : 280;
+  const STAGE_H = isSealed ? 340 : 392; // sealed quadrato, carte 5:7
 
   // Initial scale: cover (so image fills crop area at min)
   const scaleCover = Math.max(STAGE_W / img.naturalWidth, STAGE_H / img.naturalHeight);
   cropState = {
     img,
-    target: target || 'card', // 'card' | 'wish'
+    target: target || 'card', // 'card' | 'wish' | 'sealed'
     scale: scaleCover,
     minScale: scaleCover,
     maxScale: scaleCover * 4,
@@ -6833,7 +6850,10 @@ async function uploadPhotoToStorage(dataUrl, prefix) {
 
 async function cropConfirm() {
   if (!cropState) return;
-  const OUT_W = 400, OUT_H = 560;
+  // output proporzionale allo stage: carte 400×560 (5:7), sealed 480×480 (1:1)
+  const isSealed = (cropState.target === 'sealed');
+  const OUT_W = isSealed ? 480 : 400;
+  const OUT_H = isSealed ? 480 : 560;
   const ratio = OUT_W / cropState.stageW;
 
   const out = document.createElement('canvas');
@@ -7529,6 +7549,15 @@ function transitionViews(fromEl, toEl, direction) {
       main.style.minHeight = '';
       wrapper.style.overflow = '';
       wrapper.scrollTop = 0;
+      // RISVEGLIO SCROLL iOS: dopo aver rimesso overflow da 'hidden' a auto,
+      // il momentum-scroll del WebView a volte resta "congelato" (scroll bloccato
+      // finché non si esce/rientra). Forziamo la ri-attivazione del contesto di
+      // scroll con un micro-toggle di -webkit-overflow-scrolling al frame dopo.
+      requestAnimationFrame(() => {
+        wrapper.style.webkitOverflowScrolling = 'auto';
+        void wrapper.offsetHeight; // reflow
+        wrapper.style.webkitOverflowScrolling = 'touch';
+      });
       document.body.classList.remove('nav-anim');
       setNavAnimating(false);
       resolve();
@@ -8039,7 +8068,7 @@ function renderSealedPhotoPreview() {
   if (currentSealedPhoto) {
     area.innerHTML = `
       <div class="photo-preview-wrap">
-        <img src="${currentSealedPhoto}" class="photo-preview-img" alt="preview"/>
+        <img src="${currentSealedPhoto}" class="photo-preview-img square" alt="preview"/>
         <button type="button" class="photo-remove-btn" onclick="removeSealedPhoto()">✕</button>
       </div>`;
   } else {
