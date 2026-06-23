@@ -686,6 +686,75 @@
     flex-shrink: 0;
   }
 
+  /* ===== NAV TILES (stile C premium) ===== */
+  .nav-section-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 4px 4px 10px;
+    font-weight: 700;
+  }
+  .nav-tile {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, var(--surface2), var(--surface));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 15px;
+    margin-bottom: 11px;
+    cursor: pointer;
+  }
+  .nav-tile-glow {
+    position: absolute;
+    right: -30px; top: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  .nav-tile.c1 .nav-tile-glow { background: var(--accent); }
+  .nav-tile.c2 .nav-tile-glow { background: var(--gold); }
+  .nav-tile.c3 .nav-tile-glow { background: var(--orange); }
+  .nav-tile-info {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+  }
+  .nav-tile-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+  .nav-tile-desc {
+    font-size: 0.64rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .nav-tile-chip {
+    display: inline-block;
+    margin-top: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .nav-tile.c1 .nav-tile-chip { background: rgba(168,85,247,0.15); color: #c77dff; }
+  .nav-tile.c2 .nav-tile-chip { background: rgba(212,168,71,0.15); color: var(--gold); }
+  .nav-tile.c3 .nav-tile-chip { background: rgba(245,147,59,0.15); color: var(--orange); }
+  .nav-tile-arr {
+    position: relative;
+    font-size: 1.3rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
   /* LIST VIEW HEADER */
   .list-header-bar {
     display: flex;
@@ -767,6 +836,156 @@
   .stat-card.full {
     grid-column: span 2;
     padding: 14px 18px;
+  }
+
+  /* ===== HERO CARD (Collection Value protagonista) ===== */
+  .stat-card.hero-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(168,85,247,0.12), var(--surface) 65%);
+    border: 1px solid rgba(168,85,247,0.25);
+    padding: 18px;
+  }
+  .hero-glow {
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: var(--accent);
+    filter: blur(60px);
+    opacity: 0.15;
+    pointer-events: none;
+  }
+  .hero-value {
+    position: relative;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 2.1rem;
+    color: var(--orange);
+    line-height: 1;
+    margin-top: 6px;
+  }
+  .hero-row {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .hero-box {
+    flex: 1;
+    background: rgba(0,0,0,0.22);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 9px 11px;
+  }
+  .hero-box-l {
+    font-size: 0.5rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .hero-box-v {
+    font-size: 0.95rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 3px;
+  }
+  .hero-box-v.gold { color: var(--gold); }
+  .hero-box-v.green { color: var(--green); }
+  .hero-box-v.red { color: var(--red); }
+  .hero-pnlrow {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .hero-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 1.1rem;
+  }
+  .hero-pct.green { color: var(--green); }
+  .hero-pct.red { color: var(--red); }
+  .hero-poscount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.66rem;
+  }
+  .hero-poscount .green { color: var(--green); }
+  .hero-poscount .red { color: var(--red); }
+
+  /* ===== HOT PICKS (barra lunga) ===== */
+  .stat-card.hotpicks-bar {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    cursor: pointer;
+  }
+  .hotpicks-bar.hot {
+    background: linear-gradient(135deg, rgba(248,113,113,0.12), var(--surface) 70%);
+    border: 1px solid rgba(248,113,113,0.3);
+  }
+  .hotpicks-bar.calm {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .hotpicks-glow {
+    position: absolute;
+    right: -20px; top: -20px;
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: var(--red);
+    filter: blur(34px);
+    opacity: 0.2;
+    pointer-events: none;
+  }
+  .hotpicks-bar.calm .hotpicks-glow { display: none; }
+  .hotpicks-dot {
+    position: relative;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .hotpicks-bar.hot .hotpicks-dot {
+    background: var(--red);
+    box-shadow: 0 0 8px var(--red);
+    animation: hotPulse 1.6s infinite ease-in-out;
+  }
+  .hotpicks-bar.calm .hotpicks-dot {
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+  }
+  @keyframes hotPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .hotpicks-txt {
+    position: relative;
+    flex: 1;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .hotpicks-meta {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.66rem;
+  }
+  .hotpicks-n {
+    position: relative;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 1.3rem;
+  }
+  .hotpicks-bar.hot .hotpicks-n { color: var(--red); }
+  .hotpicks-bar.calm .hotpicks-n { color: var(--green); }
+  .hotpicks-arr {
+    position: relative;
+    color: var(--muted);
+    font-size: 1.1rem;
   }
 
   /* ===== TILE POSIZIONI (P&L + barra, compatta come le altre) ===== */
@@ -3466,34 +3685,42 @@
 
     <!-- HOME TILES (hidden during search) -->
     <div id="home-tiles">
-      <!-- "LE TUE CARTE" TILE -->
-      <div class="cards-tile" onclick="goToList()">
+      <div class="nav-section-label">Le tue collezioni</div>
+
+      <!-- GRADED CARD -->
+      <div class="nav-tile c1" onclick="goToList()">
+        <div class="nav-tile-glow"></div>
         <div class="cards-tile-icon"></div>
-        <div class="cards-tile-info">
-          <div class="cards-tile-title">Graded Card</div>
-          <div class="cards-tile-sub" id="cards-tile-sub">— carte</div>
+        <div class="nav-tile-info">
+          <div class="nav-tile-title">Graded Card</div>
+          <div class="nav-tile-desc">La tua collezione gradata</div>
+          <div class="nav-tile-chip" id="cards-tile-sub">— carte</div>
         </div>
-        <div class="cards-tile-arrow">›</div>
+        <div class="nav-tile-arr">›</div>
       </div>
 
-      <!-- "IL TUO SEALED" TILE -->
-      <div class="cards-tile" onclick="goToSealed()">
+      <!-- SEALED -->
+      <div class="nav-tile c2" onclick="goToSealed()">
+        <div class="nav-tile-glow"></div>
         <div class="cards-tile-icon icon-sealed"></div>
-        <div class="cards-tile-info">
-          <div class="cards-tile-title">Sealed</div>
-          <div class="cards-tile-sub" id="sealed-tile-sub">— articoli</div>
+        <div class="nav-tile-info">
+          <div class="nav-tile-title">Sealed</div>
+          <div class="nav-tile-desc">Prodotti sigillati</div>
+          <div class="nav-tile-chip" id="sealed-tile-sub">— articoli</div>
         </div>
-        <div class="cards-tile-arrow">›</div>
+        <div class="nav-tile-arr">›</div>
       </div>
 
-      <!-- "WISHLIST" TILE -->
-      <div class="cards-tile" onclick="goToWishlist()">
+      <!-- WISHLIST -->
+      <div class="nav-tile c3" onclick="goToWishlist()">
+        <div class="nav-tile-glow"></div>
         <div class="cards-tile-icon icon-wishlist"></div>
-        <div class="cards-tile-info">
-          <div class="cards-tile-title">Wishlist</div>
-          <div class="cards-tile-sub" id="wishlist-tile-sub">— carte</div>
+        <div class="nav-tile-info">
+          <div class="nav-tile-title">Wishlist</div>
+          <div class="nav-tile-desc">Le carte che cerchi</div>
+          <div class="nav-tile-chip" id="wishlist-tile-sub">— carte</div>
         </div>
-        <div class="cards-tile-arrow">›</div>
+        <div class="nav-tile-arr">›</div>
       </div>
     </div>
 
@@ -3935,7 +4162,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v112</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v114</div>
   </div>
 </div>
 
@@ -4924,7 +5151,8 @@ function renderStats() {
                  + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p > 0; }).length;
   const inLoss = cards.filter(c => { const p = getPnLPct(c); return p != null && p < 0; }).length
                + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p < 0; }).length;
-  const toSell = cards.filter(c => (getPnLPct(c) || 0) >= 30).length;
+  const toSell = cards.filter(c => (getPnLPct(c) || 0) >= 30).length
+               + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p >= 30; }).length;
   const toUpdate = cards.filter(c => {
     const days = daysSince(getLastUpdateDate(c));
     return days == null || days >= settings.staleDays;
@@ -4933,27 +5161,27 @@ function renderStats() {
   const chartData = buildMiniChartSVG();
 
   document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card full gold">
+    <div class="stat-card full hero-card">
       ${chartData.legend}
-      <div class="stat-label">💼 Capitale Investito</div>
-      <div class="stat-value gold">€${fmt(totalBuy)}</div>
-      <div class="stat-label2">📈 Valore Attuale</div>
-      <div class="stat-value2 orange">€${fmt(totalCur)}</div>
-      <div class="stat-sub">${totalCards} ${totalCards === 1 ? 'carta' : 'carte'}${sealedQty > 0 ? `<br>${sealedQty} ${sealedQty === 1 ? 'articolo sealed' : 'articoli sealed'}` : ''}</div>
+      <div class="hero-glow"></div>
+      <div class="stat-label">💎 Collection Value</div>
+      <div class="hero-value">€${fmt(totalCur)}</div>
+      <div class="hero-row">
+        <div class="hero-box">
+          <div class="hero-box-l">💼 Capitale Investito</div>
+          <div class="hero-box-v gold">€${fmt(totalBuy)}</div>
+        </div>
+        <div class="hero-box">
+          <div class="hero-box-l">📊 P&L Totale</div>
+          <div class="hero-box-v ${isPos ? 'green' : 'red'}">${isPos ? '+' : '−'}€${fmt(Math.abs(pnl))}</div>
+        </div>
+      </div>
+      <div class="hero-pnlrow">
+        <span class="hero-pct ${isPos ? 'green' : 'red'}">${isPos ? '▲' : '▼'} ${isPos ? '+' : ''}${pct.toFixed(1)}%</span>
+        <span class="hero-poscount"><span class="green">${inProfit} 📈</span> <span class="red">📉 ${inLoss}</span></span>
+      </div>
       ${chartData.chart}
-    </div>
-    <div class="stat-card clickable ${(activeFilter === 'sell' || activeFilter === 'loss') ? 'active' : ''}" data-stat-filter="sell" onclick="toggleStatFilter('sell')">
-      <div class="stat-label">📊 Posizioni</div>
-      <div class="pos-pnl ${isPos ? 'green' : 'red'}">${isPos ? '+' : ''}€${fmt(pnl)}</div>
-      <div class="pos-pct ${isPos ? 'green' : 'red'}">${isPos ? '+' : ''}${pct.toFixed(1)}%</div>
-      <div class="pos-bar"><div class="pos-bar-g" style="width:${inProfit + inLoss > 0 ? Math.round(inProfit / (inProfit + inLoss) * 100) : 50}%"></div><div class="pos-bar-r" style="width:${inProfit + inLoss > 0 ? Math.round(inLoss / (inProfit + inLoss) * 100) : 50}%"></div></div>
-      <div class="pos-leg"><span class="green">${inProfit} 📈</span><span class="red">📉 ${inLoss}</span></div>
-    </div>
-    <div class="stat-card clickable ${toSell > 0 ? 'sell-alert' : 'blue'} ${activeFilter === 'topsell' ? 'active' : ''}" data-stat-filter="topsell" onclick="toggleStatFilter('topsell')">
-      ${toSell > 0 ? '<div class="alert-dot"></div>' : ''}
-      <div class="stat-label">🚨 Da Vendere</div>
-      <div class="stat-value" style="color:${toSell > 0 ? 'var(--red)' : 'var(--accent)'}">${toSell}</div>
-      <div class="stat-sub">carte sopra +30%</div>
+      <div class="stat-sub">${totalCards} ${totalCards === 1 ? 'carta' : 'carte'}${sealedQty > 0 ? ` · ${sealedQty} ${sealedQty === 1 ? 'articolo sealed' : 'articoli sealed'}` : ''}</div>
     </div>
     <div class="stat-card clickable" onclick="goToRegistry()">
       <div class="stat-label">🧾 Registro</div>
@@ -4964,7 +5192,14 @@ function renderStats() {
       <div class="challenge-soon">COMING SOON</div>
       <div class="stat-label">⏳ In Gradazione</div>
       <div class="stat-value challenge-val">📮</div>
-      <div class="stat-sub">carte attualmente in valutazione</div>
+      <div class="stat-sub">in valutazione</div>
+    </div>
+    <div class="stat-card full hotpicks-bar ${toSell > 0 ? 'hot' : 'calm'} ${activeFilter === 'topsell' ? 'active' : ''}" data-stat-filter="topsell" onclick="toggleStatFilter('topsell')">
+      <div class="hotpicks-glow"></div>
+      <div class="hotpicks-dot"></div>
+      <div class="hotpicks-txt">🔥 Hot Picks <span class="hotpicks-meta">· articoli +30%</span></div>
+      <div class="hotpicks-n">${toSell}</div>
+      <div class="hotpicks-arr">›</div>
     </div>
     ${toUpdate > 0 ? `
     <div class="stat-card clickable stale-alert full ${activeFilter === 'stale' ? 'active' : ''}" data-stat-filter="stale" onclick="toggleStatFilter('stale')">
@@ -5097,7 +5332,7 @@ function renderCards() {
   const tileSub = document.getElementById('cards-tile-sub');
   if (tileSub) {
     if (cards.length === 0) {
-      tileSub.textContent = 'Nessuna carta · tocca per iniziare';
+      tileSub.textContent = 'Nessuna carta';
     } else {
       const totalQty = cards.reduce((s,c) => s + (c.qty || 1), 0);
       tileSub.textContent = `${totalQty} ${totalQty === 1 ? 'carta' : 'carte'}`;
@@ -5124,7 +5359,7 @@ function renderCards() {
     'sell': '📈 Carte in Profitto',
     'loss': '📉 Carte in Perdita',
     'stale': '⏳ Da Aggiornare',
-    'topsell': '🚨 Da Vendere'
+    'topsell': '🔥 Hot Picks'
   };
   const sectionText = document.getElementById('section-text');
   const sectionClear = document.getElementById('section-clear');
@@ -9842,7 +10077,7 @@ let touchStartY = 0;
 // ============ FEEDBACK PRESSIONE (classe .pressing) ============
 // Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
 // :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
-const PRESSABLE = '.icon-btn,.cards-tile,.back-btn,.stat-card.clickable,.challenge-tile,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
+const PRESSABLE = '.icon-btn,.nav-tile,.hotpicks-bar,.back-btn,.stat-card.clickable,.challenge-tile,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
 let pressedEl = null;
 function clearPressed() {
   if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
