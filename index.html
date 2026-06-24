@@ -1469,34 +1469,68 @@
   .set-next-btn { background: var(--surface); border: 1px solid var(--accent); color: var(--accent); }
 
   /* tile del set nella lista */
-  .set-card {
-    display: flex; align-items: center; gap: 14px;
-    background: linear-gradient(135deg, rgba(168,85,247,0.07), var(--surface) 60%);
-    border: 1px solid rgba(168,85,247,0.35);
-    border-radius: 13px; padding: 10px 12px; margin-bottom: 9px;
-    cursor: pointer; position: relative;
+  /* ===== SET BOX (scatola con header integrato + carte inline) ===== */
+  .set-box {
+    background: rgba(168,85,247,0.04);
+    border: 1px solid rgba(168,85,247,0.28);
+    border-radius: 16px;
+    padding: 8px;
+    margin-bottom: 10px;
   }
-  .set-stack { position: relative; width: 54px; height: 66px; flex-shrink: 0; }
-  .set-stack .ph {
-    position: absolute; width: 44px; height: 62px; border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.08); object-fit: cover;
+  .set-box-hdr {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 8px 10px 10px;
+    cursor: pointer;
+  }
+  .set-box-bar {
+    width: 3px;
+    align-self: stretch;
+    background: var(--accent);
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .set-box-info { flex: 1; min-width: 0; }
+  .set-box-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 0.88rem;
+    color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .set-box-count {
+    font-size: 0.56rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 2px;
+  }
+  .set-box-tot { text-align: right; flex-shrink: 0; }
+  .set-box-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: var(--gold);
+  }
+  .set-box-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 0.62rem;
+    margin-top: 2px;
+  }
+  .set-box-pct.pnl-pos { color: var(--green); }
+  .set-box-pct.pnl-neg { color: var(--red); }
+  .set-box-chev {
+    color: var(--accent);
+    font-size: 0.9rem;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+  /* le carte dentro il set hanno sfondo leggermente diverso per distinguerle */
+  .set-box-cards .list-card {
     background: var(--surface2);
   }
-  .set-stack .ph:nth-child(1) { left: 10px; top: 0; transform: rotate(5deg); opacity: 0.55; }
-  .set-stack .ph:nth-child(2) { left: 5px; top: 2px; transform: rotate(2deg); opacity: 0.8; }
-  .set-stack .ph:nth-child(3) { left: 0; top: 4px; transform: rotate(-2deg); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-  .set-pile-badge {
-    position: absolute; top: -6px; right: -8px;
-    background: var(--accent); color: #fff;
-    font-size: 0.58rem; font-weight: 800; font-family: 'JetBrains Mono', monospace;
-    border-radius: 999px; padding: 3px 7px;
-    box-shadow: 0 2px 8px rgba(168,85,247,0.5); z-index: 2;
-  }
-  .set-tag {
-    display: inline-block; font-size: 0.56rem; letter-spacing: 1px;
-    color: var(--accent); font-family: 'JetBrains Mono', monospace;
-    text-transform: uppercase; margin-bottom: 3px;
-  }
+  .set-box-cards .list-card:last-child { margin-bottom: 0; }
 
   /* vista set (overlay sotto i modali z100, sopra la barra) */
   .set-view {
@@ -1646,8 +1680,9 @@
     transition: max-width 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease;
   }
   .filter-extra.open {
-    max-width: 600px;
+    max-width: 1000px;
     opacity: 1;
+    overflow: visible;
   }
   .filter-chevron {
     font-size: 0.7rem;
@@ -3721,7 +3756,6 @@
         <button class="filter-pill" data-filter="BGS">BGS <span class="filter-count" id="count-bgs">0</span></button>
         <button class="filter-pill" data-filter="CGC">CGC <span class="filter-count" id="count-cgc">0</span></button>
         <button class="filter-pill" data-filter="ALTRO">Altro <span class="filter-count" id="count-other">0</span></button>
-        <button class="filter-pill" data-filter="RAW">RAW <span class="filter-count" id="count-raw">0</span></button>
       </div>
     </div>
 
@@ -3958,7 +3992,6 @@
           <option value="CGC">CGC</option>
           <option value="BGS">BGS</option>
           <option value="ALTRO">ALTRO (specifica)</option>
-          <option value="RAW">RAW</option>
         </select>
       </div>
       <div class="form-group" id="grade-group">
@@ -4136,7 +4169,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v117</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v119</div>
   </div>
 </div>
 
@@ -5303,7 +5336,6 @@ function renderCards() {
   document.getElementById('count-cgc').textContent = nCgc;
   document.getElementById('count-bgs').textContent = nBgs;
   document.getElementById('count-other').textContent = nOther;
-  document.getElementById('count-raw').textContent = nRaw;
 
   // Update home tile counter (with empty state)
   const tileSub = document.getElementById('cards-tile-sub');
@@ -5423,26 +5455,24 @@ function renderSetTile(gid, gname, members) {
   });
   const pnl = totCur - totBuy;
   const pnlPct = totBuy > 0 ? Math.round((pnl / totBuy) * 100) : null;
-  const pnlClass = pnl >= 0 ? 'positive' : 'negative';
-  const pnlTxt = (pnl >= 0 ? '+' : '−') + '€' + fmt(Math.abs(pnl));
-  const phs = members.slice(0, 3).map(m => {
-    const src = m.thumb || m.photo;
-    return src
-      ? `<img class="ph" src="${src}" alt="" loading="lazy" onerror="this.onerror=null;${m.photo ? `this.src='${m.photo}'` : `this.style.visibility='hidden'`}"/>`
-      : `<div class="ph" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.9rem">🃏</div>`;
-  }).join('');
+  const pnlClass = pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+  // le carte del set, ordinate come la lista, renderizzate inline come card normali
+  const innerCards = renderListCards(members);
   return `
-    <div class="set-card" onclick="openSetView('${gid}')">
-      <div class="set-stack">${phs}<div class="set-pile-badge">×${n}</div></div>
-      <div style="flex:1;min-width:0">
-        <div class="set-tag">📦 Set</div>
-        <div class="list-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gname}</div>
-        <div class="list-meta">${n} ${n === 1 ? 'carta' : 'carte'}</div>
+    <div class="set-box">
+      <div class="set-box-hdr" onclick="openSetView('${gid}')">
+        <div class="set-box-bar"></div>
+        <div class="set-box-info">
+          <div class="set-box-name">📦 ${gname}</div>
+          <div class="set-box-count">${n} ${n === 1 ? 'carta' : 'carte'}</div>
+        </div>
+        <div class="set-box-tot">
+          <div class="set-box-val">${totCur ? '€' + fmt(totCur) : '—'}</div>
+          ${pnlPct != null ? `<div class="set-box-pct ${pnlClass}">${pnlPct >= 0 ? '+' : ''}${pnlPct}%</div>` : ''}
+        </div>
+        <div class="set-box-chev">›</div>
       </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:700;color:var(--gold)">${totCur ? '€' + fmt(totCur) : '—'}</div>
-        <div class="list-pnl-value ${pnlClass}" style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:700;margin-top:3px">${pnlTxt}${pnlPct != null ? ` · ${pnlPct >= 0 ? '+' : ''}${pnlPct}%` : ''}</div>
-      </div>
+      <div class="set-box-cards">${innerCards}</div>
     </div>`;
 }
 
@@ -5748,14 +5778,14 @@ async function quickUpdate(id) {
 // ============ CRUD ============
 function toggleGraderFields() {
   const grader = document.getElementById('f-grader').value;
-  const isRaw = grader === 'RAW';
   const isOther = grader === 'ALTRO';
   const isPSA = grader === 'PSA';
-  document.getElementById('grade-group').style.display = isRaw ? 'none' : '';
-  document.getElementById('condition-group').style.display = isRaw ? '' : 'none';
+  // Graded Card è solo per carte gradate: il voto è sempre richiesto, niente RAW
+  document.getElementById('grade-group').style.display = '';
+  document.getElementById('condition-group').style.display = 'none';
   document.getElementById('custom-grader-group').style.display = isOther ? '' : 'none';
   document.getElementById('psa-cert-group').style.display = isPSA ? '' : 'none';
-  document.getElementById('f-currentprice-label').textContent = isRaw ? '📊 Minimo CM (€)' : '📊 Ultimo Venduto (€)';
+  document.getElementById('f-currentprice-label').textContent = '📊 Ultimo Venduto (€)';
   updatePsaScanBtn();
 }
 
