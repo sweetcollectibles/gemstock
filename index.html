@@ -1432,6 +1432,7 @@
   .reg-chip.set { background: rgba(168,85,247,0.12); color: var(--accent); }
   .reg-chip.exp { background: rgba(248,113,113,0.12); color: var(--red); }
   .reg-chip.sealed { background: rgba(212,168,71,0.12); color: var(--gold); }
+  .reg-chip.profit { background: rgba(74,222,128,0.12); color: var(--green); }
   .reg-empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 0.8rem; line-height: 1.7; }
   .reg-sell-info {
     background: rgba(168,85,247,0.07); border: 1px solid rgba(168,85,247,0.25);
@@ -3843,9 +3844,9 @@
     </div>
 
     <div class="reg-actions">
-      <button class="reg-abtn primary" onclick="openExpenseModal()">➕ Spesa</button>
-      <button class="reg-abtn" onclick="generateRegistryPDF()">📄 PDF</button>
+      <button class="reg-abtn primary" onclick="openAddActivityChoice()">➕ Spesa / Profitto</button>
       <button class="reg-abtn" onclick="exportRegistryExcel()">📊 Excel</button>
+      <button class="reg-abtn" onclick="generateRegistryPDF()">📄 PDF</button>
       <button class="reg-abtn" onclick="openImportModal()">📥 Importa</button>
     </div>
 
@@ -4169,7 +4170,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v119</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v120</div>
   </div>
 </div>
 
@@ -4462,22 +4463,22 @@
   <div class="modal">
     <div class="modal-handle-area"><div class="modal-handle"></div></div>
     <div class="modal-header">
-      <div class="modal-title">➕ Nuova spesa</div>
+      <div class="modal-title" id="exp-modal-title">➕ Nuova spesa</div>
       <button class="modal-close" onclick="closeModal('expense-modal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Motivo *</label>
+      <label class="form-label" id="exp-reason-label">Motivo *</label>
       <input type="text" class="form-input" id="exp-reason" placeholder="es. Spedizione assicurata, bustine…">
     </div>
     <div class="form-group">
-      <label class="form-label">💸 Importo (€) *</label>
+      <label class="form-label" id="exp-amount-label">💸 Importo (€) *</label>
       <input type="number" class="form-input mono" id="exp-amount" placeholder="0.00" inputmode="decimal">
     </div>
     <div class="form-group">
       <label class="form-label">📅 Data</label>
       <input type="date" class="form-input" id="exp-date">
     </div>
-    <button class="btn btn-primary" onclick="saveExpense()">💾 Salva spesa</button>
+    <button class="btn btn-primary" id="exp-save-btn" onclick="saveExpense()">💾 Salva spesa</button>
     <button class="btn btn-secondary" onclick="closeModal('expense-modal')" style="margin-top:8px">Annulla</button>
   </div>
 </div>
@@ -5863,7 +5864,8 @@ function renderRegistry() {
       const pcls = pnl >= 0 ? 'pos' : 'neg';
       const ptxt = (pnl >= 0 ? '+' : '−') + '€' + fmt(Math.abs(pnl));
       const chip = a.kind === 'set' ? '<span class="reg-chip set">📦 Set</span>'
-                 : a.kind === 'sealed' ? '<span class="reg-chip sealed">Sealed</span>' : '';
+                 : a.kind === 'sealed' ? '<span class="reg-chip sealed">Sealed</span>'
+                 : a.kind === 'manual' ? '<span class="reg-chip profit">💰 Profitto</span>' : '';
       const rowCls = a.kind === 'set' ? ' setrow' : '';
       let detail = '';
       const m = a.meta || {};
@@ -5875,10 +5877,13 @@ function renderRegistry() {
       } else if (a.kind === 'sealed') {
         detail = m.remainingQty > 0 ? `${a.qty}× venduti (ne restano ${m.remainingQty})` : `${a.qty}× venduti`;
       }
+      const metaPrices = a.kind === 'manual'
+        ? '' // profitto manuale: niente "acquisto → vendita", è solo un incasso
+        : `<span>🛒 €${fmt(a.buyTotal || 0)} → 💰 €${fmt(a.saleTotal || 0)}</span>`;
       html += `
         <div class="reg-row${rowCls}" onclick="regRowActions(${a.id})">
           <div class="reg-row-top">${chip}<div class="reg-row-name">${a.name}</div><div class="reg-row-pnl ${pcls}">${ptxt}</div></div>
-          <div class="reg-row-meta">${detail ? `<span>${detail}</span>` : ''}<span>🛒 €${fmt(a.buyTotal || 0)} → 💰 €${fmt(a.saleTotal || 0)}</span><span>${dd}</span></div>
+          <div class="reg-row-meta">${detail ? `<span>${detail}</span>` : ''}${metaPrices}<span>${dd}</span></div>
         </div>`;
     }
   }
@@ -5893,6 +5898,10 @@ function regRowActions(actId) {
     showPdfChoice(`💸 ${a.name}`, [
       { label: '🗑 Elimina spesa', onPick: () => deleteExpense(actId) }
     ]);
+  } else if (a.kind === 'manual') {
+    showPdfChoice(`💰 ${a.name}`, [
+      { label: '🗑 Elimina profitto', onPick: () => deleteExpense(actId) }
+    ]);
   } else {
     showPdfChoice(`💰 ${a.name}`, [
       { label: '↩️ Annulla vendita (torna in portfolio)', onPick: () => cancelSale(actId) }
@@ -5902,10 +5911,13 @@ function regRowActions(actId) {
 
 async function deleteExpense(actId) {
   const a = activities.find(x => x.id === actId);
-  if (!(await askConfirm('Eliminare questa spesa dal registro?', {title:'🗑 Elimina spesa', okLabel:'Elimina'}))) return;
+  const isManualProfit = a && a.kind === 'manual';
+  const what = isManualProfit ? 'questo profitto' : 'questa spesa';
+  const title = isManualProfit ? '🗑 Elimina profitto' : '🗑 Elimina spesa';
+  if (!(await askConfirm(`Eliminare ${what} dal registro?`, {title, okLabel:'Elimina'}))) return;
   await dataStore.deleteActivity(actId);
   activities = activities.filter(x => x.id !== actId);
-  showToast('🗑 Spesa eliminata');
+  showToast(isManualProfit ? '🗑 Profitto eliminato' : '🗑 Spesa eliminata');
   renderRegistry();
 }
 
@@ -5951,10 +5963,28 @@ async function _cancelSaleImpl(actId) {
 }
 
 // ---- spese ----
-function openExpenseModal() {
+function openAddActivityChoice() {
+  showPdfChoice('➕ Cosa vuoi aggiungere?', [
+    { label: '💸 Spesa', onPick: () => openExpenseModal('expense') },
+    { label: '💰 Profitto', onPick: () => openExpenseModal('profit') }
+  ]);
+}
+
+let _activityKind = 'expense'; // 'expense' | 'profit'
+function openExpenseModal(kind) {
+  _activityKind = (kind === 'profit') ? 'profit' : 'expense';
+  const isProfit = _activityKind === 'profit';
   document.getElementById('exp-reason').value = '';
   document.getElementById('exp-amount').value = '';
   document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+  // adatta titolo, etichette e placeholder al tipo scelto
+  document.getElementById('exp-modal-title').textContent = isProfit ? '💰 Nuovo profitto' : '➕ Nuova spesa';
+  document.getElementById('exp-reason-label').textContent = 'Motivo *';
+  document.getElementById('exp-reason').placeholder = isProfit
+    ? 'es. Vendita lotto, scambio, bonus…'
+    : 'es. Spedizione assicurata, bustine…';
+  document.getElementById('exp-amount-label').textContent = isProfit ? '💰 Importo (€) *' : '💸 Importo (€) *';
+  document.getElementById('exp-save-btn').textContent = isProfit ? '💾 Salva profitto' : '💾 Salva spesa';
   openModal('expense-modal');
 }
 
@@ -5965,12 +5995,19 @@ async function _saveExpenseImpl() {
   if (!reason) { showToast('⚠️ Inserisci il motivo'); return; }
   if (isNaN(amount) || amount <= 0) { showToast('⚠️ Inserisci un importo valido'); return; }
   if (!date) { showToast('⚠️ Inserisci la data'); return; }
-  const a = { type: 'expense', year: parseInt(date.slice(0, 4)), date, name: reason, amount, meta: {} };
+  const year = parseInt(date.slice(0, 4));
+  let a;
+  if (_activityKind === 'profit') {
+    // profitto manuale: lo registriamo come "vendita" con costo 0 → P&L positivo
+    a = { type: 'sale', kind: 'manual', year, date, name: reason, qty: 1, buyTotal: 0, saleTotal: amount, meta: { manual: true } };
+  } else {
+    a = { type: 'expense', year, date, name: reason, amount, meta: {} };
+  }
   const r = await dataStore.insertActivity(a);
   if (r.error) { showToast('❌ ' + (r.error.message || 'errore')); return; }
   activities.unshift(r.data);
   closeModal('expense-modal');
-  showToast('💸 Spesa registrata');
+  showToast(_activityKind === 'profit' ? '💰 Profitto registrato' : '💸 Spesa registrata');
   registryYear = r.data.year;
   renderRegistry();
 }
