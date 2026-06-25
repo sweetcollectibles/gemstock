@@ -4272,7 +4272,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v122</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v123</div>
   </div>
 </div>
 
@@ -8510,7 +8510,7 @@ function goToGrading() {
   transitionViews(fromEl, document.getElementById('grading-view'), 'forward');
 }
 
-function subCardsOf(subId) { return subCards.filter(c => c.submissionId === subId); }
+function subCardsOf(subId) { return subCards.filter(c => String(c.submissionId) === String(subId)); }
 function subGraderName(s) { return s.grader === 'ALTRO' ? (s.customGrader || 'Altro') : s.grader; }
 function daysAgo(dateStr) {
   if (!dateStr) return null;
@@ -8535,6 +8535,9 @@ function renderGradingDash() {
   if (!el) return;
   const open = submissions.filter(s => s.status === 'open').length;
   const done = submissions.filter(s => s.status === 'completed').length;
+  // carte attualmente in lavorazione (nelle sub aperte)
+  const openIds = submissions.filter(s => s.status === 'open').map(s => String(s.id));
+  const cardsInProgress = subCards.filter(c => openIds.includes(String(c.submissionId))).length;
   // tutte le carte con voto (sub completate)
   const graded = subCards.filter(c => c.grade);
   const totalGraded = graded.length;
@@ -8588,8 +8591,8 @@ function renderGradingDash() {
       <div class="dash-glow"></div>
       <div class="dash-top">
         <div class="dash-stat"><div class="n" style="color:var(--orange)">${open}</div><div class="l">Sub in corso</div></div>
-        <div class="dash-stat"><div class="n" style="color:var(--green)">${done}</div><div class="l">Completate</div></div>
-        <div class="dash-stat"><div class="n" style="color:var(--accent)">${totalGraded}</div><div class="l">Carte gradate</div></div>
+        <div class="dash-stat"><div class="n" style="color:var(--accent)">${cardsInProgress}</div><div class="l">Carte in corso</div></div>
+        <div class="dash-stat"><div class="n" style="color:var(--green)">${totalGraded}</div><div class="l">Carte gradate</div></div>
       </div>
       <div class="dash-sub">📊 Tracciamento voti</div>
       ${entHtml}
@@ -8713,8 +8716,15 @@ async function saveSubmission() {
   // inserisci le carte
   const rows = names.map(nm => ({ submissionId: r.data.id, cardName: nm, grade: null }));
   const rc = await dataStore.insertSubCards(rows);
-  if (rc.error) { showToast('⚠️ Submission creata ma errore sulle carte'); }
-  else { subCards.push(...rc.data); }
+  if (rc.error) {
+    showToast('⚠️ Submission creata ma errore sulle carte');
+  } else if (rc.data && rc.data.length) {
+    subCards.push(...rc.data);
+  } else {
+    // fallback: se l'insert non ha restituito le righe (es. select bloccata da RLS),
+    // ricarico le carte da Supabase così il conteggio è sempre corretto
+    subCards = await dataStore.loadSubCards();
+  }
   closeModal('submission-modal');
   showToast('✅ Submission creata');
   renderGrading();
