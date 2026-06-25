@@ -3845,9 +3845,9 @@
 
     <div class="reg-actions">
       <button class="reg-abtn primary" onclick="openAddActivityChoice()">➕ Spesa / Profitto</button>
+      <button class="reg-abtn" onclick="openImportModal()">📥 Importa</button>
       <button class="reg-abtn" onclick="exportRegistryExcel()">📊 Excel</button>
       <button class="reg-abtn" onclick="generateRegistryPDF()">📄 PDF</button>
-      <button class="reg-abtn" onclick="openImportModal()">📥 Importa</button>
     </div>
 
     <div id="registry-list"></div>
@@ -4170,7 +4170,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v120</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v121</div>
   </div>
 </div>
 
@@ -9784,6 +9784,13 @@ async function saveNickname() {
     if (tab && tab.style.display !== 'none') return;
     const x = e.touches[0].clientX;
     if (x > 30) return; // solo dal bordo sinistro
+    // se la vista set è aperta (overlay sopra la lista), lo swipe deve
+    // chiudere il set e tornare alla LISTA, non andare alla home
+    if (openSetId) {
+      candidate = { x, y: e.touches[0].clientY, setSwipe: true };
+      document.addEventListener('touchmove', onSwipeBackMove, { passive: false });
+      return;
+    }
     candidate = { x, y: e.touches[0].clientY };
     document.addEventListener('touchmove', onSwipeBackMove, { passive: false });
   }, { passive: true });
@@ -9802,6 +9809,13 @@ async function saveNickname() {
     const dy = Math.abs(t.clientY - candidate.y);
     if (dy > Math.abs(dx) && dy > 14) { candidate = null; detachSwipeBack(); return; } // scroll verticale
     if (dx > 12 && dx > dy) {
+      // swipe nel set-view: chiudi il set e torna alla lista (niente gesto verso home)
+      if (candidate.setSwipe) {
+        candidate = null;
+        detachSwipeBack();
+        closeSetView();
+        return;
+      }
       g = beginGesture(candidate.x, candidate.y);
       candidate = null;
       if (g) { moveGesture(t.clientX); e.preventDefault(); }
