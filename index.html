@@ -989,6 +989,91 @@
     border: 1px solid rgba(168,85,247,0.3);
     cursor: pointer;
   }
+
+  /* ===== VISTA GRADAZIONE ===== */
+  .grading-seclabel {
+    font-size: 0.6rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1.5px; margin: 18px 4px 10px; font-weight: 700;
+  }
+  .grading-add-btn {
+    width: 100%; margin-top: 14px; padding: 13px; border-radius: 12px;
+    border: none; background: linear-gradient(135deg, #a855f7, #7e22ce);
+    color: #fff; font-weight: 700; font-size: 0.85rem; font-family: 'Inter', sans-serif;
+  }
+  .grading-empty, .dash-empty, .ent-empty {
+    font-size: 0.72rem; color: var(--muted); text-align: center;
+    padding: 18px 12px; line-height: 1.5;
+  }
+  .ent-empty { padding: 10px; font-size: 0.66rem; }
+  /* dashboard */
+  .dash {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, rgba(168,85,247,0.10), var(--surface) 70%);
+    border: 1px solid rgba(168,85,247,0.22); border-radius: 18px;
+    padding: 14px; margin-bottom: 4px;
+  }
+  .dash-glow {
+    position: absolute; right: -40px; top: -40px; width: 130px; height: 130px;
+    border-radius: 50%; background: var(--accent); filter: blur(55px); opacity: 0.12; pointer-events: none;
+  }
+  body.nav-anim .dash-glow { display: none; }
+  .dash-top { display: flex; gap: 8px; margin-bottom: 14px; position: relative; }
+  .dash-stat {
+    flex: 1; background: rgba(0,0,0,0.22); border: 1px solid var(--border);
+    border-radius: 11px; padding: 10px 8px; text-align: center;
+  }
+  .dash-stat .n { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.45rem; line-height: 1; }
+  .dash-stat .l { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .dash-sub {
+    position: relative; font-size: 0.54rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; margin-bottom: 9px; font-weight: 700;
+  }
+  .ent { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; overflow: hidden; position: relative; }
+  .ent:last-child { margin-bottom: 0; }
+  .ent-head { display: flex; align-items: center; gap: 11px; padding: 12px; cursor: pointer; }
+  .ent-bar { width: 3px; align-self: stretch; border-radius: 3px; flex-shrink: 0; }
+  .ent-name { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1rem; }
+  .ent-cards { font-size: 0.58rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+  .ent-pct { margin-left: auto; text-align: right; }
+  .ent-pct .v { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.3rem; color: var(--green); }
+  .ent-pct .l { font-size: 0.46rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .ent-chev { color: var(--muted); font-size: 0.9rem; transition: transform 0.2s; }
+  .ent.open .ent-chev { transform: rotate(90deg); }
+  .ent-body { border-top: 1px solid var(--border); padding: 6px 12px 10px; }
+  .vrow { display: flex; align-items: center; padding: 7px 2px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .vrow:last-child { border-bottom: none; }
+  .vrow .vk { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.8rem; width: 88px; }
+  .vrow .vbar { flex: 1; height: 6px; background: var(--surface); border-radius: 3px; margin: 0 10px; overflow: hidden; }
+  .vrow .vbar .f { height: 100%; border-radius: 3px; }
+  .vrow .vn { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--muted); width: 62px; text-align: right; }
+  .vrow.v10 .vk { color: var(--green); } .vrow.v10 .f { background: var(--green); }
+  .vrow.v9 .vk { color: #60a5fa; } .vrow.v9 .f { background: #60a5fa; }
+  .vrow.v8 .vk { color: var(--gold); } .vrow.v8 .f { background: var(--gold); }
+  .vrow.vlow .vk { color: var(--muted); } .vrow.vlow .f { background: var(--muted); }
+  .vrow.special .vk { color: #c77dff; } .vrow.special .f { background: #a855f7; }
+  /* submission card */
+  .subc { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 13px; margin-bottom: 9px; position: relative; overflow: hidden; cursor: pointer; }
+  .subc-bar { width: 3px; align-self: stretch; border-radius: 3px; flex-shrink: 0; }
+  .subc.psa .subc-bar { background: #e3122b; } .subc.bgs .subc-bar { background: #c8a24a; } .subc.cgc .subc-bar { background: #2a6cc9; } .subc.alt .subc-bar { background: #8a8478; }
+  .subc-info { flex: 1; min-width: 0; }
+  .subc-nm { font-weight: 800; font-size: 0.9rem; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 7px; }
+  .subc-badge { font-size: 0.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; padding: 2px 7px; border-radius: 999px; }
+  .subc-badge.exp { background: rgba(245,147,59,0.15); color: var(--orange); }
+  .subc-badge.base { background: rgba(138,132,120,0.15); color: var(--muted); }
+  .subc-mt { font-size: 0.6rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+  .subc-cnt { text-align: right; flex-shrink: 0; }
+  .subc-cnt .b { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.2rem; color: var(--accent); }
+  .subc-cnt .l { font-size: 0.5rem; color: var(--muted); }
+  .subc-arr { color: var(--muted); font-size: 1.2rem; flex-shrink: 0; }
+  /* form submission */
+  .seg-control { display: flex; gap: 6px; }
+  .seg-opt { flex: 1; text-align: center; padding: 9px; border-radius: 9px; background: var(--surface2); border: 1px solid var(--border); font-size: 0.72rem; font-weight: 700; color: var(--muted); cursor: pointer; }
+  .seg-opt.on { background: rgba(168,85,247,0.15); border-color: var(--accent); color: #c77dff; }
+  .sub-card-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .sub-card-row .sub-card-input { flex: 1; }
+  .sub-card-x { width: 36px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; color: var(--red); font-size: 0.85rem; padding: 9px 0; }
+  .sub-addcard { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface2); border: 1px dashed var(--border); border-radius: 10px; padding: 10px; font-size: 0.78rem; color: var(--muted); cursor: pointer; margin-top: 4px; }
+
   .challenge-soon {
     position: absolute;
     top: 9px;
@@ -3854,6 +3939,23 @@
 
   </div>
 
+  <div id="grading-view" class="page-view" style="display:none">
+
+    <div class="sec-brand"><div class="sec-wm"><span class="purple-s">S</span>WEETHOME</div></div>
+    <div class="list-header-bar">
+      <button class="back-btn" onclick="goToHome()">←</button>
+      <div class="list-title">⏳ In Gradazione</div>
+    </div>
+
+    <div id="grading-dash"></div>
+
+    <div class="grading-seclabel">Submission in corso</div>
+    <div id="grading-list"></div>
+
+    <button class="grading-add-btn" onclick="openAddSubmission()">➕ Aggiungi submission</button>
+
+  </div>
+
 </div><!-- end .main -->
 
 </div><!-- end scroll-wrapper / app-page -->
@@ -4170,7 +4272,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v121</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v122</div>
   </div>
 </div>
 
@@ -4459,6 +4561,47 @@
 </div>
 
 <!-- ============ MODALE SPESA ============ -->
+<div class="modal-overlay" id="submission-modal">
+  <div class="modal">
+    <div class="modal-handle-area"><div class="modal-handle"></div></div>
+    <div class="modal-header">
+      <div class="modal-title">➕ Nuova submission</div>
+      <button class="modal-close" onclick="closeModal('submission-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ente di grading</label>
+      <div class="seg-control" id="sub-grader-seg">
+        <div class="seg-opt on" data-grader="PSA" onclick="selectSubGrader('PSA')">PSA</div>
+        <div class="seg-opt" data-grader="BGS" onclick="selectSubGrader('BGS')">BGS</div>
+        <div class="seg-opt" data-grader="CGC" onclick="selectSubGrader('CGC')">CGC</div>
+        <div class="seg-opt" data-grader="ALTRO" onclick="selectSubGrader('ALTRO')">Altro</div>
+      </div>
+    </div>
+    <div class="form-group" id="sub-custom-group" style="display:none">
+      <label class="form-label">Nome ente</label>
+      <input type="text" class="form-input" id="sub-custom" placeholder="es. SGC, TAG…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo submission</label>
+      <div class="seg-control" id="sub-type-seg">
+        <div class="seg-opt on" data-type="base" onclick="selectSubType('base')">Base</div>
+        <div class="seg-opt" data-type="express" onclick="selectSubType('express')">Express</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">📅 Data invio</label>
+      <input type="date" class="form-input" id="sub-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">🃏 Carte nella submission</label>
+      <div id="sub-cards-list"></div>
+      <div class="sub-addcard" onclick="addSubCardRow()">+ Aggiungi carta</div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSubmission()">💾 Crea submission</button>
+    <button class="btn btn-secondary" onclick="closeModal('submission-modal')" style="margin-top:8px">Annulla</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="expense-modal">
   <div class="modal">
     <div class="modal-handle-area"><div class="modal-handle"></div></div>
@@ -4710,6 +4853,52 @@ function dbToAct(r) {
   };
 }
 
+// ---- Mapper Submissions ----
+function subToDb(s, userId) {
+  const o = {
+    user_id: userId || (currentUser ? currentUser.id : undefined),
+    grader: s.grader,
+    custom_grader: s.customGrader || null,
+    sub_type: s.subType || 'base',
+    sent_date: s.sentDate,
+    status: s.status || 'open',
+    returned_date: s.returnedDate || null
+  };
+  if (s.id != null) o.id = s.id;
+  return o;
+}
+function dbToSub(r) {
+  return {
+    id: r.id,
+    grader: r.grader,
+    customGrader: r.custom_grader || null,
+    subType: r.sub_type || 'base',
+    sentDate: r.sent_date,
+    status: r.status || 'open',
+    returnedDate: r.returned_date || null,
+    createdAt: r.created_at
+  };
+}
+function subCardToDb(c, userId) {
+  const o = {
+    user_id: userId || (currentUser ? currentUser.id : undefined),
+    submission_id: c.submissionId,
+    card_name: c.cardName,
+    grade: c.grade || null
+  };
+  if (c.id != null) o.id = c.id;
+  return o;
+}
+function dbToSubCard(r) {
+  return {
+    id: r.id,
+    submissionId: r.submission_id,
+    cardName: r.card_name,
+    grade: r.grade || null,
+    createdAt: r.created_at
+  };
+}
+
 // ============ DATA STORE ============
 const dataStore = {
   // === Settings (still localStorage — not user-specific) ===
@@ -4741,6 +4930,44 @@ const dataStore = {
   async deleteActivity(id) {
     const { error } = await _supabase.from('activities').delete().eq('id', id).eq('user_id', currentUser.id);
     if (error) console.error('deleteActivity:', error);
+  },
+  // === Submissions (Gradazione) ===
+  async loadSubmissions() {
+    if (!currentUser) return [];
+    const { data, error } = await _supabase.from('submissions').select('*').order('created_at', { ascending: false });
+    if (error) { console.error('loadSubmissions:', error); return []; }
+    return (data || []).map(dbToSub);
+  },
+  async insertSubmission(s) {
+    if (!currentUser) return { error: { message: 'non loggato' } };
+    const { data, error } = await _supabase.from('submissions').insert(subToDb(s)).select().single();
+    if (error) { console.error('insertSubmission:', error); return { error }; }
+    return { data: dbToSub(data) };
+  },
+  async updateSubmission(s) {
+    const { error } = await _supabase.from('submissions').update(subToDb(s)).eq('id', s.id).eq('user_id', currentUser.id);
+    if (error) console.error('updateSubmission:', error);
+  },
+  async deleteSubmission(id) {
+    const { error } = await _supabase.from('submissions').delete().eq('id', id).eq('user_id', currentUser.id);
+    if (error) console.error('deleteSubmission:', error);
+  },
+  async loadSubCards() {
+    if (!currentUser) return [];
+    const { data, error } = await _supabase.from('submission_cards').select('*').order('created_at', { ascending: true });
+    if (error) { console.error('loadSubCards:', error); return []; }
+    return (data || []).map(dbToSubCard);
+  },
+  async insertSubCards(rows) {
+    if (!currentUser || !rows.length) return { data: [] };
+    const payload = rows.map(subCardToDb);
+    const { data, error } = await _supabase.from('submission_cards').insert(payload).select();
+    if (error) { console.error('insertSubCards:', error); return { error }; }
+    return { data: (data || []).map(dbToSubCard) };
+  },
+  async updateSubCard(c) {
+    const { error } = await _supabase.from('submission_cards').update(subCardToDb(c)).eq('id', c.id).eq('user_id', currentUser.id);
+    if (error) console.error('updateSubCard:', error);
   },
   async loadCards() {
     if (!currentUser) return [];
@@ -4865,6 +5092,8 @@ let cards = [];
 let activities = []; // registro vendite e spese
 let wishlist = [];
 let sealed = [];
+let submissions = []; // submission di gradazione
+let subCards = [];    // carte dentro le submission
 let settings = dataStore.loadSettings();
 let activeFilter = 'all';
 let editingId = null;
@@ -5195,11 +5424,10 @@ function renderStats() {
       <div class="stat-value" style="color:var(--accent)">${activities.filter(a => a.year === new Date().getFullYear()).length}</div>
       <div class="stat-sub">movimenti ${new Date().getFullYear()}</div>
     </div>
-    <div class="stat-card challenge-tile" onclick="showToast('⏳ In Gradazione — in arrivo!')">
-      <div class="challenge-soon">COMING SOON</div>
+    <div class="stat-card challenge-tile" onclick="goToGrading()">
       <div class="stat-label">⏳ In Gradazione</div>
-      <div class="stat-value challenge-val">📮</div>
-      <div class="stat-sub">in valutazione</div>
+      <div class="stat-value challenge-val" id="grading-tile-n">📮</div>
+      <div class="stat-sub" id="grading-tile-sub">submission attive</div>
     </div>
     <div class="stat-card full hotpicks-bar ${toSell > 0 ? 'hot' : 'calm'} ${activeFilter === 'topsell' ? 'active' : ''}" data-stat-filter="topsell" onclick="toggleStatFilter('topsell')">
       <div class="hotpicks-glow"></div>
@@ -7805,7 +8033,7 @@ function cancelSale(actId) { return runOnce('cancel_' + actId, () => _cancelSale
 // ============ TRANSIZIONI VISTA — iOS PUSH/POP ============
 // La vista nuova scivola da destra sopra la vecchia, che arretra (parallasse)
 // e si scurisce. Tornando, il contrario. Solo transform/opacity/filter → GPU 60fps.
-const VIEW_IDS = { home: 'home-view', list: 'list-view', wishlist: 'wishlist-view', sealed: 'sealed-view', registry: 'registry-view' };
+const VIEW_IDS = { home: 'home-view', list: 'list-view', wishlist: 'wishlist-view', sealed: 'sealed-view', registry: 'registry-view', grading: 'grading-view' };
 let navAnimating = false;
 let _navWatchdog = null;
 // Setter centralizzato: quando si attiva l'animazione, arma un timer di sicurezza
@@ -8258,6 +8486,243 @@ function goToRegistry() {
   updateFabVisibility();
   hideViewsExcept(['registry-view', fromEl ? fromEl.id : '']);
   transitionViews(fromEl, document.getElementById('registry-view'), 'forward');
+}
+
+// ============ GRADAZIONE ============
+const GRADE_SCALES = {
+  PSA:   ['10','9.5','9','8.5','8','7.5','7','<7'],
+  BGS:   ['10BL','10PR','10','9.5','9','8.5','8','7.5','7','<7'],
+  CGC:   ['10PR','10','9.5','9','8.5','8','7.5','7','<7'],
+  ALTRO: ['10','9.5','9','8.5','8','7.5','7','<7']
+};
+const GRADE_LABELS = { '10BL':'10 BL', '10PR':'10 PR', '<7':'< 7' };
+function gradeLabel(g) { return GRADE_LABELS[g] || g; }
+// un voto conta come "10" (anche varianti speciali) per la percentuale dashboard
+function isTen(g) { return g === '10' || g === '10BL' || g === '10PR'; }
+
+function goToGrading() {
+  if (navAnimating || currentView === 'grading') return;
+  const fromEl = document.getElementById(VIEW_IDS[currentView]);
+  currentView = 'grading';
+  renderGrading();
+  updateFabVisibility();
+  hideViewsExcept(['grading-view', fromEl ? fromEl.id : '']);
+  transitionViews(fromEl, document.getElementById('grading-view'), 'forward');
+}
+
+function subCardsOf(subId) { return subCards.filter(c => c.submissionId === subId); }
+function subGraderName(s) { return s.grader === 'ALTRO' ? (s.customGrader || 'Altro') : s.grader; }
+function daysAgo(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function renderGrading() {
+  // contatori tile home
+  const open = submissions.filter(s => s.status === 'open');
+  const tileN = document.getElementById('grading-tile-n');
+  const tileSub = document.getElementById('grading-tile-sub');
+  if (tileN) tileN.textContent = open.length || '📮';
+  if (tileSub) tileSub.textContent = open.length === 1 ? 'submission attiva' : 'submission attive';
+
+  renderGradingDash();
+  renderGradingList();
+}
+
+function renderGradingDash() {
+  const el = document.getElementById('grading-dash');
+  if (!el) return;
+  const open = submissions.filter(s => s.status === 'open').length;
+  const done = submissions.filter(s => s.status === 'completed').length;
+  // tutte le carte con voto (sub completate)
+  const graded = subCards.filter(c => c.grade);
+  const totalGraded = graded.length;
+
+  // raggruppa per ente (usando la submission di appartenenza)
+  const subById = {}; submissions.forEach(s => subById[s.id] = s);
+  const byEnt = {}; // ent -> { cards:[], byGrade:{} }
+  graded.forEach(c => {
+    const s = subById[c.submissionId];
+    if (!s) return;
+    const ent = subGraderName(s);
+    const key = ['PSA','BGS','CGC'].includes(s.grader) ? s.grader : 'ALTRO';
+    if (!byEnt[key]) byEnt[key] = { label: key === 'ALTRO' ? 'Altro' : key, cards: 0, byGrade: {} };
+    byEnt[key].cards++;
+    byEnt[key].byGrade[c.grade] = (byEnt[key].byGrade[c.grade] || 0) + 1;
+  });
+
+  const entColors = { PSA:'#ff6b7d', BGS:'#d4b15a', CGC:'#5b9bd5', ALTRO:'var(--text)' };
+  const entBars   = { PSA:'#e3122b', BGS:'#c8a24a', CGC:'#2a6cc9', ALTRO:'#8a8478' };
+
+  let entHtml = '';
+  ['PSA','BGS','CGC','ALTRO'].forEach(key => {
+    const e = byEnt[key];
+    if (!e) return;
+    const tens = Object.keys(e.byGrade).filter(isTen).reduce((s,g) => s + e.byGrade[g], 0);
+    const pct = e.cards > 0 ? Math.round(tens / e.cards * 100) : 0;
+    // righe voti (solo quelli presenti, in ordine scala)
+    const scale = GRADE_SCALES[key] || GRADE_SCALES.ALTRO;
+    const maxN = Math.max(...Object.values(e.byGrade), 1);
+    const rows = scale.filter(g => e.byGrade[g]).map(g => {
+      const n = e.byGrade[g];
+      const w = Math.round(n / maxN * 100);
+      const cls = isTen(g) ? (g === '10' ? 'v10' : 'special v10') : g.startsWith('9') ? 'v9' : g.startsWith('8') ? 'v8' : 'vlow';
+      return `<div class="vrow ${cls}"><div class="vk">${gradeLabel(g)}</div><div class="vbar"><div class="f" style="width:${w}%"></div></div><div class="vn">${n} ${n === 1 ? 'carta' : 'carte'}</div></div>`;
+    }).join('');
+    entHtml += `
+      <div class="ent ${key.toLowerCase()}" data-ent="${key}">
+        <div class="ent-head" onclick="toggleEnt('${key}')">
+          <div class="ent-bar" style="background:${entBars[key]}"></div>
+          <div><div class="ent-name" style="color:${entColors[key]}">${e.label}</div><div class="ent-cards">${e.cards} ${e.cards === 1 ? 'carta gradata' : 'carte gradate'}</div></div>
+          <div class="ent-pct"><div class="v">${pct}%</div><div class="l">voti 10</div></div>
+          <div class="ent-chev">›</div>
+        </div>
+        <div class="ent-body" style="display:none">${rows || '<div class="ent-empty">Nessun voto registrato</div>'}</div>
+      </div>`;
+  });
+  if (!entHtml) entHtml = '<div class="dash-empty">Nessuna carta gradata ancora. Le statistiche appariranno quando una submission rientra con i voti.</div>';
+
+  el.innerHTML = `
+    <div class="dash">
+      <div class="dash-glow"></div>
+      <div class="dash-top">
+        <div class="dash-stat"><div class="n" style="color:var(--orange)">${open}</div><div class="l">Sub in corso</div></div>
+        <div class="dash-stat"><div class="n" style="color:var(--green)">${done}</div><div class="l">Completate</div></div>
+        <div class="dash-stat"><div class="n" style="color:var(--accent)">${totalGraded}</div><div class="l">Carte gradate</div></div>
+      </div>
+      <div class="dash-sub">📊 Tracciamento voti</div>
+      ${entHtml}
+    </div>`;
+}
+
+function toggleEnt(key) {
+  const ent = document.querySelector(`.ent[data-ent="${key}"]`);
+  if (!ent) return;
+  const body = ent.querySelector('.ent-body');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  ent.classList.toggle('open', !open);
+}
+
+function renderGradingList() {
+  const el = document.getElementById('grading-list');
+  if (!el) return;
+  const open = submissions.filter(s => s.status === 'open');
+  if (!open.length) {
+    el.innerHTML = '<div class="grading-empty">Nessuna submission in corso. Tocca "Aggiungi submission" per iniziare.</div>';
+    return;
+  }
+  el.innerHTML = open.map(s => {
+    const ent = subGraderName(s);
+    const n = subCardsOf(s.id).length;
+    const d = daysAgo(s.sentDate);
+    const key = ['PSA','BGS','CGC'].includes(s.grader) ? s.grader.toLowerCase() : 'alt';
+    const typeBadge = s.subType === 'express'
+      ? '<span class="subc-badge exp">Express</span>'
+      : '<span class="subc-badge base">Base</span>';
+    const sent = s.sentDate ? s.sentDate.split('-').reverse().join('/') : '—';
+    return `
+      <div class="subc ${key}" onclick="openSubDetail(${s.id})">
+        <div class="subc-bar"></div>
+        <div class="subc-info">
+          <div class="subc-nm">${ent} ${typeBadge}</div>
+          <div class="subc-mt">📅 ${sent}${d != null ? ` · ${d} ${d === 1 ? 'giorno' : 'giorni'} fa` : ''}</div>
+        </div>
+        <div class="subc-cnt"><div class="b">${n}</div><div class="l">${n === 1 ? 'carta' : 'carte'}</div></div>
+        <div class="subc-arr">›</div>
+      </div>`;
+  }).join('');
+}
+
+// ---- form aggiungi submission ----
+let _newSubGrader = 'PSA';
+let _newSubType = 'base';
+let _newSubCardRows = []; // array di stringhe (nomi)
+
+function openAddSubmission() {
+  _newSubGrader = 'PSA';
+  _newSubType = 'base';
+  _newSubCardRows = [''];
+  document.getElementById('sub-custom').value = '';
+  document.getElementById('sub-custom-group').style.display = 'none';
+  document.getElementById('sub-date').value = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('#sub-grader-seg .seg-opt').forEach(o => o.classList.toggle('on', o.dataset.grader === 'PSA'));
+  document.querySelectorAll('#sub-type-seg .seg-opt').forEach(o => o.classList.toggle('on', o.dataset.type === 'base'));
+  renderSubCardRows();
+  openModal('submission-modal');
+}
+
+function selectSubGrader(g) {
+  _newSubGrader = g;
+  document.querySelectorAll('#sub-grader-seg .seg-opt').forEach(o => o.classList.toggle('on', o.dataset.grader === g));
+  document.getElementById('sub-custom-group').style.display = (g === 'ALTRO') ? '' : 'none';
+}
+function selectSubType(t) {
+  _newSubType = t;
+  document.querySelectorAll('#sub-type-seg .seg-opt').forEach(o => o.classList.toggle('on', o.dataset.type === t));
+}
+function addSubCardRow() {
+  // salva i valori correnti prima di ri-renderizzare
+  syncSubCardRows();
+  _newSubCardRows.push('');
+  renderSubCardRows();
+  // focus sull'ultima riga
+  const inputs = document.querySelectorAll('#sub-cards-list .sub-card-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+function removeSubCardRow(i) {
+  syncSubCardRows();
+  _newSubCardRows.splice(i, 1);
+  if (!_newSubCardRows.length) _newSubCardRows = [''];
+  renderSubCardRows();
+}
+function syncSubCardRows() {
+  const inputs = document.querySelectorAll('#sub-cards-list .sub-card-input');
+  _newSubCardRows = Array.from(inputs).map(inp => inp.value);
+}
+function renderSubCardRows() {
+  const el = document.getElementById('sub-cards-list');
+  if (!el) return;
+  el.innerHTML = _newSubCardRows.map((name, i) => `
+    <div class="sub-card-row">
+      <input type="text" class="form-input sub-card-input" value="${(name || '').replace(/"/g, '&quot;')}" placeholder="Nome carta #${i + 1}" oninput="syncSubCardRows()">
+      <button type="button" class="sub-card-x" onclick="removeSubCardRow(${i})">✕</button>
+    </div>`).join('');
+}
+
+async function saveSubmission() {
+  syncSubCardRows();
+  const date = document.getElementById('sub-date').value;
+  const custom = document.getElementById('sub-custom').value.trim();
+  if (!date) { showToast('⚠️ Inserisci la data di invio'); return; }
+  if (_newSubGrader === 'ALTRO' && !custom) { showToast("⚠️ Inserisci il nome dell'ente"); return; }
+  const names = _newSubCardRows.map(s => s.trim()).filter(Boolean);
+  if (!names.length) { showToast('⚠️ Aggiungi almeno una carta'); return; }
+
+  const sub = {
+    grader: _newSubGrader,
+    customGrader: _newSubGrader === 'ALTRO' ? custom : null,
+    subType: _newSubType,
+    sentDate: date,
+    status: 'open'
+  };
+  const r = await dataStore.insertSubmission(sub);
+  if (r.error) { showToast('❌ ' + (r.error.message || 'errore')); return; }
+  submissions.unshift(r.data);
+  // inserisci le carte
+  const rows = names.map(nm => ({ submissionId: r.data.id, cardName: nm, grade: null }));
+  const rc = await dataStore.insertSubCards(rows);
+  if (rc.error) { showToast('⚠️ Submission creata ma errore sulle carte'); }
+  else { subCards.push(...rc.data); }
+  closeModal('submission-modal');
+  showToast('✅ Submission creata');
+  renderGrading();
+}
+
+// placeholder: dettaglio submission (step successivo)
+function openSubDetail(subId) {
+  showToast('Dettaglio submission — in arrivo nel prossimo step');
 }
 
 function renderSealed() {
@@ -9994,6 +10459,11 @@ async function initApp() {
   wishlist = loadedWishlist;
   sealed = loadedSealed;
 
+  // submissions di gradazione (in parallelo, non bloccanti)
+  Promise.all([dataStore.loadSubmissions(), dataStore.loadSubCards()])
+    .then(([subs, scs]) => { submissions = subs || []; subCards = scs || []; if (currentView === 'grading') renderGrading(); })
+    .catch(e => console.error('load submissions:', e));
+
   if (nickname) localStorage.setItem('tcg_nickname', nickname);
   if (psaToken) settings.psaToken = psaToken;
   loadNickname();
@@ -10133,7 +10603,7 @@ let touchStartY = 0;
 // ============ FEEDBACK PRESSIONE (classe .pressing) ============
 // Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
 // :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
-const PRESSABLE = '.icon-btn,.nav-tile,.hotpicks-bar,.back-btn,.stat-card.clickable,.challenge-tile,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
+const PRESSABLE = '.icon-btn,.nav-tile,.hotpicks-bar,.subc,.ent-head,.grading-add-btn,.sub-addcard,.back-btn,.stat-card.clickable,.challenge-tile,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
 let pressedEl = null;
 function clearPressed() {
   if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
