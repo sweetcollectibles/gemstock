@@ -884,6 +884,15 @@
     text-transform: uppercase;
     letter-spacing: 0.4px;
   }
+  .hero-box-ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 11px; height: 11px;
+    vertical-align: middle;
+    margin-right: 2px;
+  }
+  .hero-box-ico svg { width: 100%; height: 100%; }
   .hero-box-v {
     font-size: 0.95rem;
     font-weight: 800;
@@ -4348,7 +4357,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v129</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v130</div>
   </div>
 </div>
 
@@ -5481,11 +5490,11 @@ function renderStats() {
       <div class="hero-value">€${fmt(totalCur)}</div>
       <div class="hero-row">
         <div class="hero-box">
-          <div class="hero-box-l">💼 Capitale Investito</div>
+          <div class="hero-box-l"><span class="hero-box-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#d4a847" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg></span> Capitale Investito</div>
           <div class="hero-box-v gold">€${fmt(totalBuy)}</div>
         </div>
         <div class="hero-box">
-          <div class="hero-box-l">📊 P&L Totale</div>
+          <div class="hero-box-l"><span class="hero-box-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#8a8478" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M17 8h4v4"/></svg></span> P&L Totale</div>
           <div class="hero-box-v ${isPos ? 'green' : 'red'}">${isPos ? '+' : '−'}€${fmt(Math.abs(pnl))}</div>
         </div>
       </div>
