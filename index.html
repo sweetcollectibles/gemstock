@@ -591,24 +591,6 @@
   /* (keyframes viewFadeIn rimossi — sostituiti dal push/pop JS) */
 
   /* "Le tue carte" tile */
-  .cards-tile {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px 16px;
-    margin-top: 14px;
-    margin-bottom: 16px;
-    cursor: pointer;
-    transition: transform 0.15s, border-color 0.15s, background 0.15s;
-  }
-.cards-tile.pressing { transform: scale(0.985); }
-  .cards-tile:hover {
-    border-color: var(--accent);
-    background: rgba(168,85,247,0.04);
-  }
   .cards-tile-icon {
     width: 56px; height: 56px;
     border-radius: 13px;
@@ -636,54 +618,6 @@
     border: 1px solid rgba(168,85,247,0.2);
     font-size: 0;
     color: transparent;
-  }
-
-  /* Tile in "soon" state — placeholder, less prominent */
-  .cards-tile.soon {
-    opacity: 0.7;
-    cursor: pointer;
-  }
-  .cards-tile.soon:hover {
-    border-color: var(--border2);
-    background: var(--surface);
-    opacity: 0.85;
-  }
-
-  .cards-tile-soon-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.55rem;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    padding: 3px 8px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    flex-shrink: 0;
-  }
-  .cards-tile-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .cards-tile-title {
-    font-family: 'Inter', -apple-system, sans-serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.2px;
-    margin-bottom: 2px;
-  }
-  .cards-tile-sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted);
-    letter-spacing: 0.2px;
-  }
-  .cards-tile-arrow {
-    font-size: 1.6rem;
-    color: var(--muted);
-    font-weight: 300;
-    flex-shrink: 0;
   }
 
   /* ===== NAV TILES (stile C premium) ===== */
@@ -999,13 +933,6 @@
   }
 
   /* ===== TILE CHALLENGES (teaser coming soon) ===== */
-  .challenge-tile {
-    position: relative;
-    background: linear-gradient(135deg, rgba(168,85,247,0.10), rgba(212,168,71,0.06));
-    border: 1px solid rgba(168,85,247,0.3);
-    cursor: pointer;
-  }
-
   /* ===== VISTA GRADAZIONE ===== */
   .grading-seclabel {
     font-size: 0.6rem; color: var(--muted); text-transform: uppercase;
@@ -1115,26 +1042,6 @@
   .ge-grade.miss.sel { background: rgba(138,132,120,0.2); border-color: var(--muted); color: var(--muted); }
   .subc-badge.done { background: rgba(74,222,128,0.15); color: var(--green); }
   .subc.done { opacity: 0.92; }
-
-  .challenge-soon {
-    position: absolute;
-    top: 9px;
-    right: 9px;
-    font-size: 0.46rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--gold);
-    background: rgba(212,168,71,0.14);
-    border: 1px solid rgba(212,168,71,0.3);
-    border-radius: 999px;
-    padding: 2px 7px;
-  }
-  .challenge-val {
-    font-size: 1.5rem;
-    margin-top: 6px;
-    filter: drop-shadow(0 0 8px rgba(168,85,247,0.5));
-  }
 
   /* Mini chart inside card */
   .mini-chart-wrap {
@@ -1283,29 +1190,12 @@
   }
 
   /* Sell card extra glow */
-  .stat-card.sell-alert {
-    background: linear-gradient(135deg, rgba(248,113,113,0.06), var(--surface));
-    border-color: rgba(248,113,113,0.2);
-  }
-  body.app-ready .stat-card.sell-alert {
-    animation: sellGlow 2.4s infinite ease-in-out;
-  }
-  .stat-card.sell-alert::before {
-    background: linear-gradient(180deg, #ef4444, #c8432a) !important;
-    width: 4px !important;
-  }
-
-  @keyframes sellGlow {
-    0%, 100% { box-shadow: 0 0 0 1px rgba(248,113,113,0.1); }
-    50% { box-shadow: 0 0 16px 2px rgba(248,113,113,0.18); }
-  }
 
   /* Durante le transizioni di navigazione: in pausa le animazioni infinite
      (box-shadow = repaint a ogni frame sulla vista in movimento) e
      niente blur sulla barra (compositing costoso su contenuto che scorre) */
   body.nav-anim .alert-dot,
   body.nav-anim .alert-dot.amber,
-  body.nav-anim .stat-card.sell-alert,
   body.nav-anim .hotpicks-dot {
     animation-play-state: paused !important;
   }
@@ -4412,7 +4302,7 @@
     </div>
 
     <button class="btn btn-secondary" style="border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v132</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v133</div>
   </div>
 </div>
 
@@ -10940,7 +10830,7 @@ let touchStartY = 0;
 // ============ FEEDBACK PRESSIONE (classe .pressing) ============
 // Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
 // :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
-const PRESSABLE = '.icon-btn,.nav-tile,.hotpicks-bar,.subc,.ent-head,.grading-add-btn,.sub-addcard,.subd-return-btn,.ge-grade,.subdetail-del,.back-btn,.stat-card.clickable,.challenge-tile,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
+const PRESSABLE = '.icon-btn,.nav-tile,.hotpicks-bar,.subc,.ent-head,.grading-add-btn,.sub-addcard,.subd-return-btn,.ge-grade,.subdetail-del,.back-btn,.stat-card.clickable,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
 let pressedEl = null;
 function clearPressed() {
   if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
