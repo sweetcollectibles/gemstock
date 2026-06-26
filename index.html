@@ -4315,7 +4315,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v126</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v127</div>
   </div>
 </div>
 
@@ -8274,6 +8274,9 @@ function updateFabVisibility() {
   } else {
     document.body.classList.add('hide-fab');
   }
+  // la ricerca non serve nella sezione gradazione
+  const bs = document.getElementById('bottom-search');
+  if (bs) bs.style.display = (currentView === 'grading') ? 'none' : '';
 }
 
 // ============ WISHLIST ============
@@ -8534,7 +8537,7 @@ function goToRegistry() {
 // ============ GRADAZIONE ============
 const GRADE_SCALES = {
   PSA:   ['10','9.5','9','8.5','8','7.5','7','<7'],
-  BGS:   ['10BL','10PR','10','9.5','9','8.5','8','7.5','7','<7'],
+  BGS:   ['10BL','10PR','9.5','9','8.5','8','7.5','7','<7'],
   CGC:   ['10PR','10','9.5','9','8.5','8','7.5','7','<7'],
   ALTRO: ['10','9.5','9','8.5','8','7.5','7','<7']
 };
