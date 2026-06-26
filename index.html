@@ -1024,6 +1024,8 @@
   }
   .dash-stat .n { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.45rem; line-height: 1; }
   .dash-stat .l { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .dash-stat.clickable-stat { cursor: pointer; border-color: rgba(74,222,128,0.3); }
+  .dash-stat.clickable-stat:active { transform: scale(0.97); }
   .dash-sub {
     position: relative; font-size: 0.54rem; color: var(--muted); text-transform: uppercase;
     letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; margin-bottom: 9px; font-weight: 700;
@@ -3976,9 +3978,6 @@
     <div class="grading-seclabel">Submission in corso</div>
     <div id="grading-list"></div>
 
-    <div class="grading-seclabel" id="grading-done-label" style="display:none">Registro completate</div>
-    <div id="grading-done-list"></div>
-
     <button class="grading-add-btn" onclick="openAddSubmission()">➕ Aggiungi submission</button>
 
   </div>
@@ -4022,6 +4021,14 @@
     <div class="set-view-title" id="set-view-title">📦 Set</div>
   </div>
   <div class="set-view-scroll" id="set-view-body"></div>
+</div>
+
+<div class="set-view" id="subdone-view" style="display:none">
+  <div class="set-view-head">
+    <button class="back-btn" onclick="closeSubDone()">←</button>
+    <div class="set-view-title">✅ Submission completate</div>
+  </div>
+  <div class="set-view-scroll" id="subdone-body"></div>
 </div>
 
 <div class="set-view" id="subdetail-view" style="display:none">
@@ -4308,7 +4315,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v125</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v126</div>
   </div>
 </div>
 
@@ -8532,7 +8539,7 @@ const GRADE_SCALES = {
   ALTRO: ['10','9.5','9','8.5','8','7.5','7','<7']
 };
 const GRADE_LABELS = { '10BL':'10 BL', '10PR':'10 PR', '<7':'< 7' };
-function gradeLabel(g) { return GRADE_LABELS[g] || g; }
+function subGradeLabel(g) { return GRADE_LABELS[g] || g; }
 // un voto conta come "10" (anche varianti speciali) per la percentuale dashboard
 function isTen(g) { return g === '10' || g === '10BL' || g === '10PR'; }
 
@@ -8564,7 +8571,6 @@ function renderGrading() {
 
   renderGradingDash();
   renderGradingList();
-  renderGradingDone();
 }
 
 function renderGradingDash() {
@@ -8608,7 +8614,7 @@ function renderGradingDash() {
       const n = e.byGrade[g];
       const w = Math.round(n / maxN * 100);
       const cls = isTen(g) ? (g === '10' ? 'v10' : 'special v10') : g.startsWith('9') ? 'v9' : g.startsWith('8') ? 'v8' : 'vlow';
-      return `<div class="vrow ${cls}"><div class="vk">${gradeLabel(g)}</div><div class="vbar"><div class="f" style="width:${w}%"></div></div><div class="vn">${n} ${n === 1 ? 'carta' : 'carte'}</div></div>`;
+      return `<div class="vrow ${cls}"><div class="vk">${subGradeLabel(g)}</div><div class="vbar"><div class="f" style="width:${w}%"></div></div><div class="vn">${n} ${n === 1 ? 'carta' : 'carte'}</div></div>`;
     }).join('');
     entHtml += `
       <div class="ent ${key.toLowerCase()}" data-ent="${key}">
@@ -8628,7 +8634,7 @@ function renderGradingDash() {
       <div class="dash-glow"></div>
       <div class="dash-top">
         <div class="dash-stat"><div class="n" style="color:var(--orange)">${open}</div><div class="l">Sub in corso</div></div>
-        <div class="dash-stat"><div class="n" style="color:var(--green)">${done}</div><div class="l">Sub completate</div></div>
+        <div class="dash-stat ${done > 0 ? 'clickable-stat' : ''}" ${done > 0 ? 'onclick="openSubDone()"' : ''}><div class="n" style="color:var(--green)">${done}</div><div class="l">Sub completate${done > 0 ? ' ›' : ''}</div></div>
         <div class="dash-stat"><div class="n" style="color:var(--accent)">${totalGraded}</div><div class="l">Carte gradate</div></div>
       </div>
       <div class="dash-sub">📊 Tracciamento voti</div>
@@ -8769,33 +8775,40 @@ async function saveSubmission() {
 
 // placeholder rimosso — dettaglio submission implementato sotto
 
-// ---- registro submission completate ----
-function renderGradingDone() {
-  const el = document.getElementById('grading-done-list');
-  const label = document.getElementById('grading-done-label');
-  if (!el) return;
+// ---- registro submission completate (overlay) ----
+function openSubDone() {
+  const el = document.getElementById('subdone-body');
   const done = submissions.filter(s => s.status === 'completed');
-  if (!done.length) { el.innerHTML = ''; if (label) label.style.display = 'none'; return; }
-  if (label) label.style.display = '';
-  el.innerHTML = done.map(s => {
-    const ent = subGraderName(s);
-    const cards = subCardsOf(s.id);
-    const n = cards.length;
-    const tens = cards.filter(c => isTen(c.grade)).length;
-    const pct = n > 0 ? Math.round(tens / n * 100) : 0;
-    const key = ['PSA','BGS','CGC'].includes(s.grader) ? s.grader.toLowerCase() : 'alt';
-    const ret = s.returnedDate ? s.returnedDate.split('-').reverse().join('/') : '—';
-    return `
-      <div class="subc ${key} done" onclick="openSubDetail(${s.id})">
-        <div class="subc-bar"></div>
-        <div class="subc-info">
-          <div class="subc-nm">${ent} <span class="subc-badge done">✅ Completata</span></div>
-          <div class="subc-mt">📦 Rientrata ${ret} · ${n} ${n === 1 ? 'carta' : 'carte'}</div>
-        </div>
-        <div class="subc-cnt"><div class="b" style="color:var(--green)">${pct}%</div><div class="l">voti 10</div></div>
-        <div class="subc-arr">›</div>
-      </div>`;
-  }).join('');
+  if (!done.length) {
+    el.innerHTML = '<div class="grading-empty">Nessuna submission completata.</div>';
+  } else {
+    el.innerHTML = done.map(s => {
+      const ent = subGraderName(s);
+      const cards = subCardsOf(s.id);
+      const n = cards.length;
+      const tens = cards.filter(c => isTen(c.grade)).length;
+      const pct = n > 0 ? Math.round(tens / n * 100) : 0;
+      const key = ['PSA','BGS','CGC'].includes(s.grader) ? s.grader.toLowerCase() : 'alt';
+      const ret = s.returnedDate ? s.returnedDate.split('-').reverse().join('/') : '—';
+      return `
+        <div class="subc ${key} done" onclick="closeSubDone(); openSubDetail(${s.id})">
+          <div class="subc-bar"></div>
+          <div class="subc-info">
+            <div class="subc-nm">${ent} <span class="subc-badge done">✅ Completata</span></div>
+            <div class="subc-mt">📦 Rientrata ${ret} · ${n} ${n === 1 ? 'carta' : 'carte'}</div>
+          </div>
+          <div class="subc-cnt"><div class="b" style="color:var(--green)">${pct}%</div><div class="l">voti 10</div></div>
+          <div class="subc-arr">›</div>
+        </div>`;
+    }).join('');
+  }
+  document.getElementById('subdone-view').style.display = 'flex';
+  requestAnimationFrame(() => document.getElementById('subdone-view').classList.add('open'));
+}
+function closeSubDone() {
+  const v = document.getElementById('subdone-view');
+  v.classList.remove('open');
+  setTimeout(() => { v.style.display = 'none'; }, 280);
 }
 
 function openSubDetail(subId) {
@@ -8813,7 +8826,7 @@ function openSubDetail(subId) {
 
   const cardsHtml = cards.map(c => {
     const gradeChip = c.grade
-      ? `<span class="subdc-grade ${isTen(c.grade) ? 'ten' : ''}">${gradeLabel(c.grade)}</span>`
+      ? `<span class="subdc-grade ${isTen(c.grade) ? 'ten' : ''}">${subGradeLabel(c.grade)}</span>`
       : '';
     return `<div class="subdc-row"><span class="subdc-name">${c.cardName}</span>${gradeChip}</div>`;
   }).join('');
@@ -8870,7 +8883,7 @@ function openGradeEntry(subId) {
     const opts = scale.map(g => {
       const special = (g === '10BL' || g === '10PR');
       const miss = (g === '<7');
-      return `<div class="ge-grade ${special ? 'spec' : ''} ${miss ? 'miss' : ''}" data-card="${c.id}" data-grade="${g}" onclick="pickGrade(${c.id},'${g}')">${gradeLabel(g)}</div>`;
+      return `<div class="ge-grade ${special ? 'spec' : ''} ${miss ? 'miss' : ''}" data-card="${c.id}" data-grade="${g}" onclick="pickGrade(${c.id},'${g}')">${subGradeLabel(g)}</div>`;
     }).join('');
     return `<div class="ge-card"><div class="ge-name">${c.cardName}</div><div class="ge-grades">${opts}</div></div>`;
   }).join('');
