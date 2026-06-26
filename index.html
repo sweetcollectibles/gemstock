@@ -976,6 +976,13 @@
   }
   .hotpicks-bar.hot .hotpicks-n { color: var(--red); }
   .hotpicks-bar.calm .hotpicks-n { color: var(--green); }
+  .hotpicks-ico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; vertical-align: middle; margin-right: 3px;
+  }
+  .hotpicks-ico svg { width: 100%; height: 100%; }
+  .hotpicks-bar.hot .hotpicks-ico { color: var(--red); }
+  .hotpicks-bar.calm .hotpicks-ico { color: var(--green); }
   .hotpicks-arr {
     position: relative;
     color: var(--muted);
@@ -4341,7 +4348,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v128</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v129</div>
   </div>
 </div>
 
@@ -5470,7 +5477,7 @@ function renderStats() {
     <div class="stat-card full hero-card">
       ${chartData.legend}
       <div class="hero-glow"></div>
-      <div class="stat-label">💎 Collection Value</div>
+      <div class="stat-label"><span class="tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#f5933b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l-1.5 6L12 21M15 3l1.5 6L12 21"/></svg></span> Collection Value</div>
       <div class="hero-value">€${fmt(totalCur)}</div>
       <div class="hero-row">
         <div class="hero-box">
@@ -5503,7 +5510,7 @@ function renderStats() {
     <div class="stat-card full hotpicks-bar ${toSell > 0 ? 'hot' : 'calm'} ${activeFilter === 'topsell' ? 'active' : ''}" data-stat-filter="topsell" onclick="toggleStatFilter('topsell')">
       <div class="hotpicks-glow"></div>
       <div class="hotpicks-dot"></div>
-      <div class="hotpicks-txt">🔥 Hot Picks <span class="hotpicks-meta">· articoli +30%</span></div>
+      <div class="hotpicks-txt"><span class="hotpicks-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4-2 5-2 8a2 2 0 0 0 4 0c0-1 0-1 0-1 2 1 4 3 4 6a6 6 0 0 1-12 0c0-4 4-6 6-13z"/></svg></span> Hot Picks <span class="hotpicks-meta">· articoli +30%</span></div>
       <div class="hotpicks-n">${toSell}</div>
       <div class="hotpicks-arr">›</div>
     </div>
@@ -5520,6 +5527,9 @@ function renderStats() {
   if (!_chartFadeShown) {
     requestAnimationFrame(() => { _chartFadeShown = true; });
   }
+  // mantieni aggiornati i contatori della tile Grading (le submission possono
+  // essere caricate dopo il primo render della home)
+  updateGradingTile();
 }
 
 function toggleStatFilter(filter) {
@@ -8592,8 +8602,7 @@ function daysAgo(dateStr) {
   return Math.floor((Date.now() - d.getTime()) / 86400000);
 }
 
-function renderGrading() {
-  // contatori tile home
+function updateGradingTile() {
   const open = submissions.filter(s => s.status === 'open');
   const openIds = open.map(s => String(s.id));
   const cardsInProgress = subCards.filter(c => openIds.includes(String(c.submissionId))).length;
@@ -8603,9 +8612,12 @@ function renderGrading() {
   if (tileSub) {
     tileSub.textContent = open.length === 0
       ? 'nessuna in corso'
-      : `${open.length === 1 ? 'sub' : 'sub'} in corso · ${cardsInProgress} ${cardsInProgress === 1 ? 'carta' : 'carte'}`;
+      : `sub in corso · ${cardsInProgress} ${cardsInProgress === 1 ? 'carta' : 'carte'}`;
   }
+}
 
+function renderGrading() {
+  updateGradingTile();
   renderGradingDash();
   renderGradingList();
 }
@@ -10699,7 +10711,13 @@ async function initApp() {
 
   // submissions di gradazione (in parallelo, non bloccanti)
   Promise.all([dataStore.loadSubmissions(), dataStore.loadSubCards()])
-    .then(([subs, scs]) => { submissions = subs || []; subCards = scs || []; if (currentView === 'grading') renderGrading(); })
+    .then(([subs, scs]) => {
+      submissions = subs || [];
+      subCards = scs || [];
+      // aggiorna i contatori della tile Grading nella home (e la vista se aperta)
+      updateGradingTile();
+      if (currentView === 'grading') renderGrading();
+    })
     .catch(e => console.error('load submissions:', e));
 
   if (nickname) localStorage.setItem('tcg_nickname', nickname);
