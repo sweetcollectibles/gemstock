@@ -3525,6 +3525,39 @@
   }
 
   /* Threshold pills (settings) */
+  /* ===== IMPOSTAZIONI: sezioni a card ===== */
+  .set-sec {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .set-sec-h {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 13px;
+  }
+  .set-sec-ico {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .set-sec-ico svg { width: 15px; height: 15px; }
+  .set-sec-ico.v { background: rgba(168,85,247,0.12); }
+  .set-sec-ico.o { background: rgba(245,147,59,0.12); }
+  .set-sec-ico.g { background: rgba(212,168,71,0.12); }
+  .set-sec-ico.gr { background: rgba(74,222,128,0.10); }
+  .set-sec-ico.r { background: rgba(248,113,113,0.10); }
+  .set-sec-t { font-weight: 800; font-size: 0.92rem; font-family: 'Outfit', sans-serif; }
+  .set-sec-sub { font-size: 0.62rem; color: var(--muted); margin-top: 1px; }
+  .set-row-lbl { font-size: 0.66rem; color: var(--muted); margin-bottom: 7px; font-weight: 600; }
+  .set-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .set-btn-grid .btn { margin-top: 0; }
+  .set-sec .btn:first-of-type { margin-top: 0; }
+
   .threshold-pills {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -4300,8 +4333,13 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">⏰ Soglia aggiornamento <span style="color:var(--muted);font-weight:400">(Le tue carte)</span></label>
+    <!-- SOGLIE AGGIORNAMENTO -->
+    <div class="set-sec">
+      <div class="set-sec-h">
+        <div class="set-sec-ico v"><svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div>
+        <div><div class="set-sec-t">Soglie aggiornamento</div><div class="set-sec-sub">quando segnalare prezzi vecchi</div></div>
+      </div>
+      <div class="set-row-lbl">Carte gradate</div>
       <div class="threshold-pills" id="stale-pills">
         <button class="threshold-pill" data-days="3" onclick="setStaleDays(3)">3 gg</button>
         <button class="threshold-pill" data-days="7" onclick="setStaleDays(7)">7 gg</button>
@@ -4309,10 +4347,7 @@
         <button class="threshold-pill" data-days="30" onclick="setStaleDays(30)">30 gg</button>
       </div>
       <input type="hidden" id="s-stale-days" value="7">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">💜 Soglia aggiornamento <span style="color:var(--muted);font-weight:400">(Wishlist)</span></label>
+      <div class="set-row-lbl" style="margin-top:14px">Wishlist</div>
       <div class="threshold-pills" id="wish-stale-pills">
         <button class="threshold-pill" data-wdays="7" onclick="setWishStaleDays(7)">7 gg</button>
         <button class="threshold-pill" data-wdays="14" onclick="setWishStaleDays(14)">14 gg</button>
@@ -4322,42 +4357,62 @@
       <input type="hidden" id="s-wish-stale-days" value="14">
     </div>
 
-    <div class="form-group" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-      <label class="form-label">🏅 Token PSA API <span style="color:var(--muted);font-weight:400">(per scan automatici)</span></label>
+    <!-- TOKEN PSA -->
+    <div class="set-sec">
+      <div class="set-sec-h">
+        <div class="set-sec-ico g"><svg viewBox="0 0 24 24" fill="none" stroke="#d4a847" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div><div class="set-sec-t">Token PSA API</div><div class="set-sec-sub">per gli scan automatici</div></div>
+      </div>
       <input type="password" class="form-input mono" id="s-psa-token" placeholder="Incolla qui il tuo token PSA" autocomplete="off" style="font-size:0.75rem">
-      <button type="button" class="btn btn-secondary" style="margin-top:8px;font-size:0.78rem" onclick="generatePsaTokenGuide()">📖 Come ottengo il token? Scarica la guida (PDF)</button>
-      <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;line-height:1.5">
+      <button type="button" class="btn btn-secondary" style="margin-top:8px;font-size:0.78rem" onclick="generatePsaTokenGuide()">📖 Come ottengo il token? (PDF)</button>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:8px;line-height:1.5">
         Ottieni il token su <span style="color:var(--accent)">psacard.com/publicapi/documentation</span> → Sign In → Generate Token
       </div>
     </div>
 
-    <button class="btn btn-primary" style="margin-top:16px" onclick="saveSettings()">💾 Salva Impostazioni</button>
+    <button class="btn btn-primary" onclick="saveSettings()">💾 Salva impostazioni</button>
 
-    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
-
-    <div class="form-label" style="margin-bottom:10px">📄 Esporta Liste PDF</div>
-    <div class="btn-row" style="flex-direction:column;gap:8px">
-      <button class="btn btn-secondary" onclick="exportListPDF('cards')">🃏 Lista Carte</button>
-      <button class="btn btn-secondary" onclick="exportListPDF('sealed')">📦 Lista Sealed</button>
-      <button class="btn btn-secondary" onclick="exportListPDF('wishlist')">💜 Wishlist</button>
+    <!-- ESPORTA LISTE -->
+    <div class="set-sec" style="margin-top:12px">
+      <div class="set-sec-h">
+        <div class="set-sec-ico o"><svg viewBox="0 0 24 24" fill="none" stroke="#f5933b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/></svg></div>
+        <div><div class="set-sec-t">Esporta liste (PDF)</div><div class="set-sec-sub">carte, sealed, wishlist</div></div>
+      </div>
+      <div class="set-btn-grid">
+        <button class="btn btn-secondary" onclick="exportListPDF('cards')">🃏 Carte</button>
+        <button class="btn btn-secondary" onclick="exportListPDF('sealed')">📦 Sealed</button>
+      </div>
+      <button class="btn btn-secondary" style="margin-top:8px" onclick="exportListPDF('wishlist')">💜 Wishlist</button>
     </div>
 
-    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
-
-    <div class="form-label" style="margin-bottom:10px">📦 Backup &amp; Ripristino</div>
-    <div style="font-size:0.74rem;color:var(--muted);line-height:1.5;margin-bottom:12px">
-      Salva un backup completo (carte, sealed, wishlist, registro) come àncora di sicurezza. Tienilo al sicuro: se un giorno serve, lo ripristini in un colpo.
+    <!-- BACKUP -->
+    <div class="set-sec">
+      <div class="set-sec-h">
+        <div class="set-sec-ico gr"><svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7"/><path d="M7 10l5 5 5-5M12 15V3"/></svg></div>
+        <div><div class="set-sec-t">Backup &amp; Ripristino</div><div class="set-sec-sub">àncora di sicurezza completa</div></div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--muted);line-height:1.5;margin-bottom:10px">
+        Salva un backup completo (carte, sealed, wishlist, registro). Tienilo al sicuro: se serve, lo ripristini in un colpo.
+      </div>
+      <div class="set-btn-grid">
+        <button class="btn btn-secondary" onclick="exportData()">💾 Backup</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">♻️ Ripristina</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-secondary" style="margin-top:8px" onclick="repairThumbnails()">🩺 Ripara miniature rotte</button>
     </div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="exportData()">💾 Salva backup</button>
-      <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">♻️ Ripristina</button>
-    </div>
-    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
-    <button class="btn btn-secondary" style="margin-top:10px" onclick="repairThumbnails()">🩺 Ripara miniature rotte</button>
 
-    <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
-    <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v130</div>
+    <!-- ZONA PERICOLOSA -->
+    <div class="set-sec">
+      <div class="set-sec-h">
+        <div class="set-sec-ico r"><svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+        <div><div class="set-sec-t">Zona pericolosa</div><div class="set-sec-sub">azione irreversibile</div></div>
+      </div>
+      <button class="btn btn-danger" onclick="clearAllData()">🗑 Cancella tutto</button>
+    </div>
+
+    <button class="btn btn-secondary" style="border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v131</div>
   </div>
 </div>
 
