@@ -1324,6 +1324,32 @@
     margin-bottom: 4px;
   }
 
+  /* tile con glow colorato (Registro viola, Grading arancione) + icona SVG */
+  .tile-ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px; height: 15px;
+    vertical-align: middle;
+    margin-right: 2px;
+  }
+  .tile-ico svg { width: 100%; height: 100%; }
+  .stat-card.tile-glow-v, .stat-card.tile-glow-o { position: relative; overflow: hidden; }
+  .tile-gd {
+    position: absolute;
+    right: -22px; top: -22px;
+    width: 66px; height: 66px;
+    border-radius: 50%;
+    filter: blur(28px);
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  .tile-gd.v { background: var(--accent); }
+  .tile-gd.o { background: var(--orange); }
+  body.nav-anim .tile-gd { display: none; }
+  .stat-card.tile-glow-v > *:not(.tile-gd),
+  .stat-card.tile-glow-o > *:not(.tile-gd) { position: relative; }
+
   .stat-value {
     font-family: 'JetBrains Mono', monospace;
     font-size: 1.4rem;
@@ -4315,7 +4341,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v127</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v128</div>
   </div>
 </div>
 
@@ -5462,15 +5488,17 @@ function renderStats() {
       ${chartData.chart}
       <div class="stat-sub">${totalCards} ${totalCards === 1 ? 'carta' : 'carte'}${sealedQty > 0 ? ` · ${sealedQty} ${sealedQty === 1 ? 'articolo sealed' : 'articoli sealed'}` : ''}</div>
     </div>
-    <div class="stat-card clickable" onclick="goToRegistry()">
-      <div class="stat-label">🧾 Registro</div>
+    <div class="stat-card clickable tile-glow-v" onclick="goToRegistry()">
+      <div class="tile-gd v"></div>
+      <div class="stat-label"><span class="tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="M8.5 10h7M8.5 14h7M8.5 18h4"/></svg></span> Registro</div>
       <div class="stat-value" style="color:var(--accent)">${activities.filter(a => a.year === new Date().getFullYear()).length}</div>
       <div class="stat-sub">movimenti ${new Date().getFullYear()}</div>
     </div>
-    <div class="stat-card challenge-tile" onclick="goToGrading()">
-      <div class="stat-label">⏳ In Gradazione</div>
-      <div class="stat-value challenge-val" id="grading-tile-n">📮</div>
-      <div class="stat-sub" id="grading-tile-sub">submission attive</div>
+    <div class="stat-card clickable tile-glow-o" onclick="goToGrading()">
+      <div class="tile-gd o"></div>
+      <div class="stat-label"><span class="tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#f5933b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5z"/><path d="M9 12l2 2 4-4"/></svg></span> Grading</div>
+      <div class="stat-value" style="color:var(--orange)" id="grading-tile-n">0</div>
+      <div class="stat-sub" id="grading-tile-sub">in corso</div>
     </div>
     <div class="stat-card full hotpicks-bar ${toSell > 0 ? 'hot' : 'calm'} ${activeFilter === 'topsell' ? 'active' : ''}" data-stat-filter="topsell" onclick="toggleStatFilter('topsell')">
       <div class="hotpicks-glow"></div>
@@ -8567,10 +8595,16 @@ function daysAgo(dateStr) {
 function renderGrading() {
   // contatori tile home
   const open = submissions.filter(s => s.status === 'open');
+  const openIds = open.map(s => String(s.id));
+  const cardsInProgress = subCards.filter(c => openIds.includes(String(c.submissionId))).length;
   const tileN = document.getElementById('grading-tile-n');
   const tileSub = document.getElementById('grading-tile-sub');
-  if (tileN) tileN.textContent = open.length || '📮';
-  if (tileSub) tileSub.textContent = open.length === 1 ? 'submission attiva' : 'submission attive';
+  if (tileN) tileN.textContent = open.length;
+  if (tileSub) {
+    tileSub.textContent = open.length === 0
+      ? 'nessuna in corso'
+      : `${open.length === 1 ? 'sub' : 'sub'} in corso · ${cardsInProgress} ${cardsInProgress === 1 ? 'carta' : 'carte'}`;
+  }
 
   renderGradingDash();
   renderGradingList();
