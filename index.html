@@ -1074,6 +1074,30 @@
   .sub-card-x { width: 36px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; color: var(--red); font-size: 0.85rem; padding: 9px 0; }
   .sub-addcard { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface2); border: 1px dashed var(--border); border-radius: 10px; padding: 10px; font-size: 0.78rem; color: var(--muted); cursor: pointer; margin-top: 4px; }
 
+  /* dettaglio submission */
+  .subdetail-del { width: 36px; height: 36px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); color: var(--red); font-size: 1rem; flex-shrink: 0; }
+  .subd-meta { font-size: 0.68rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; margin-bottom: 12px; }
+  .subd-done-badge { font-size: 0.72rem; color: var(--green); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25); border-radius: 10px; padding: 9px 12px; margin-bottom: 12px; text-align: center; font-weight: 700; }
+  .subd-cards { margin-bottom: 14px; }
+  .subdc-row { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; margin-bottom: 7px; }
+  .subdc-name { flex: 1; font-size: 0.85rem; font-weight: 600; }
+  .subdc-grade { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.78rem; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 4px 10px; }
+  .subdc-grade.ten { color: var(--green); background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.3); }
+  .subd-return-btn { width: 100%; padding: 13px; border-radius: 12px; border: none; background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; font-weight: 700; font-size: 0.85rem; font-family: 'Inter', sans-serif; margin-top: 4px; }
+  /* registrazione voti */
+  .ge-note { font-size: 0.66rem; color: var(--muted); background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.2); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; line-height: 1.5; }
+  .ge-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .ge-name { font-weight: 700; font-size: 0.86rem; margin-bottom: 9px; }
+  .ge-grades { display: flex; gap: 5px; flex-wrap: wrap; }
+  .ge-grade { padding: 7px 11px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.74rem; color: var(--text); cursor: pointer; }
+  .ge-grade.sel { background: rgba(74,222,128,0.18); border-color: var(--green); color: var(--green); }
+  .ge-grade.spec { color: #c77dff; }
+  .ge-grade.spec.sel { background: rgba(168,85,247,0.18); border-color: var(--accent); color: #c77dff; }
+  .ge-grade.miss { color: var(--muted); }
+  .ge-grade.miss.sel { background: rgba(138,132,120,0.2); border-color: var(--muted); color: var(--muted); }
+  .subc-badge.done { background: rgba(74,222,128,0.15); color: var(--green); }
+  .subc.done { opacity: 0.92; }
+
   .challenge-soon {
     position: absolute;
     top: 9px;
@@ -3952,6 +3976,9 @@
     <div class="grading-seclabel">Submission in corso</div>
     <div id="grading-list"></div>
 
+    <div class="grading-seclabel" id="grading-done-label" style="display:none">Registro completate</div>
+    <div id="grading-done-list"></div>
+
     <button class="grading-add-btn" onclick="openAddSubmission()">➕ Aggiungi submission</button>
 
   </div>
@@ -3995,6 +4022,15 @@
     <div class="set-view-title" id="set-view-title">📦 Set</div>
   </div>
   <div class="set-view-scroll" id="set-view-body"></div>
+</div>
+
+<div class="set-view" id="subdetail-view" style="display:none">
+  <div class="set-view-head">
+    <button class="back-btn" onclick="closeSubDetail()">←</button>
+    <div class="set-view-title" id="subdetail-title">Submission</div>
+    <button class="subdetail-del" onclick="deleteCurrentSub()" title="Elimina submission">🗑</button>
+  </div>
+  <div class="set-view-scroll" id="subdetail-body"></div>
 </div>
 
 <!-- AUTH PAGE — BEFORE the script so DOM exists when JS runs -->
@@ -4272,7 +4308,7 @@
 
     <button class="btn btn-danger" style="margin-top:8px" onclick="clearAllData()">🗑 Cancella Tutto</button>
     <button class="btn btn-secondary" style="margin-top:10px;border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v123</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v124</div>
   </div>
 </div>
 
@@ -8528,6 +8564,7 @@ function renderGrading() {
 
   renderGradingDash();
   renderGradingList();
+  renderGradingDone();
 }
 
 function renderGradingDash() {
@@ -8591,8 +8628,8 @@ function renderGradingDash() {
       <div class="dash-glow"></div>
       <div class="dash-top">
         <div class="dash-stat"><div class="n" style="color:var(--orange)">${open}</div><div class="l">Sub in corso</div></div>
-        <div class="dash-stat"><div class="n" style="color:var(--accent)">${cardsInProgress}</div><div class="l">Carte in corso</div></div>
-        <div class="dash-stat"><div class="n" style="color:var(--green)">${totalGraded}</div><div class="l">Carte gradate</div></div>
+        <div class="dash-stat"><div class="n" style="color:var(--green)">${done}</div><div class="l">Sub completate</div></div>
+        <div class="dash-stat"><div class="n" style="color:var(--accent)">${totalGraded}</div><div class="l">Carte gradate</div></div>
       </div>
       <div class="dash-sub">📊 Tracciamento voti</div>
       ${entHtml}
@@ -8730,9 +8767,150 @@ async function saveSubmission() {
   renderGrading();
 }
 
-// placeholder: dettaglio submission (step successivo)
+// placeholder rimosso — dettaglio submission implementato sotto
+
+// ---- registro submission completate ----
+function renderGradingDone() {
+  const el = document.getElementById('grading-done-list');
+  const label = document.getElementById('grading-done-label');
+  if (!el) return;
+  const done = submissions.filter(s => s.status === 'completed');
+  if (!done.length) { el.innerHTML = ''; if (label) label.style.display = 'none'; return; }
+  if (label) label.style.display = '';
+  el.innerHTML = done.map(s => {
+    const ent = subGraderName(s);
+    const cards = subCardsOf(s.id);
+    const n = cards.length;
+    const tens = cards.filter(c => isTen(c.grade)).length;
+    const pct = n > 0 ? Math.round(tens / n * 100) : 0;
+    const key = ['PSA','BGS','CGC'].includes(s.grader) ? s.grader.toLowerCase() : 'alt';
+    const ret = s.returnedDate ? s.returnedDate.split('-').reverse().join('/') : '—';
+    return `
+      <div class="subc ${key} done" onclick="openSubDetail(${s.id})">
+        <div class="subc-bar"></div>
+        <div class="subc-info">
+          <div class="subc-nm">${ent} <span class="subc-badge done">✅ Completata</span></div>
+          <div class="subc-mt">📦 Rientrata ${ret} · ${n} ${n === 1 ? 'carta' : 'carte'}</div>
+        </div>
+        <div class="subc-cnt"><div class="b" style="color:var(--green)">${pct}%</div><div class="l">voti 10</div></div>
+        <div class="subc-arr">›</div>
+      </div>`;
+  }).join('');
+}
+
 function openSubDetail(subId) {
-  showToast('Dettaglio submission — in arrivo nel prossimo step');
+  const s = submissions.find(x => String(x.id) === String(subId));
+  if (!s) return;
+  _openSubId = s.id;
+  const ent = subGraderName(s);
+  const cards = subCardsOf(s.id);
+  const sent = s.sentDate ? s.sentDate.split('-').reverse().join('/') : '—';
+  const d = daysAgo(s.sentDate);
+  const typeLabel = s.subType === 'express' ? 'Express' : 'Base';
+  const isCompleted = s.status === 'completed';
+
+  document.getElementById('subdetail-title').textContent = `${ent} · ${typeLabel}`;
+
+  const cardsHtml = cards.map(c => {
+    const gradeChip = c.grade
+      ? `<span class="subdc-grade ${isTen(c.grade) ? 'ten' : ''}">${gradeLabel(c.grade)}</span>`
+      : '';
+    return `<div class="subdc-row"><span class="subdc-name">${c.cardName}</span>${gradeChip}</div>`;
+  }).join('');
+
+  const retInfo = isCompleted && s.returnedDate
+    ? ` · rientrata ${s.returnedDate.split('-').reverse().join('/')}`
+    : (d != null ? ` · ${d} ${d === 1 ? 'giorno' : 'giorni'} fa` : '');
+
+  document.getElementById('subdetail-body').innerHTML = `
+    <div class="subd-meta">📅 Inviata ${sent}${retInfo} · <span style="color:var(--orange)">${cards.length} ${cards.length === 1 ? 'carta' : 'carte'}</span></div>
+    ${isCompleted ? '<div class="subd-done-badge">✅ Submission completata</div>' : ''}
+    <div class="subd-cards">${cardsHtml}</div>
+    ${!isCompleted ? `<button class="subd-return-btn" onclick="openGradeEntry(${s.id})">📦 Sub rientrata — registra voti</button>` : ''}
+  `;
+
+  document.getElementById('subdetail-view').style.display = 'flex';
+  requestAnimationFrame(() => document.getElementById('subdetail-view').classList.add('open'));
+}
+
+function closeSubDetail() {
+  const v = document.getElementById('subdetail-view');
+  v.classList.remove('open');
+  setTimeout(() => { v.style.display = 'none'; _openSubId = null; }, 280);
+}
+
+async function deleteCurrentSub() {
+  if (_openSubId == null) return;
+  const s = submissions.find(x => String(x.id) === String(_openSubId));
+  if (!s) return;
+  const ent = subGraderName(s);
+  if (!(await askConfirm(`Eliminare la submission ${ent} e tutte le sue carte?`, { title: '🗑 Elimina submission', okLabel: 'Elimina' }))) return;
+  const sid = _openSubId;
+  await dataStore.deleteSubmission(sid); // le carte cadono per ON DELETE CASCADE
+  submissions = submissions.filter(x => String(x.id) !== String(sid));
+  subCards = subCards.filter(c => String(c.submissionId) !== String(sid));
+  closeSubDetail();
+  showToast('🗑 Submission eliminata');
+  renderGrading();
+}
+
+// ---- registrazione voti (sub rientrata) ----
+let _gradeEntrySubId = null;
+let _gradeEntryValues = {}; // subCardId -> grade
+
+function openGradeEntry(subId) {
+  const s = submissions.find(x => String(x.id) === String(subId));
+  if (!s) return;
+  _gradeEntrySubId = s.id;
+  _gradeEntryValues = {};
+  const cards = subCardsOf(s.id);
+  const scale = GRADE_SCALES[['PSA','BGS','CGC'].includes(s.grader) ? s.grader : 'ALTRO'];
+
+  const cardsHtml = cards.map(c => {
+    const opts = scale.map(g => {
+      const special = (g === '10BL' || g === '10PR');
+      const miss = (g === '<7');
+      return `<div class="ge-grade ${special ? 'spec' : ''} ${miss ? 'miss' : ''}" data-card="${c.id}" data-grade="${g}" onclick="pickGrade(${c.id},'${g}')">${gradeLabel(g)}</div>`;
+    }).join('');
+    return `<div class="ge-card"><div class="ge-name">${c.cardName}</div><div class="ge-grades">${opts}</div></div>`;
+  }).join('');
+
+  document.getElementById('subdetail-body').innerHTML = `
+    <div class="ge-note">💡 Seleziona il voto preso da ogni carta.${(s.grader === 'BGS' || s.grader === 'CGC') ? ' Le varianti 10 contano come "10" nella percentuale.' : ''}</div>
+    <div class="ge-list">${cardsHtml}</div>
+    <button class="subd-return-btn" onclick="confirmGradeEntry()" style="background:linear-gradient(135deg,#4ade80,#16a34a)">✅ Conferma e archivia submission</button>
+  `;
+  document.getElementById('subdetail-title').textContent = '📦 Voti ricevuti';
+}
+
+function pickGrade(cardId, grade) {
+  _gradeEntryValues[cardId] = grade;
+  document.querySelectorAll(`.ge-grade[data-card="${cardId}"]`).forEach(el => {
+    el.classList.toggle('sel', el.dataset.grade === grade);
+  });
+}
+
+async function confirmGradeEntry() {
+  const cards = subCardsOf(_gradeEntrySubId);
+  const missing = cards.filter(c => !_gradeEntryValues[c.id]);
+  if (missing.length) { showToast(`⚠️ Manca il voto per ${missing.length} ${missing.length === 1 ? 'carta' : 'carte'}`); return; }
+
+  // salva i voti su ogni carta
+  for (const c of cards) {
+    const grade = _gradeEntryValues[c.id];
+    c.grade = grade;
+    await dataStore.updateSubCard(c);
+  }
+  // marca la submission completata
+  const s = submissions.find(x => String(x.id) === String(_gradeEntrySubId));
+  if (s) {
+    s.status = 'completed';
+    s.returnedDate = new Date().toISOString().split('T')[0];
+    await dataStore.updateSubmission(s);
+  }
+  closeSubDetail();
+  showToast('✅ Submission archiviata coi voti');
+  renderGrading();
 }
 
 function renderSealed() {
@@ -10613,7 +10791,7 @@ let touchStartY = 0;
 // ============ FEEDBACK PRESSIONE (classe .pressing) ============
 // Gestiamo lo stato "premuto" via JS invece che con :active, perché su iOS
 // :active resta appiccicato se scrolli. Così lo rimuoviamo SEMPRE al rilascio/scroll.
-const PRESSABLE = '.icon-btn,.nav-tile,.hotpicks-bar,.subc,.ent-head,.grading-add-btn,.sub-addcard,.back-btn,.stat-card.clickable,.challenge-tile,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
+const PRESSABLE = '.icon-btn,.nav-tile,.hotpicks-bar,.subc,.ent-head,.grading-add-btn,.sub-addcard,.subd-return-btn,.ge-grade,.subdetail-del,.back-btn,.stat-card.clickable,.challenge-tile,.dock-add-btn,.mini-dock-btn,.filter-pill,#filter-all-btn,.list-card,.wish-card,.wish-link-btn,.sealed-card,.card,.ebay-link-btn,.ebay-btn,.detail-ebay-btn,.fab,.photo-upload-btn,.btn,.crop-zoom-btn,.history-entry-del,.threshold-pill,.link-tile,.search-scope,.reg-yp,.reg-abtn,.mode-opt,.sort-opt,.sc-card,.sc-empty,.sc-pick-row';
 let pressedEl = null;
 function clearPressed() {
   if (pressedEl) { pressedEl.classList.remove('pressing'); pressedEl = null; }
