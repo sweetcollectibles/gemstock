@@ -4302,7 +4302,7 @@
     </div>
 
     <button class="btn btn-secondary" style="border-color:rgba(168,85,247,0.4)" onclick="authSignOut()">🚪 Logout</button>
-    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v133</div>
+    <div style="text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted)">Sweethome v134</div>
   </div>
 </div>
 
@@ -5407,40 +5407,43 @@ function buildMiniChartSVG() {
 }
 
 function renderStats() {
-  const totalCards = cards.reduce((s, c) => s + (c.qty || 1), 0);
-  // capitale carte
-  const cardsBuy = cards.reduce((s, c) => s + c.buyPrice * (c.qty || 1), 0);
-  const cardsCur = cards.reduce((s, c) => {
+  // --- CARTE: una sola passata per tutti i totali ---
+  let totalCards = 0, cardsBuy = 0, cardsCur = 0, toSell = 0, toUpdate = 0;
+  for (const c of cards) {
+    const qty = c.qty || 1;
+    totalCards += qty;
+    cardsBuy += c.buyPrice * qty;
     const cur = getCurrentPrice(c);
-    return s + (cur ? cur * (c.qty || 1) : c.buyPrice * (c.qty || 1));
-  }, 0);
-  // capitale sealed (incluso nel totale investito)
-  const sealedQty = sealed.reduce((s, x) => s + (x.qty || 1), 0);
-  const sealedBuy = sealed.reduce((s, x) => s + ((x.buyPrice || 0) * (x.qty || 1)), 0);
-  const sealedCur = sealed.reduce((s, x) => {
+    cardsCur += (cur ? cur * qty : c.buyPrice * qty);
+    // conteggio "da vendere" (+30%)
+    if (cur) {
+      const pnl = ((cur - c.buyPrice) / c.buyPrice * 100);
+      if (pnl >= 30) toSell++;
+    }
+    // conteggio "da aggiornare"
+    const days = daysSince(getLastUpdateDate(c));
+    if (days == null || days >= settings.staleDays) toUpdate++;
+  }
+  // --- SEALED: una sola passata ---
+  let sealedQty = 0, sealedBuy = 0, sealedCur = 0;
+  for (const x of sealed) {
+    const qty = x.qty || 1;
+    sealedQty += qty;
+    sealedBuy += (x.buyPrice || 0) * qty;
     const cur = (x.currentPrice != null) ? x.currentPrice : x.buyPrice;
-    return s + ((cur || 0) * (x.qty || 1));
-  }, 0);
+    sealedCur += (cur || 0) * qty;
+    // sealed in profitto +30%
+    if (x.currentPrice != null && x.buyPrice) {
+      const p = ((x.currentPrice - x.buyPrice) / x.buyPrice) * 100;
+      if (p >= 30) toSell++;
+    }
+  }
   // totali complessivi (carte + sealed)
   const totalBuy = cardsBuy + sealedBuy;
   const totalCur = cardsCur + sealedCur;
   const pnl = totalCur - totalBuy;
   const pct = totalBuy > 0 ? (pnl / totalBuy * 100) : 0;
   const isPos = pnl >= 0;
-
-  // Filter counts
-  // posizioni in profitto/perdita: carte + sealed
-  const sealedPnlPct = (x) => {
-    const cur = (x.currentPrice != null) ? x.currentPrice : null;
-    if (cur == null || !x.buyPrice) return null;
-    return ((cur - x.buyPrice) / x.buyPrice) * 100;
-  };
-  const toSell = cards.filter(c => (getPnLPct(c) || 0) >= 30).length
-               + sealed.filter(x => { const p = sealedPnlPct(x); return p != null && p >= 30; }).length;
-  const toUpdate = cards.filter(c => {
-    const days = daysSince(getLastUpdateDate(c));
-    return days == null || days >= settings.staleDays;
-  }).length;
 
   const chartData = buildMiniChartSVG();
 
